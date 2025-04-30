@@ -61,6 +61,8 @@ function ensureGitIgnoreForPersonalizedQuestions() {
 
 // Helper function to extract student name from filePath
 function extractStudentName(filePath) {
+  console.log('File Path:')
+  console.log(filePath)
   const parts = filePath.split(path.sep);
 
   // First, check if the path contains an email address
@@ -2142,6 +2144,8 @@ function activate(context) {
 
       // Extract student names from file paths
       function extractStudentName(filePath) {
+        console.log('In extractStudentName')
+        console.log(filePath)
         const parts = filePath.split(path.sep);
 
         // First, check if the path contains an email address
