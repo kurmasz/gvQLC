@@ -1,7 +1,7 @@
 {
-    "title": "aa",
+    "title": "Sefa",
     "topic": "Variable",
-    "folder": "aa",
+    "folder": "Sefa",
     "pl_root": "/Users/benedictoseisefa/Desktop/pl-gvsu-cis500dev-master",
     "pl_question_root": "PersonalQuiz",
     "pl_assessment_root": "courseInstances/TemplateCourseInstance/assessments",
@@ -14,5 +14,12 @@
     "daysForGrading": 7,
     "reviewEndDate": "2025-04-21T23:59:59",
     "password": "letMeIn",
-    "language": "python"
+    "language": "python",
+    "studentNameMapping": {
+        "benedictosefaosei": "oseisefb@mail.gvsu.edu",
+        "william_williams": "williamsw@mail.gvsu.edu",
+        "sam": "sam.test@mail.gvsu.edu",
+        "antonio": "anto.test@ug.edu.gh",
+        "caleb": "caleb.test@ug.edu.gh"
+    }
 }
