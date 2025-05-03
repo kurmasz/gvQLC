@@ -1,11 +1,11 @@
 {
-  "name": "code-review-extension",
-  "displayName": "Code Review Extension",
-  "description": "A code review extension for Instructors, Technical leads, and senior developers to collaborate with fellow developers on any project.",
-  "version": "1.1.0",
-  "publisher": "BenedictOseiSefa",
+  "name": "gvqlc",
+  "displayName": "gvQLC",
+  "description": "A VS Code extension for Prairielearn that enabels instructors to review code, set quizzes and assignment based on the quiz and many more ",
+  "version": "0.0.2",
+  "publisher": "ZacharyKurmas",
   "readme": "README.md",
-  "icon": "sefa-logo.png",
+  "icon": "gvsu.jpg",
   "license": "MIT",
   "engines": {
     "vscode": "^1.80.0"
