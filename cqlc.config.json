@@ -1,7 +1,7 @@
 {
     "title": "Sefa",
     "topic": "Variable",
-    "folder": "Sefa",
+    "quiz_directory_name": "Sefa",
     "pl_root": "/Users/benedictoseisefa/Desktop/pl-gvsu-cis500dev-master",
     "pl_question_root": "PersonalQuiz",
     "pl_assessment_root": "courseInstances/TemplateCourseInstance/assessments",

@@ -1831,7 +1831,7 @@ function activate(context) {
 
       // Validate required fields in config
       const requiredFields = [
-        'title', 'topic', 'folder', 'pl_root', 'pl_question_root', 'pl_assessment_root',
+        'title', 'topic', 'quiz_directory_name', 'pl_root', 'pl_question_root', 'pl_assessment_root',
         'set', 'number', 'points_per_question', 'startDate', 'endDate', 'timeLimitMin',
         'daysForGrading', 'reviewEndDate', 'language'
       ];
@@ -1843,8 +1843,8 @@ function activate(context) {
       }
 
       // Construct paths
-      const questionsFolderPath = path.join(config.pl_root, 'questions', config.pl_question_root, config.folder);
-      const assessmentFolderPath = path.join(config.pl_root, config.pl_assessment_root, config.folder);
+      const questionsFolderPath = path.join(config.pl_root, 'questions', config.pl_question_root, config.quiz_directory_name);
+      const assessmentFolderPath = path.join(config.pl_root, config.pl_assessment_root, config.quiz_directory_name);
       const instructorFolderPath = path.join(questionsFolderPath, 'instructor');
       const instructorAssessmentPath = path.join(assessmentFolderPath, 'instructor');
 
@@ -1935,7 +1935,7 @@ ${question.text || 'No question text provided'}
           zones: [
             {
               questions: questions.map((q, index) => ({
-                id: `${config.pl_question_root}/${config.folder}/${studentName}/question${index + 1}`,
+                id: `${config.pl_question_root}/${config.quiz_directory_name}/${studentName}/question${index + 1}`,
                 points: config.points_per_question
               }))
             }
@@ -2027,7 +2027,7 @@ ${questionText}
           {
             title: "Combined Questions",
             questions: [{
-              id: `${config.pl_question_root}/${config.folder}/instructor/combined_questions`,
+              id: `${config.pl_question_root}/${config.quiz_directory_name}/instructor/combined_questions`,
               points: 0,
               description: "All student questions combined"
             }]

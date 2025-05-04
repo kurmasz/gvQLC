@@ -2,10 +2,10 @@
   "name": "gvqlc",
   "displayName": "gvQLC",
   "description": "A VS Code extension for Prairielearn that enabels instructors to review code, set quizzes and assignment based on the quiz and many more ",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "ZacharyKurmas",
   "readme": "README.md",
-  "icon": "gvsu.jpg",
+  "icon": "gv.png",
   "license": "MIT",
   "engines": {
     "vscode": "^1.80.0"
@@ -28,39 +28,39 @@
     "commands": [
       {
         "command": "extension.askQuestion",
-        "title": "plQLC: Ask Practice Question"
+        "title": "gvQLC: Ask Practice Question"
       },
       {
         "command": "extension.answerQuestion",
-        "title": "plQLC: Answer Practice Question"
+        "title": "gvQLC: Answer Practice Question"
       },
       {
         "command": "extension.viewQuestionsAndAnswers",
-        "title": "plQLC: View Practice Questions and Answers"
+        "title": "gvQLC: View Practice Questions and Answers"
       },
       {
         "command": "extension.addPersonalizedQuestion",
-        "title": "plQLC: New Quiz Question"
+        "title": "gvQLC: New Quiz Question"
       },
       {
         "command": "extension.viewPersonalizedQuestions",
-        "title": "plQLC: View Quiz Questions"
+        "title": "gvQLC: View Quiz Questions"
       },
       {
         "command": "extension.generatePersonalizedQuiz",
-        "title": "plQLC: Generate PrairieLearn Quiz"
+        "title": "gvQLC: Generate PrairieLearn Quiz"
       },
       {
         "command": "extension.askQuestion",
-        "title": "plQLC: New Practice Question"
+        "title": "gvQLC: New Practice Question"
       },
       {
         "command": "extension.answerQuestion",
-        "title": "plQLC: Answer Practice Questions"
+        "title": "gvQLC: Answer Practice Questions"
       },
       {
         "command": "extension.viewQuestionsAndAnswers",
-        "title": "plQLC: View viewQuestions And Answers "
+        "title": "gvQLC: View viewQuestions And Answers "
       }
     ],
     "menus": {
