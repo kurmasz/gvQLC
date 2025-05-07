@@ -838,12 +838,11 @@ function activate(context) {
             </style>
         </head>
         <body>
-            <h1>Add a Personalized Question</h1>
+            <h1>Add a Quiz Question</h1>
 
             <p><strong>Edit Highlighted Code:</strong></p>
             <textarea id="codeBlock" class="code-area">${selectedText}</textarea>
             <button onclick="copyAndPasteCode()">Copy & Paste Code</button>
-            <button onclick="saveCode()">Save Code</button>
             
             <div id="question-container">
                 <p><strong>Add Your Question:</strong></p>
@@ -1045,10 +1044,6 @@ function activate(context) {
     });
   });
 
-
-
-
-
   //Helper function to save data to a file
 
   async function saveDataToFile(filename, data) {
@@ -1061,8 +1056,6 @@ function activate(context) {
     const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
     await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data, null, 2)));
   }
-
-
 
 
   function openEditQuestionPanel(index) {
@@ -1131,10 +1124,36 @@ function activate(context) {
   const questionLabels = {};
 
 
+  let configData = null;
+  let studentNameMapping = {};
+
   let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
     if (personalizedQuestionsData.length === 0) {
       vscode.window.showInformationMessage('No personalized questions added yet!');
       return;
+    }
+
+    // Check if we have config data, if not prompt user to select config file
+    if (!configData) {
+      try {
+        const configFileUri = await vscode.window.showOpenDialog({
+          canSelectMany: false,
+          openLabel: 'Select Config File',
+          filters: {
+            'JSON Files': ['json']
+          }
+        });
+
+        if (configFileUri && configFileUri[0]) {
+          const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
+          configData = JSON.parse(fileData.toString());
+          studentNameMapping = configData.studentNameMapping || {};
+        } else {
+          vscode.window.showInformationMessage('No config file selected. Using default student names.');
+        }
+      } catch (error) {
+        vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+      }
     }
 
     // Create a Webview Panel for viewing personalized questions
@@ -1170,38 +1189,63 @@ function activate(context) {
       }
     };
 
+    // Function to map student name using the config
+    const mapStudentName = (name) => {
+      return studentNameMapping[name] || name;
+    };
+
     // Get all CIS students
     const allCISStudents = await getAllCISStudents();
 
-    // Calculate question counts per student
+    // Group questions by student name
+    const questionsByStudent = {};
+    personalizedQuestionsData.forEach((question) => {
+      const studentName = extractStudentName(question.filePath);
+      if (!questionsByStudent[studentName]) {
+        questionsByStudent[studentName] = [];
+      }
+      questionsByStudent[studentName].push(question);
+    });
+
+    // Calculate question counts per student and determine max questions
     const studentQuestionCounts = new Map();
     let maxQuestions = 0;
 
-    // Rebuild the questionLabels since we need it for the webview
-    const studentNumbers = new Map();
-    let studentCount = 0;
+    for (const studentName in questionsByStudent) {
+      const count = questionsByStudent[studentName].length;
+      studentQuestionCounts.set(studentName, count);
+      if (count > maxQuestions) {
+        maxQuestions = count;
+      }
+    }
+
+    // Assign labels to questions (1a, 1b, 2a, etc.)
     const questionLabels = {};
+    const studentNumbers = {};
+    let studentCounter = 1;
+    let questionIndex = 0;
 
-    personalizedQuestionsData.forEach((question, index) => {
-      const studentName = extractStudentName(question.filePath);
+    // Process students in alphabetical order for consistent numbering
+    const sortedStudentNames = Object.keys(questionsByStudent).sort();
 
-      if (!studentNumbers.has(studentName)) {
-        studentCount++;
-        studentNumbers.set(studentName, { count: 0, label: studentCount });
-      }
+    for (const studentName of sortedStudentNames) {
+      studentNumbers[studentName] = studentCounter;
+      const questions = questionsByStudent[studentName];
 
-      const studentInfo = studentNumbers.get(studentName);
-      studentInfo.count++;
-      const questionLabel = String.fromCharCode(96 + studentInfo.count); // Convert 1 -> 'a', 2 -> 'b', etc.
-      questionLabels[index] = `${studentInfo.label}${questionLabel}`;
+      questions.forEach((question, qIndex) => {
+        const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+        questionLabels[questionIndex] = questionLabel;
+        questionIndex++;
+      });
 
-      // Count questions per student for coloring
-      const count = studentQuestionCounts.get(studentName) || 0;
-      studentQuestionCounts.set(studentName, count + 1);
-      if (count + 1 > maxQuestions) {
-        maxQuestions = count + 1;
-      }
-    });
+      studentCounter++;
+    }
+
+    // Rebuild the questions array in the new order (grouped by student)
+    const reorderedQuestions = [];
+    for (const studentName of sortedStudentNames) {
+      reorderedQuestions.push(...questionsByStudent[studentName]);
+    }
 
     // Build the summary table HTML
     const buildSummaryTable = () => {
@@ -1215,30 +1259,33 @@ function activate(context) {
           color = 'yellow';
         }
 
+        // Use mapped name if available, otherwise use original
+        const displayName = mapStudentName(student);
+
         return `
-                <tr style="background-color: ${color}">
-                    <td>${student}</td>
-                    <td>${count}</td>
-                </tr>
-            `;
+            <tr style="background-color: ${color}">
+                <td>${displayName}</td>
+                <td>${count}</td>
+            </tr>
+        `;
       }).join('');
 
       return `
-            <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
-                <h2>Student Question Summary</h2>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Question Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${summaryRows}
-                    </tbody>
-                </table>
-            </div>
-        `;
+        <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+            <h2>Student Question Summary</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Question Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${summaryRows}
+                </tbody>
+            </table>
+        </div>
+    `;
     };
 
     // Determine color for question labels
@@ -1254,7 +1301,7 @@ function activate(context) {
     };
 
     // Build a table with editable fields, revert button, and a checkbox inside the Actions column
-    const questionsTable = personalizedQuestionsData.map((question, index) => {
+    const questionsTable = reorderedQuestions.map((question, index) => {
       const studentName = extractStudentName(question.filePath);
       const labelColor = getLabelColor(studentName);
 
@@ -1266,26 +1313,26 @@ function activate(context) {
       shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
 
       return `
-        <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
-            <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-            <td title="${question.filePath}">${shortenedFilePath}</td>
-            <td>
-                <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
-            </td>
-            <td>
-                <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
-            </td>
-            <td>
-                <button onclick="saveChanges(${index})">Save</button>
-                <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
-                <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
-                <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
-                <br>
-                <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
-                <label for="exclude-${index}">Exclude from Quiz</label>
-            </td>
-        </tr>
-        `;
+    <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
+        <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
+        <td title="${question.filePath}">${shortenedFilePath}</td>
+        <td>
+            <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
+        </td>
+        <td>
+            <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+        </td>
+        <td>
+            <button onclick="saveChanges(${index})">Save</button>
+            <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+            <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+            <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+            <br>
+            <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
+            <label for="exclude-${index}">Exclude from Quiz</label>
+        </td>
+    </tr>
+    `;
     }).join('');
 
     // HTML content for the Webview
@@ -1460,8 +1507,8 @@ function activate(context) {
 </head>
 <body>
     <div class="header-container">
-        <h1>All Personalized Questions</h1>
-        <div class="total-count">Total Questions: ${personalizedQuestionsData.length}</div>
+        <h1>All Quiz Questions</h1>
+        <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
     </div>
 
     <div class="controls-container">
@@ -1474,7 +1521,7 @@ function activate(context) {
     </div>
 
     ${buildSummaryTable()}
-    
+
     <table id="questionsTable">
         <thead>
             <tr>
@@ -1522,13 +1569,13 @@ function activate(context) {
 
     <script>
         const vscode = acquireVsCodeApi();
-        const originalData = JSON.parse(JSON.stringify(${JSON.stringify(personalizedQuestionsData)}));
+        const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
         const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
         
         // Pagination variables
         let currentPage = 1;
         let rowsPerPage = 15;
-        let totalPages = Math.ceil(${personalizedQuestionsData.length} / rowsPerPage);
+        let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
         let filteredRows = [];
         let isFiltered = false;
 
@@ -1655,7 +1702,7 @@ function activate(context) {
         // Change rows per page
         function changeRowsPerPage() {
             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${personalizedQuestionsData.length} / rowsPerPage);
+            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
             if (currentPage > totalPages) {
                 currentPage = totalPages;
             }
@@ -1690,12 +1737,11 @@ function activate(context) {
                     : 'No matches';
             }
             
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${personalizedQuestionsData.length} / rowsPerPage);
+            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
             currentPage = 1;
             initializeTable();
         }
 
-        // [Rest of your existing functions remain unchanged]
         function copyQuestionText(index) {
             const questionTextArea = document.getElementById('question-' + index);
             const selectedText = questionTextArea.value.substring(
@@ -1759,16 +1805,20 @@ function activate(context) {
     panel.webview.onDidReceiveMessage((message) => {
       if (message.type === 'saveChanges') {
         // Update the data in memory
-        personalizedQuestionsData[message.index].highlightedCode = message.updatedCode;
-        personalizedQuestionsData[message.index].text = message.updatedQuestion;
+        reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+        reorderedQuestions[message.index].text = message.updatedQuestion;
 
+        // Update the original data array as well
+        personalizedQuestionsData = reorderedQuestions;
         saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
         vscode.window.showInformationMessage('Changes saved successfully!');
       }
 
       if (message.type === 'toggleExclude') {
         // Save exclude checkbox status automatically
-        personalizedQuestionsData[message.index].excludeFromQuiz = message.excludeStatus;
+        reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+        // Update the original data array as well
+        personalizedQuestionsData = reorderedQuestions;
         saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
       }
 
@@ -1831,7 +1881,7 @@ function activate(context) {
 
       // Validate required fields in config
       const requiredFields = [
-        'title', 'topic', 'folder', 'pl_root', 'pl_question_root', 'pl_assessment_root',
+        'title', 'topic', 'quiz_directory_name', 'pl_root', 'pl_question_root', 'pl_assessment_root',
         'set', 'number', 'points_per_question', 'startDate', 'endDate', 'timeLimitMin',
         'daysForGrading', 'reviewEndDate', 'language'
       ];
@@ -1843,8 +1893,8 @@ function activate(context) {
       }
 
       // Construct paths
-      const questionsFolderPath = path.join(config.pl_root, 'questions', config.pl_question_root, config.folder);
-      const assessmentFolderPath = path.join(config.pl_root, config.pl_assessment_root, config.folder);
+      const questionsFolderPath = path.join(config.pl_root, 'questions', config.pl_question_root, config.quiz_directory_name);
+      const assessmentFolderPath = path.join(config.pl_root, config.pl_assessment_root, config.quiz_directory_name);
       const instructorFolderPath = path.join(questionsFolderPath, 'instructor');
       const instructorAssessmentPath = path.join(assessmentFolderPath, 'instructor');
 
@@ -1935,7 +1985,7 @@ ${question.text || 'No question text provided'}
           zones: [
             {
               questions: questions.map((q, index) => ({
-                id: `${config.pl_question_root}/${config.folder}/${studentName}/question${index + 1}`,
+                id: `${config.pl_question_root}/${config.quiz_directory_name}/${studentName}/question${index + 1}`,
                 points: config.points_per_question
               }))
             }
@@ -2027,7 +2077,7 @@ ${questionText}
           {
             title: "Combined Questions",
             questions: [{
-              id: `${config.pl_question_root}/${config.folder}/instructor/combined_questions`,
+              id: `${config.pl_question_root}/${config.quiz_directory_name}/instructor/combined_questions`,
               points: 0,
               description: "All student questions combined"
             }]
@@ -2051,6 +2101,57 @@ ${questionText}
     }
   );
 
+  let createConfigCommand = vscode.commands.registerCommand('extension.createConfig', async () => {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+      vscode.window.showErrorMessage('No workspace folder is open');
+      return;
+    }
+
+    const workspaceRoot = workspaceFolders[0].uri.fsPath;
+    const configPath = path.join(workspaceRoot, 'cqlc.config.json');
+
+    if (fs.existsSync(configPath)) {
+      const overwrite = await vscode.window.showWarningMessage(
+        'Config file already exists. Overwrite?',
+        { modal: true },
+        'Yes', 'No'
+      );
+
+      if (overwrite !== 'Yes') return;
+    }
+
+    const sampleConfig = {
+      "title": " eg: Variables",
+      "topic": "Variable",
+      "folder": "eg: Variables",
+      "pl_root": "/Users/benedictoseisefa/Desktop/pl-gvsu-cis500dev-master",
+      "pl_question_root": "PersonalQuiz",
+      "pl_assessment_root": "courseInstances/TemplateCourseInstance/assessments",
+      "set": "Custom Quiz",
+      "number": "2",
+      "points_per_question": 10,
+      "startDate": "2025-03-22T10:30:00",
+      "endDate": "2025-03-22T16:30:40",
+      "timeLimitMin": 30,
+      "daysForGrading": 7,
+      "reviewEndDate": "2025-04-21T23:59:59",
+      "password": "letMeIn",
+      "language": "python",
+      "studentNameMapping": {
+        "benedictosefaosei": "oseisefb@mail.gvsu.edu",
+        "william_williams": "williamsw@mail.gvsu.edu",
+        "sam": "sam.test@mail.gvsu.edu",
+        "antonio": "anto.test@ug.edu.gh",
+        "caleb": "caleb.test@ug.edu.gh"
+      }
+    }
+
+    fs.writeFileSync(configPath, JSON.stringify(sampleConfig, null, 2));
+    vscode.window.showInformationMessage(`Config file created at ${configPath}`);
+  });
+
+
   // Register all commands
   context.subscriptions.push(
     highlightAndCommentCommand,
@@ -2060,7 +2161,8 @@ ${questionText}
     viewQuestionsAndAnswersCommand,
     addPersonalizedQuestionCommand,
     viewPersonalizedQuestionsCommand,
-    generatePersonalizedQuizCommand
+    generatePersonalizedQuizCommand,
+    createConfigCommand
   );
 }
 
