@@ -45,7 +45,7 @@ We have two primary methods of collecting student submissions:
    1. For PrairieLearn assignments, we simply go to the `Downloads` tab for the assignment, then choose the `*_final_files.zip` option. Uncompressing this zip file produces a directory with the desired organization.
    2. For assignments managed using GitHub Classroom, we have a script that will clone each repository into the project directory. Each repository then becomes a subdirectory at the root level of the project. 
 
-**Review Submissions:** Once the code is collected, you can browse the files and leave feedback for the students. Our preferred method is to simply add comments with an easily searchable prefix (e.g., `# zk I like your approach here`)
+**Review Submissions:** Once the code is collected, you can browse the files and leave feedback for the students. Our preferred method is to simply add comments with an easily searchable prefix (e.g., `# zk I like your approach`)
 
 **Prepare Quiz Questions:** While reviewing the code, instructors can write a quiz question that specifically references a segment of code. To do this
   1. Highlight that segment of code in the editor.
@@ -67,6 +67,7 @@ We have two primary methods of collecting student submissions:
 # Feature Details
   1. Add Quiz Question
   2. View Quiz Questions
+  3. Generate PrairieLearn Quiz
 
   2. Ask Practice Question
   3. Answer Practice Question
@@ -75,7 +76,7 @@ We have two primary methods of collecting student submissions:
 
   7. Generate Quiz Questions
 
-## 1. Add Quiz Question
+### 1. Add Quiz Question
  1. Highlight the relevant code snippet in your editor (must be non-empty).
  2. Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "New Quiz Question". (Also available through Cmd+Shift+.)
  3. An interactive panel opens where you can:
@@ -90,22 +91,106 @@ Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "View Quiz Questi
   - A question number.  
      * The question number is of the format "1a". The number refers to the student (i.e., the questions for a given student all have the same number). The letter refers distinguishes between the questions for a given student (i.e., Student 3 will have questions 3a, 3b, 3c, etc.)  
      * The color of this cell shows how many questions the student has compared to other students.
+  - The source file. Long file paths are shortened. Hover over the shortened path to see the full path. 
+  - The code selection
+  - Several action buttons
 
-      - The source file location (shortened path)
-      - The actual code snippet referenced
-      - The full question text
-      - An "Exclude from Quiz" checkbox
-    - Interactive controls to:
-      - Edit question text or code snippet
-      - Delete unwanted questions
-      - Toggle exclusion from future quizzes
-  4. Key Notes:
-    - Changes save automatically when you close the panel
-    - Excluded questions remain stored but won't appear in generated quizzes
-    - Plain text display without extra formatting or metadata
+It is possible to make minor edits from this page. After making an edit, you can either `Save` or `Revert` the change. Closing the tab will save all changes. (So, be sure to use the `Revert` button when necessary.)
+
+If it is not easy to make the desired edits in the small boxes on this page, click the `Edit` button will open a new tab with larger text boxes for editing the question. Closing the tab will discard any unsaved changes.
+
+To exclude a question from a quiz, check `Exclude from Quiz`.
+
+### 3. Generate PrairieLearn Quiz
+
+`gvQLC` can automatically generate all the PrairieLearn files necessary to prepare a custom quiz (assessment) for each student. Doing this does require users to populate a config file.
+
+  1. If necessary, Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select `gvQLC: Generate Quiz Config".
+  2. Open and edit the config file. (See details below.)
+  3. Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "Generate PrairieLearn Quiz".
+  4. Select the config file when prompted. 
+
+At this point, `gvQLC` will 
+    - collect all non-excluded questions from `personalizedQuestions.json`
+    - Group them by student based on file paths
+    - Generate generate the necessary PrairieLearn questions and assessments. 
+
+The config file must specify a name for the directories containing this quiz and its questions. Let's suppose it is `customQuiz1`. Generating a PrairieLearn quiz will create the following files and directories: 
+   - A directory inside `questions` named `customQuiz1`
+   - A directory inside `customQuiz1` for each student
+   - A directory for each question placed inside each the appropriate student directory (containing the `question.html` and `info.json`).
+   - A directory inside `assessments` named `customQuiz1`
+   - A directory inside `assessments/customQuiz1` for each student (containing `infoAssessment.json`)
+
+The result is an assessment for each student, and each assessment contains the (non-excluded) questions for that student. The config file contains the information needed to set the access parameters for the quiz (start time, end time, time limit, password, etc.)
+ 
+
+#### PrairieLearn configuration file. 
+
+Below is a sample PrairieLearn configuration file:
+
+```json
+{
+    "title": "Mutual Exclusion",
+    "topic": "mutex",
+    "quiz_directory_name": "mutex1",
+    "pl_root": "/Users/schottj/CIS500/pl-umd-cis500",
+    "pl_question_root": "CustomQuizzes",
+    "pl_assessment_root": "courseInstances/Fa24/assessments",
+    "set": "Custom Quiz",
+    "number": "2",
+    "points_per_question": 10,
+    "startDate": "2025-03-22T10:30:00",
+    "endDate": "2025-03-22T16:30:40",
+    "timeLimitMin": 30,
+    "daysForGrading": 7,
+    "reviewEndDate": "2025-04-21T23:59:59",
+    "password": "letMeIn",
+    "language": "python"
+}
+```
+
+Details:
 
 
-### 2. Ask Practice Question
+| Field                 | Description                                                          | Example Value           | Required | Default |
+|-----------------------|----------------------------------------------------------------------|-------------------------|----------|---------|
+| `title`               | The displayed ("human-readable") title of the quiz or assessment     | Mutual Exclusion        | yes      |         |
+| `topic`               | The PL topic associated with the quiz                                | mutex                   | yes      |         |
+| `quiz_directory_name` | The directories that contain the assessments and questions           | mutex1                  | yes      |         |
+| `pl_root`             | Root of the PL repository for this course                            | /Users/schottj/CIS500/pl-umd-cis500  | yes | |
+| `pl_question_root`    | Subdirectory of `questions` that will contain `gvQLC` questions      | CustomQuizzes           | no       | `.`     |
+| `pl_assessment_root`  | Path to the `assessment` for the current instance of the course      | courseInstances/Fa24/assessments | yes |     |
+| `set`                 | Name of the PL assessment set                                        | Custom Quiz             | no       | "Quiz"  |
+| `number`              | Number of questions in the quiz                                      | 2                       | yes      |         |
+| `points_per_question` | Points assigned to each question                                     | 10                      | no       |  10     |
+| `startDate`           | Start date and time for the quiz                                     | 2025-03-22T10:30:00     | yes      |         |
+| `endDate`             | End date and time for the quiz                                       | 2025-03-22T16:30:40     | yes      |         |
+| `timeLimitMin`        | Time limit for completing the quiz in minutes                        | 30                      | no       | `none`  |
+| `daysForGrading`      | Number of days after `endDate` that the quiz results are made available to students  | 7       | no       | `none`  |
+| `reviewEndDate`       | Deadline for reviewing the quiz results                              | 2025-04-21T23:59:59     | no       | one week  |
+| `password`            | Password required to access the quiz.                                | letMeIn                 | no       | `none`  |
+| `language`            | Programming language used for quiz questions.                        | "python"                | no       | `none`  |
+
+
+Notes:
+  * If `pl_question_root` is not specified, then the quiz directory will be placed in `questions`.
+  * If `timeLimitMin` is not specified, then the `allowAccess` rule will not have a `timeLimitMin` field.
+  * If `password` is not specified, then the `allowAccess` rule will not have a `password` field.
+  * if `language` is not specified, then code blocks will not have any language identified.
+
+When generating custom PrairieLearn quizzes, `gvQLC` will place two `allowAccess` rules in `infoAssessment.json`. 
+  * The first rule provides students access to the quiz. 
+  * The second rule provides students access to review their graded quiz.
+
+Each student will have access to only his or her custom quiz. (In other words, students can't see each other's quizzes.)
+  * If `daysForGrading` is not specified, then the second, "review" access rule is omitted.
+  * If `reviewEndDate` is not specified, it will be set to one week after the review period opens.
+
+
+
+
+### 4. Ask Practice Question
 - **How to Use**:
   1. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P) and select "Ask Practice Question".
   2. Select a code snippet in the active editor (must be a valid, non-empty selection).
@@ -177,73 +262,6 @@ Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "View Quiz Questi
 
 
 ### 7. Generate Quiz Questions
-- **How to Use**:
-  1. Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "Generate Personalized Quiz".
-  2. Select a config file (cqlc.config.json) when prompted. Below is a sample of the config file
-  3. The system automatically:
-    - Collects all non-excluded questions from personalizedQuestions.json
-    - Groups them by student based on file paths
-    - Generates individual quiz folders for each student
-  4. What Gets Created:
-    - For each student:
-      - A question bank folder with:
-        - question.html files (containing question text + code snippets)
-        - info.json files (with unique IDs and basic metadata)
-      - An assessment folder with:
-        - infoAssessment.json (quiz settings like time limits and access dates)
-  5. Configuration File Sample
-      - Below is an example configuration file used in the extension:
-
-      ```json
-      {
-          "title": "Dass",
-          "topic": "dayyy",
-          "folder": "osei",
-          "pl_root": "/Users/benedictoseisefa/Desktop/pl-gvsu-cis500dev-master",
-          "pl_question_root": "PersonalQuiz",
-          "pl_assessment_root": "courseInstances/TemplateCourseInstance/assessments",
-          "set": "Custom Quiz",
-          "number": "2",
-          "points_per_question": 10,
-          "startDate": "2025-03-22T10:30:00",
-          "endDate": "2025-03-22T16:30:40",
-          "timeLimitMin": 30,
-          "daysForGrading": 7,
-          "reviewEndDate": "2025-04-21T23:59:59",
-          "password": "letMeIn",
-          "language": "python"
-      }
-
-    - Configuration Fields Explained
-
-      | Field                | Description                                           | Example Value |
-      |----------------------|-------------------------------------------------------|--------------|
-      | `title`             | The title of the quiz or assessment.                  | "Dass"       |
-      | `topic`             | The topic associated with the quiz.                    | "dayyy"      |
-      | `folder`            | The folder where the quiz is stored.                   | "osei"       |
-      | `pl_root`           | Root directory for quiz configurations.                | "/Users/.../pl-gvsu-cis500dev-master" |
-      | `pl_question_root`  | Directory for personal quiz questions.                 | "PersonalQuiz" |
-      | `pl_assessment_root`| Path to assessment storage within a course.            | "courseInstances/TemplateCourseInstance/assessments" |
-      | `set`               | Type of quiz set.                                      | "Custom Quiz" |
-      | `number`            | Number of questions in the quiz.                       | 2            |
-      | `points_per_question` | Points assigned to each question.                   | 10           |
-      | `startDate`         | Start date and time for the quiz.                      | "2025-03-22T10:30:00" |
-      | `endDate`           | End date and time for the quiz.                        | "2025-03-22T16:30:40" |
-      | `timeLimitMin`      | Time limit for completing the quiz in minutes.         | 30           |
-      | `daysForGrading`    | Number of days allowed for grading.                    | 7            |
-      | `reviewEndDate`     | Deadline for reviewing the quiz results.               | "2025-04-21T23:59:59" |
-      | `password`          | Password required to access the quiz.                  | "letMeIn"    |
-      | `language`          | Programming language used for quiz questions.          | "python"     |
-
-
-  6. Output Location:
-    - Creates structured folders under:
-      - prairielearn/questions/ (for question content)
-      - prairielearn/assessments/ (for quiz settings)
-    - Important Notes:
-      - Only includes questions NOT marked "exclude from quiz"
-      - Preserves original code formatting from student submissions
-
 
 
 ---
