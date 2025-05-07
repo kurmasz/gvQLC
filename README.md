@@ -1,25 +1,109 @@
-# Code Review Extension
+# gvQLC
 
-Welcome to the **Prairielearn Code Review Extension**! The Code Review Extension is a helpful Visual Studio Code (VS Code) tool built for instructors, teaching assistants, and developers who use PrairieLearn. It makes giving feedback on code easier by letting educators highlight sections, ask questions, and leave comments right inside VS Code. Students and developers can then respond, discuss improvements, and learn from the feedback. The extension also helps instructors quickly turn code reviews into quizzes and assignments on PrairieLearn, saving time and making lessons more interactive—all without switching between different apps.
+The `gvQLC` extension allows instructors to prepare custom quiz questions for each student based specifically on code he or she submits. 
 
----
+In particular, this extension allows instructors to 
+   1. highlight a segment of submitted code, 
+   2. select the `gvQLC: New Quiz Question` command, then 
+   3. enter a question about the selected code in Markdown format. 
 
-## **Features**
+After preparing one or more questions for each student, `gvQLC` can then prepare a quiz customized for each student, either in PrairieLearn format, or as a set of `.pdf` files that can be printed and distributed.
 
-### How to Use The Extension:
-  1. Highlight a code snippet in the editor.
+## Motivation 
+
+This extension is motivated by [Teemu Lehtinen's Ph.D. dissertation](https://aaltodoc.aalto.fi/items/f3d7183b-fd7f-4ff7-b624-89af3c5aa118). His work uses the phrase <em>Q</em>uestions over <em>L</em>earner's <em>Code</em>, which is the the `QLC` in `gvQLC`.
+
+It is possible for students to submit code that is functionally correct, even though the students has not met assignment's learning goals. This can happen for several reasons: Sometimes tutors give too much (or the wrong type) of help. Sometimes, student make seemingly random changes to the code until it works. Sometimes students cheat.
+
+The "gold standard" for addressing this issue is to give students a customized, oral exam over the code. Unfortunately, this process does not scale well: It is not practical to administer such an exam to each student in a large course. 
+
+For small- and medium-sized courses, many instructors take the time to read through and comment on submitted code. We believe that, with the right tools (e.g., `gvQLC`), instructors can efficiently write custom questions while they are reading the code and preparing feedback.
+
+To be clear: We believe that the process of creating custom quiz questions for students can be reasonably efficient
+   * for courses/sections of up to about 40 students
+   * _if_ the instructor has already allocated time to review and comment on all student submissions.
+The approach proposed here will be significantly larger time burden in very large courses, or for courses where the instructor has not already allocated time for reviewing code (as opposed to allowing code to be completely auto-graded).
+
+# Workflow / Basic Usage
+
+**Collect Submissions:** Begin by collecting all submissions into a single VS Code project. Each student's code should be in a subdirectory at the root of the project.  For example:
+
+<pre>
+* Project1
+  * smithj
+    * Character.java
+    * Game.java
+  * jonesb
+    * Character.java
+    * Game.java
+  * patilr
+    * Character.java
+    * Game.java
+</pre>
+
+We have two primary methods of collecting student submissions:
+   1. For PrairieLearn assignments, we simply go to the `Downloads` tab for the assignment, then choose the `*_final_files.zip` option. Uncompressing this zip file produces a directory with the desired organization.
+   2. For assignments managed using GitHub Classroom, we have a script that will clone each repository into the project directory. Each repository then becomes a subdirectory at the root level of the project. 
+
+**Review Submissions:** Once the code is collected, you can browse the files and leave feedback for the students. Our preferred method is to simply add comments with an easily searchable prefix (e.g., `# zk I like your approach here`)
+
+**Prepare Quiz Questions:** While reviewing the code, instructors can write a quiz question that specifically references a segment of code. To do this
+  1. Highlight that segment of code in the editor.
+  2. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P) and select `gvQLC: New Quiz Question". (Or use the short-cut: Cmd+Shift+.)
+  3. Add your question text in Markdown format
+     * You can modify the selected code (e.g., if you want to draw attention to a specific line), or
+     * You can select, copy and paste part of the selected code into the question text.
+  4. Press `Submit`
+
+![New Question Form](newQuestion.png)
+
+**Prepare a Quiz**: To prepare a quiz:
+  1. From the Command Palette, select `gvQLC: View Quiz Questions`
+     * From here you can edit and/or exclude questions.
+     * The colors in the leftmost column indicate the number of questions for that student. Use this if you want to be sure each quiz has the same number of questions.
+  2. Prepare a quiz configuration file.  (See details below.)
+  3. From the command Pallette, select `gvQLC: Generate PrairieLearn Quiz`, then select the config file. The command will place the questions and assessments into the chosen PrairieLearn repository.   
+
+# Feature Details
+  1. Add Quiz Question
+  2. View Quiz Questions
+
   2. Ask Practice Question
   3. Answer Practice Question
   4. View Practice Questions and Answers
-  5. Add Quiz Question
-  6. View Quiz Questions
+ 
+
   7. Generate Quiz Questions
 
+## 1. Add Quiz Question
+ 1. Highlight the relevant code snippet in your editor (must be non-empty).
+ 2. Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "New Quiz Question". (Also available through Cmd+Shift+.)
+ 3. An interactive panel opens where you can:
+    - Edit the selected code. (For example, you may want to add a comment to highlight a particular aspect of the code.)
+    - Write a question in Markdown format.
+    - Write an answer. (This is optional. It is mainly useful if the question is computational in nature, or a different person is grading the quiz.) 
+    - Copy and Paste code into the question text. Sometimes, is is helpful to place a copy of the selected code into the question. Rather than having to select, copy, and paste in three separate steps, you can simply select the desired snipped and press the "Copy & Paste Code" button. The selected snippet will then be inserted into the question and marked up as code.
 
-### 1. Highlight a code snippet in the editor.
-- **How to Use**:
-  1. The "Highlight a Code Snippet in the Editor" feature works by first validating an active text editor and a non-empty selection. When triggered, it captures the selected code range and applies a visual highlight using VS Code’s TextEditorDecorationType. The highlight persists in the editor but does not modify the actual file content, serving purely as a temporary visual marker for user reference. The feature relies on VS Code’s built-in decoration API to manage the highlight’s appearance and removal.
-  
+### 2. View Quiz Questions
+
+Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "View Quiz Questions". (Also available through Cmd+Shift+V.) A panel opens showing all saved quiz questions in a table format. Each row contains:
+  - A question number.  
+     * The question number is of the format "1a". The number refers to the student (i.e., the questions for a given student all have the same number). The letter refers distinguishes between the questions for a given student (i.e., Student 3 will have questions 3a, 3b, 3c, etc.)  
+     * The color of this cell shows how many questions the student has compared to other students.
+
+      - The source file location (shortened path)
+      - The actual code snippet referenced
+      - The full question text
+      - An "Exclude from Quiz" checkbox
+    - Interactive controls to:
+      - Edit question text or code snippet
+      - Delete unwanted questions
+      - Toggle exclusion from future quizzes
+  4. Key Notes:
+    - Changes save automatically when you close the panel
+    - Excluded questions remain stored but won't appear in generated quizzes
+    - Plain text display without extra formatting or metadata
+
 
 ### 2. Ask Practice Question
 - **How to Use**:
@@ -88,46 +172,9 @@ Welcome to the **Prairielearn Code Review Extension**! The Code Review Extension
         - Student-specific files (in individual folders)
       - Maintains original formatting of questions and answers
 
-### 5. Add Quiz Question
-- **How to Use**:
-  1. Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "Add Quiz Question".
-  2. Highlight the relevant code snippet in your editor (must be non-empty).
-  3. An interactive panel opens with:
-    - Editable code display (modify the snippet before creating question)
-    - Question input field (supports markdown formatting)
-    - Quick-action buttons:
-      - "Copy Code to Question" (auto-formats with code fences)
-      - "Save as Draft" (stores unfinished questions)
-  **What Happens:**
-    1. When you use the "Add Quiz Question" feature:
-      - Your selected code snippet is captured and displayed in an editable panel.
-      - Your question text is saved with:
-        - The original file path
-        - Exact code range (start/end lines)
-        - The highlighted code itself
-      - The question gets stored in personalizedQuestions.json in your workspace.
-      - You can later:
-        - View all questions using "View Personalized Questions"
-        - Include them in quizzes with "Generate Personalized Quiz"
 
-### 6. View Quiz Questions
-- **How to Use**:
-  1. Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "View Personalized Questions".
-  2. A panel opens showing all saved quiz questions in a table format.
-  3. What You See:
-    - Each question displays:
-      - The source file location (shortened path)
-      - The actual code snippet referenced
-      - The full question text
-      - An "Exclude from Quiz" checkbox
-    - Interactive controls to:
-      - Edit question text or code snippet
-      - Delete unwanted questions
-      - Toggle exclusion from future quizzes
-  4. Key Notes:
-    - Changes save automatically when you close the panel
-    - Excluded questions remain stored but won't appear in generated quizzes
-    - Plain text display without extra formatting or metadata
+
+
 
 ### 7. Generate Quiz Questions
 - **How to Use**:

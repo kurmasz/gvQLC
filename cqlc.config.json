@@ -21,5 +21,6 @@
         "sam": "sam.test@mail.gvsu.edu",
         "antonio": "anto.test@ug.edu.gh",
         "caleb": "caleb.test@ug.edu.gh"
-    }
+    },
+    "submissionFolder": "cis371_server" 
 }
