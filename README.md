@@ -105,7 +105,9 @@ To exclude a question from a quiz, check `Exclude from Quiz`.
 
 `gvQLC` can automatically generate all the PrairieLearn files necessary to prepare a custom quiz (assessment) for each student. Doing this does require users to populate a config file.
 
-  1. If necessary, Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select `gvQLC: Generate Quiz Config".
+  1. If necessary, Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select `gvQLC: Generate Sample Config File`.
+     * This will create a file at named `cqlc.config.json` at the root of the project.
+     * It may be easier to copy the config file from a previous assignment.
   2. Open and edit the config file. (See details below.)
   3. Open the Command Palette (Ctrl+Shift+P/Cmd+Shift+P) and select "Generate PrairieLearn Quiz".
   4. Select the config file when prompted. 
@@ -188,81 +190,31 @@ Each student will have access to only his or her custom quiz. (In other words, s
   * If `reviewEndDate` is not specified, it will be set to one week after the review period opens.
 
 
-
-
 ### 4. Ask Practice Question
-- **How to Use**:
-  1. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P) and select "Ask Practice Question".
-  2. Select a code snippet in the active editor (must be a valid, non-empty selection).
+
+In addition to writing formal quiz questions, instructors can also prepare custom, informal practice questions for students. 
+  1. Select a code snippet in the active editor (must be a valid, non-empty selection).
+  2. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P) and select "New Practice Question".
   3. A panel will open where you can:
      - View the selected code (editable before submission).
      - Type your question about the code.
      - Submit the question, which will be saved in questionsData.json.
-  4. The question will be stored with metadata including:
-     - The file path where the question was asked.
-     - The exact code range (line numbers and characters).
-     - The highlighted code snippet.
-     - The question text.
 
-  - **Note**
-    - Questions can later be answered via the "Answer Question" command.
-    - All questions are visible in the "View Questions and Answers" panel.
-    - Works per-student if used in a structured workspace (e.g., CIS500/student_name/).
-  
-
-### 3. Answer Practice Question
-- **How to Use**:
-  1. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P) and select "Answer Practice Question".
-  2. A list of all unanswered questions will appear in a Quick Pick menu.
-  3. Select a question to answer.
-  4. A panel will open showing:
-   - The original question.
-   - The highlighted code snippet.
-   - A text area to type your answer.
-   - A copy and paste feature that can copy the entire highlighted code snippet and paste it in the text box
-  5. Submit your answer to save it.
-  - **What Happens:**
-    - The answer is stored with the question in questionsData.json.
-    - The question is marked as answered and can be viewed later.
-    - If the workspace has student-specific folders (e.g., CIS500/student_name/), the answer is saved in both:
-    - The global questionsData.json (for instructor reference).
-    - The student's questionsData.json (for personalized tracking).
-  - **Notes:**
-    - Answers can be viewed or exported via "View Questions and Answers".
-    - Supports rich text formatting in answers.
-    - Questions can be filtered by student or file in structured workspaces.
-
-### 4. View Practice Questions and Answers
-- **How to Use**:
-  1. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P) and select "View Questions and Answers".
-  2. A webview panel will open displaying:
-    - A sortable table of all questions and answers.
-    - Columns showing:
-      - Question number
-      - Source file path (shortened for readability)
-      - Highlighted code snippet
-      - Full question text
-      - Given answer (if available)
-  3. Key Features:
-    - Export Capability: Click the "Export to CSV" button to save all Q&A data for record-keeping.
-    - Smart Filtering:
-      - Questions are automatically grouped by student in structured workspaces
-      - Unanswered questions appear highlighted
-    - Code Display:
-      - Syntax-highlighted code snippets
-      - Full code visibility with horizontal scrolling
-    - Data Management:
-      - Pulls from both:
-        - Central questionsData.json (all questions)
-        - Student-specific files (in individual folders)
-      - Maintains original formatting of questions and answers
+The question will be stored in the student's directory in a file named `questionsData.json`. 
 
 
+### 5. Answer Practice Question
 
+To view and answer practice questions, students 
+1. Open a project in VS Code with `questionsData.json` in the root of the project.
+2. Open the Command Palette (Ctrl+Shift+P or Cmd+Shift+P) and select "Answer Practice Question".
+3. Select one of the questions from the drop-down.
 
+The answer is then saved in `questionsData.json`. 
 
-### 7. Generate Quiz Questions
-
+`gvQLC` does not provide any means for evaluating or providing feedback on practice questions. 
+If evaluation and/or feedback is desired, make a "quiz". (At the moment there is not a mechanism to define
+two separate problem sets in one assignment.)
 
 ---
 
