@@ -81,9 +81,6 @@ function extractStudentName(filePath, config) {
 }
 
 
-
-
-
 function generateQuestionHTML(questionData, language) {
   return `<pl-question-panel>
 <markdown>
@@ -339,7 +336,7 @@ function activate(context) {
   });
 
 
-  // Helper function to get the base workspace directory (CIS500_P1)
+  // Helper function to get the base workspace directory (eg: CIS500_P1)
   function getBaseWorkspaceDirectory() {
     if (vscode.workspace.workspaceFolders) {
       return vscode.workspace.workspaceFolders[0].uri.fsPath;
@@ -640,9 +637,6 @@ function activate(context) {
     questionsData.length = 0;
     questionsData.push(...uniqueQuestions);
 
-    // Rest of your existing viewQuestionsAndAnswersCommand implementation...
-    // (the Webview panel creation and HTML generation)
-
     // Create a Webview Panel for viewing questions and answers
     const panel = vscode.window.createWebviewPanel(
       'viewQuestionsAndAnswers', // Panel ID
@@ -792,7 +786,7 @@ function activate(context) {
     // Create a Webview Panel for adding a personalized question
     const panel = vscode.window.createWebviewPanel(
       'addPersonalizedQuestion',
-      'Add Personalized Question',
+      'Add Quiz Question',
       vscode.ViewColumn.One,
       { enableScripts: true }
     );
@@ -804,7 +798,7 @@ function activate(context) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Add Personalized Question</title>
+            <title>Add Quiz Question</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 textarea { width: 100%; font-size: 14px; margin-bottom: 10px; display: block; }
@@ -1127,6 +1121,7 @@ function activate(context) {
   let configData = null;
   let studentNameMapping = {};
 
+
   let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
     if (personalizedQuestionsData.length === 0) {
       vscode.window.showInformationMessage('No personalized questions added yet!');
@@ -1159,35 +1154,125 @@ function activate(context) {
     // Create a Webview Panel for viewing personalized questions
     const panel = vscode.window.createWebviewPanel(
       'viewPersonalizedQuestions',
-      'View Personalized Questions',
+      'View Quiz Questions',
       vscode.ViewColumn.One,
       { enableScripts: true }
     );
 
-    // Function to get all CIS students from the workspace
+
+    // const getAllCISStudents = async () => {
+    //   try {
+    //     const workspaceFolders = vscode.workspace.workspaceFolders;
+    //     if (!workspaceFolders) return [];
+
+    //     const cisStudents = new Set();
+
+    //     // Only add folder names under CIS directories
+    //     for (const folder of workspaceFolders) {
+    //       const folderUri = folder.uri;
+    //       if (folderUri.fsPath.includes("CIS")) {
+    //         const files = await vscode.workspace.fs.readDirectory(folderUri);
+    //         for (const [name, type] of files) {
+    //           if (type === vscode.FileType.Directory) {
+    //             cisStudents.add(name);
+    //           }
+    //         }
+    //       }
+    //     }
+    //     return Array.from(cisStudents).sort();
+    //   } catch (error) {
+    //     console.error("Error fetching CIS students:", error);
+    //     return [];
+    //   }
+    // };
+
+
+
+
     const getAllCISStudents = async () => {
       try {
         const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) return [];
+        if (!workspaceFolders || !configData || !configData.quiz_directory_name) return [];
 
-        const cisStudents = new Set();
+        const students = new Set();
+        const quizDirName = configData.quiz_directory_name;
+
+        // First try: Look for quiz directory directly in workspace folders
         for (const folder of workspaceFolders) {
           const folderUri = folder.uri;
-          if (folderUri.fsPath.includes("CIS")) {
+
+          // Case 1: The workspace folder itself is the quiz directory
+          if (folderUri.path.split('/').pop() === quizDirName) {
             const files = await vscode.workspace.fs.readDirectory(folderUri);
             for (const [name, type] of files) {
               if (type === vscode.FileType.Directory) {
-                cisStudents.add(name);
+                students.add(name);
+              }
+            }
+            continue;
+          }
+
+          // Case 2: Quiz directory is a subfolder
+          const files = await vscode.workspace.fs.readDirectory(folderUri);
+          for (const [name, type] of files) {
+            if (type === vscode.FileType.Directory && name === quizDirName) {
+              const quizDirUri = vscode.Uri.joinPath(folderUri, name);
+              const studentFolders = await vscode.workspace.fs.readDirectory(quizDirUri);
+
+              for (const [studentName, studentType] of studentFolders) {
+                if (studentType === vscode.FileType.Directory) {
+                  students.add(studentName);
+                }
               }
             }
           }
         }
-        return Array.from(cisStudents);
+
+        // Second try: Recursive search if not found directly
+        if (students.size === 0) {
+          for (const folder of workspaceFolders) {
+            const found = await findStudentFoldersRecursive(folder.uri, quizDirName);
+            found.forEach(student => students.add(student));
+          }
+        }
+
+        return Array.from(students).sort();
       } catch (error) {
-        console.error("Error fetching CIS students:", error);
+        console.error("Error fetching students:", error);
         return [];
       }
     };
+
+    // Helper function for recursive search
+    async function findStudentFoldersRecursive(uri, quizDirName) {
+      const students = new Set();
+      try {
+        const files = await vscode.workspace.fs.readDirectory(uri);
+
+        for (const [name, type] of files) {
+          if (type === vscode.FileType.Directory) {
+            // If this is the quiz directory, add all its subdirectories as students
+            if (name === quizDirName) {
+              const studentFolders = await vscode.workspace.fs.readDirectory(vscode.Uri.joinPath(uri, name));
+              for (const [studentName, studentType] of studentFolders) {
+                if (studentType === vscode.FileType.Directory) {
+                  students.add(studentName);
+                }
+              }
+            }
+            // Otherwise search deeper
+            else {
+              const found = await findStudentFoldersRecursive(vscode.Uri.joinPath(uri, name), quizDirName);
+              found.forEach(student => students.add(student));
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error searching ${uri.fsPath}:`, error);
+      }
+      return Array.from(students);
+    }
+
 
     // Function to map student name using the config
     const mapStudentName = (name) => {
@@ -1247,45 +1332,55 @@ function activate(context) {
       reorderedQuestions.push(...questionsByStudent[studentName]);
     }
 
+
+
     // Build the summary table HTML
     const buildSummaryTable = () => {
-      const summaryRows = allCISStudents.map(student => {
-        const count = studentQuestionCounts.get(student) || 0;
-        let color = 'red'; // default for zero questions
+      // Get all unique student names (from both questions and folders)
+      const allStudents = Array.from(new Set([
+        ...Object.keys(questionsByStudent),
+        ...allCISStudents
+      ])).sort();
 
+      const summaryRows = allStudents.map(student => {
+        const count = studentQuestionCounts.get(student) || 0;
+        const hasQuestions = count > 0;
+
+        let color = 'red'; // default color for zero questions
         if (count === maxQuestions && maxQuestions > 0) {
           color = 'green';
         } else if (count > 0 && count < maxQuestions) {
           color = 'yellow';
         }
 
-        // Use mapped name if available, otherwise use original
         const displayName = mapStudentName(student);
 
         return `
-            <tr style="background-color: ${color}">
-                <td>${displayName}</td>
-                <td>${count}</td>
-            </tr>
-        `;
+      <tr style="background-color: ${color}">
+        <td>${displayName}</td>
+        <td>${count}</td>
+        <td>${hasQuestions ? '✓' : '✗'}</td>
+      </tr>
+    `;
       }).join('');
 
       return `
-        <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
-            <h2>Student Question Summary</h2>
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th>Student Name</th>
-                        <th>Question Count</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${summaryRows}
-                </tbody>
-            </table>
-        </div>
-    `;
+    <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+      <h2>Student Question Summary</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Question Count</th>
+            <th>Has Questions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${summaryRows}
+        </tbody>
+      </table>
+    </div>
+  `;
     };
 
     // Determine color for question labels
@@ -1337,469 +1432,469 @@ function activate(context) {
 
     // HTML content for the Webview
     panel.webview.html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Personalized Questions</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px; 
-            background-color:rgb(255, 255, 255);
-            color: black;
-        }
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .controls-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .search-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px; 
-            background-color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: left; 
-        }
-        th { 
-            background-color: #007acc; 
-            color: white; 
-            position: sticky;
-            top: 0;
-        }
-        textarea { 
-            width: 100%; 
-            height: 100px; 
-            font-size: 14px; 
-            border: 1px solid #ccc; 
-            padding: 8px; 
-            resize: vertical;
-        }
-        .code-area { 
-            background-color: #1e1e1e; 
-            color: #d4d4d4; 
-            font-family: monospace; 
-        }
-        .question-area { 
-            background-color: #f9f9f9; 
-            color: #333; 
-            font-family: sans-serif; 
-        }
-        button { 
-            padding: 8px 12px; 
-            margin: 2px; 
-            cursor: pointer; 
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        button:hover {
-            opacity: 0.9;
-        }
-        #refreshBtn {
-            background-color: #4CAF50; 
-            color: white;
-        }
-        #toggleSummaryBtn {
-            background-color: #673AB7;
-            color: white;
-        }
-        input[type="text"] {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 250px;
-        }
-        input[type="checkbox"] { 
-            transform: scale(1.2); 
-            margin-top: 5px; 
-        }
-        #summaryTableContainer table th { 
-            background-color: #007acc; 
-            color: white; 
-        }
-        #summaryTableContainer table td { 
-            border: 1px solid #ddd; 
-            padding: 8px; 
-        }
-        .total-count {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .pagination-controls {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .page-btn {
-            padding: 5px 10px;
-            border: 1px solid #ddd;
-            background-color: white;
-            cursor: pointer;
-            border-radius: 4px;
-            min-width: 30px;
-            text-align: center;
-        }
-        .page-btn:hover:not(.active):not(:disabled) {
-            background-color: #f1f1f1;
-        }
-        .page-btn.active {
-            background-color: #007acc;
-            color: white;
-            border-color: #007acc;
-        }
-        .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .page-jump {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .page-jump input {
-            width: 50px;
-            padding: 5px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .rows-per-page {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .rows-per-page select {
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-    </style>
-</head>
-<body>
-    <div class="header-container">
-        <h1>All Quiz Questions</h1>
-        <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
-    </div>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>View Quiz Questions</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              background-color:rgb(255, 255, 255);
+              color: black;
+          }
+          .header-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+              flex-wrap: wrap;
+          }
+          .controls-container {
+              display: flex;
+              gap: 10px;
+              margin-bottom: 20px;
+              align-items: center;
+              flex-wrap: wrap;
+          }
+          .search-container {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+          }
+          table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              background-color: white;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          th, td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+          }
+          th {
+              background-color: #007acc;
+              color: white;
+              position: sticky;
+              top: 0;
+          }
+          textarea {
+              width: 100%;
+              height: 100px;
+              font-size: 14px;
+              border: 1px solid #ccc;
+              padding: 8px;
+              resize: vertical;
+          }
+          .code-area {
+              background-color: #1e1e1e;
+              color: #d4d4d4;
+              font-family: monospace;
+          }
+          .question-area {
+              background-color: #f9f9f9;
+              color: #333;
+              font-family: sans-serif;
+          }
+          button {
+              padding: 8px 12px;
+              margin: 2px;
+              cursor: pointer;
+              border: none;
+              border-radius: 4px;
+              font-weight: bold;
+          }
+          button:hover {
+              opacity: 0.9;
+          }
+          #refreshBtn {
+              background-color: #4CAF50;
+              color: white;
+          }
+          #toggleSummaryBtn {
+              background-color: #673AB7;
+              color: white;
+          }
+          input[type="text"] {
+              padding: 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              width: 250px;
+          }
+          input[type="checkbox"] {
+              transform: scale(1.2);
+              margin-top: 5px;
+          }
+          #summaryTableContainer table th {
+              background-color: #007acc;
+              color: white;
+          }
+          #summaryTableContainer table td {
+              border: 1px solid #ddd;
+              padding: 8px;
+          }
+          .total-count {
+              font-size: 18px;
+              font-weight: bold;
+              color: #333;
+          }
+          .pagination-container {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin-top: 20px;
+              gap: 10px;
+              flex-wrap: wrap;
+          }
+          .pagination-controls {
+              display: flex;
+              gap: 5px;
+              align-items: center;
+          }
+          .page-btn {
+              padding: 5px 10px;
+              border: 1px solid #ddd;
+              background-color: white;
+              cursor: pointer;
+              border-radius: 4px;
+              min-width: 30px;
+              text-align: center;
+          }
+          .page-btn:hover:not(.active):not(:disabled) {
+              background-color: #f1f1f1;
+          }
+          .page-btn.active {
+              background-color: #007acc;
+              color: white;
+              border-color: #007acc;
+          }
+          .page-btn:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+          }
+          .page-jump {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+          }
+          .page-jump input {
+              width: 50px;
+              padding: 5px;
+              text-align: center;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+          }
+          .rows-per-page {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+          }
+          .rows-per-page select {
+              padding: 5px;
+              border-radius: 4px;
+              border: 1px solid #ddd;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="header-container">
+          <h1>All Quiz Questions</h1>
+          <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+      </div>
 
-    <div class="controls-container">
-        <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
-        <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
-            <span id="filterCount"></span>
-        </div>
-    </div>
+      <div class="controls-container">
+          <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
+          <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
+          <div class="search-container">
+              <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+              <span id="filterCount"></span>
+          </div>
+      </div>
 
-    ${buildSummaryTable()}
+      ${buildSummaryTable()}
 
-    <table id="questionsTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>File</th>
-                <th>Highlighted Code</th>
-                <th>Question</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="questionsTableBody">
-            ${questionsTable}
-        </tbody>
-    </table>
+      <table id="questionsTable">
+          <thead>
+              <tr>
+                  <th>#</th>
+                  <th>File</th>
+                  <th>Highlighted Code</th>
+                  <th>Question</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody id="questionsTableBody">
+              ${questionsTable}
+          </tbody>
+      </table>
 
-    <div class="pagination-container">
-        <div class="pagination-controls">
-            <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
-            <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
-            
-            <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
-            
-            <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
-            <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
-        </div>
-        
-        <div class="page-jump">
-            <span>Go to:</span>
-            <input type="number" id="pageJumpInput" min="1" value="1">
-            <button onclick="jumpToPage()">Go</button>
-            <span>of <span id="totalPagesDisplay">1</span></span>
-        </div>
-        
-        <div class="rows-per-page">
-            <label for="rowsPerPage">Rows per page:</label>
-            <select id="rowsPerPage" onchange="changeRowsPerPage()">
-                <option value="10">10</option>
-                <option value="15" selected>15</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-            </select>
-        </div>
-    </div>
+      <div class="pagination-container">
+          <div class="pagination-controls">
+              <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
+              <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
 
-    <script>
-        const vscode = acquireVsCodeApi();
-        const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
-        const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
-        
-        // Pagination variables
-        let currentPage = 1;
-        let rowsPerPage = 15;
-        let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
-        let filteredRows = [];
-        let isFiltered = false;
+              <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
 
-        // Initialize the table
-        function initializeTable() {
-            updatePaginationControls();
-            renderPageNumbers();
-            updateVisibleRows();
-        }
+              <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
+              <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
+          </div>
 
-        // Update which rows are visible based on current page
-        function updateVisibleRows() {
-            const rows = document.querySelectorAll('#questionsTableBody tr');
-            const startIdx = (currentPage - 1) * rowsPerPage;
-            const endIdx = startIdx + rowsPerPage;
-            
-            rows.forEach((row, index) => {
-                if (isFiltered && !filteredRows.includes(index)) {
-                    row.style.display = 'none';
-                    return;
-                }
-                
-                if (index >= startIdx && index < endIdx) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
+          <div class="page-jump">
+              <span>Go to:</span>
+              <input type="number" id="pageJumpInput" min="1" value="1">
+              <button onclick="jumpToPage()">Go</button>
+              <span>of <span id="totalPagesDisplay">1</span></span>
+          </div>
 
-        // Update pagination controls state
-        function updatePaginationControls() {
-            document.getElementById('firstPageBtn').disabled = currentPage === 1;
-            document.getElementById('prevPageBtn').disabled = currentPage === 1;
-            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
-            document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
-            document.getElementById('pageJumpInput').value = currentPage;
-            document.getElementById('totalPagesDisplay').textContent = totalPages;
-        }
+          <div class="rows-per-page">
+              <label for="rowsPerPage">Rows per page:</label>
+              <select id="rowsPerPage" onchange="changeRowsPerPage()">
+                  <option value="10">10</option>
+                  <option value="15" selected>15</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+              </select>
+          </div>
+      </div>
 
-        // Render page number buttons
-        function renderPageNumbers() {
-            const container = document.getElementById('pageNumbers');
-            container.innerHTML = '';
-            
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-            
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-            
-            if (startPage > 1) {
-                const btn = document.createElement('button');
-                btn.className = 'page-btn';
-                btn.textContent = '1';
-                btn.onclick = () => goToPage(1);
-                container.appendChild(btn);
-                
-                if (startPage > 2) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    container.appendChild(ellipsis);
-                }
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-                btn.textContent = i;
-                btn.onclick = () => goToPage(i);
-                container.appendChild(btn);
-            }
-            
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    container.appendChild(ellipsis);
-                }
-                
-                const btn = document.createElement('button');
-                btn.className = 'page-btn';
-                btn.textContent = totalPages;
-                btn.onclick = () => goToPage(totalPages);
-                container.appendChild(btn);
-            }
-        }
+      <script>
+          const vscode = acquireVsCodeApi();
+          const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
+          const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
 
-        // Navigation functions
-        function goToPage(page) {
-            if (page < 1 || page > totalPages) return;
-            currentPage = page;
-            updateVisibleRows();
-            updatePaginationControls();
-            renderPageNumbers();
-        }
+          // Pagination variables
+          let currentPage = 1;
+          let rowsPerPage = 15;
+          let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+          let filteredRows = [];
+          let isFiltered = false;
 
-        function goToFirstPage() {
-            goToPage(1);
-        }
+          // Initialize the table
+          function initializeTable() {
+              updatePaginationControls();
+              renderPageNumbers();
+              updateVisibleRows();
+          }
 
-        function goToPreviousPage() {
-            goToPage(currentPage - 1);
-        }
+          // Update which rows are visible based on current page
+          function updateVisibleRows() {
+              const rows = document.querySelectorAll('#questionsTableBody tr');
+              const startIdx = (currentPage - 1) * rowsPerPage;
+              const endIdx = startIdx + rowsPerPage;
 
-        function goToNextPage() {
-            goToPage(currentPage + 1);
-        }
+              rows.forEach((row, index) => {
+                  if (isFiltered && !filteredRows.includes(index)) {
+                      row.style.display = 'none';
+                      return;
+                  }
 
-        function goToLastPage() {
-            goToPage(totalPages);
-        }
+                  if (index >= startIdx && index < endIdx) {
+                      row.style.display = '';
+                  } else {
+                      row.style.display = 'none';
+                  }
+              });
+          }
 
-        function jumpToPage() {
-            const input = document.getElementById('pageJumpInput');
-            const page = parseInt(input.value);
-            if (!isNaN(page) && page >= 1 && page <= totalPages) {
-                goToPage(page);
-            }
-        }
+          // Update pagination controls state
+          function updatePaginationControls() {
+              document.getElementById('firstPageBtn').disabled = currentPage === 1;
+              document.getElementById('prevPageBtn').disabled = currentPage === 1;
+              document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+              document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+              document.getElementById('pageJumpInput').value = currentPage;
+              document.getElementById('totalPagesDisplay').textContent = totalPages;
+          }
 
-        // Change rows per page
-        function changeRowsPerPage() {
-            rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
-            initializeTable();
-        }
+          // Render page number buttons
+          function renderPageNumbers() {
+              const container = document.getElementById('pageNumbers');
+              container.innerHTML = '';
 
-        // Filter questions based on search term
-        function filterQuestions() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#questionsTableBody tr');
-            filteredRows = [];
-            
-            if (searchTerm === '') {
-                isFiltered = false;
-                document.getElementById('filterCount').textContent = '';
-            } else {
-                isFiltered = true;
-                rows.forEach((row, index) => {
-                    const label = row.dataset.label.toLowerCase();
-                    const file = row.dataset.file.toLowerCase();
-                    const code = row.dataset.code.toLowerCase();
-                    const question = row.dataset.question.toLowerCase();
-                    
-                    if (label.includes(searchTerm) || file.includes(searchTerm) || 
-                        code.includes(searchTerm) || question.includes(searchTerm)) {
-                        filteredRows.push(index);
-                    }
-                });
-                
-                document.getElementById('filterCount').textContent = filteredRows.length > 0 
-                    ? \`\${filteredRows.length} matches\` 
-                    : 'No matches';
-            }
-            
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-            currentPage = 1;
-            initializeTable();
-        }
+              const maxVisiblePages = 5;
+              let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+              let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-        function copyQuestionText(index) {
-            const questionTextArea = document.getElementById('question-' + index);
-            const selectedText = questionTextArea.value.substring(
-                questionTextArea.selectionStart,
-                questionTextArea.selectionEnd
-            );
-            const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+              if (endPage - startPage + 1 < maxVisiblePages) {
+                  startPage = Math.max(1, endPage - maxVisiblePages + 1);
+              }
 
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                vscode.postMessage({ 
-                    type: 'showInformationMessage', 
-                    message: 'Copied to clipboard: ' + 
-                        (selectedText.length > 0 ? 'Selected text' : 'Full question')
-                });
-            }).catch(err => {
-                vscode.postMessage({ 
-                    type: 'showErrorMessage', 
-                    message: 'Failed to copy text: ' + err 
-                });
-            });
-        }
+              if (startPage > 1) {
+                  const btn = document.createElement('button');
+                  btn.className = 'page-btn';
+                  btn.textContent = '1';
+                  btn.onclick = () => goToPage(1);
+                  container.appendChild(btn);
 
-        function toggleSummaryTable() {
-            const container = document.getElementById('summaryTableContainer');
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
-        }
+                  if (startPage > 2) {
+                      const ellipsis = document.createElement('span');
+                      ellipsis.textContent = '...';
+                      container.appendChild(ellipsis);
+                  }
+              }
 
-        function refreshView() {
-            vscode.postMessage({ type: 'refreshView' });
-        }
+              for (let i = startPage; i <= endPage; i++) {
+                  const btn = document.createElement('button');
+                  btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+                  btn.textContent = i;
+                  btn.onclick = () => goToPage(i);
+                  container.appendChild(btn);
+              }
 
-        function saveChanges(index) {
-            const updatedCode = document.getElementById('code-' + index).value;
-            const updatedQuestion = document.getElementById('question-' + index).value;
-            vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
-        }
+              if (endPage < totalPages) {
+                  if (endPage < totalPages - 1) {
+                      const ellipsis = document.createElement('span');
+                      ellipsis.textContent = '...';
+                      container.appendChild(ellipsis);
+                  }
 
-        function revertChanges(index) {
-            document.getElementById('code-' + index).value = originalData[index].highlightedCode;
-            document.getElementById('question-' + index).value = originalData[index].text;
-            document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
-        }
+                  const btn = document.createElement('button');
+                  btn.className = 'page-btn';
+                  btn.textContent = totalPages;
+                  btn.onclick = () => goToPage(totalPages);
+                  container.appendChild(btn);
+              }
+          }
 
-        function toggleExclude(index) {
-            const excludeStatus = document.getElementById('exclude-' + index).checked;
-            vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
-        }
+          // Navigation functions
+          function goToPage(page) {
+              if (page < 1 || page > totalPages) return;
+              currentPage = page;
+              updateVisibleRows();
+              updatePaginationControls();
+              renderPageNumbers();
+          }
 
-        function editQuestion(index) {
-            vscode.postMessage({ type: 'editQuestion', index });
-        }
-        
-        // Initialize the table when the page loads
-        window.addEventListener('load', initializeTable);
-    </script>
-</body>
-</html>
-    `;
+          function goToFirstPage() {
+              goToPage(1);
+          }
+
+          function goToPreviousPage() {
+              goToPage(currentPage - 1);
+          }
+
+          function goToNextPage() {
+              goToPage(currentPage + 1);
+          }
+
+          function goToLastPage() {
+              goToPage(totalPages);
+          }
+
+          function jumpToPage() {
+              const input = document.getElementById('pageJumpInput');
+              const page = parseInt(input.value);
+              if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                  goToPage(page);
+              }
+          }
+
+          // Change rows per page
+          function changeRowsPerPage() {
+              rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+              totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+              if (currentPage > totalPages) {
+                  currentPage = totalPages;
+              }
+              initializeTable();
+          }
+
+          // Filter questions based on search term
+          function filterQuestions() {
+              const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+              const rows = document.querySelectorAll('#questionsTableBody tr');
+              filteredRows = [];
+
+              if (searchTerm === '') {
+                  isFiltered = false;
+                  document.getElementById('filterCount').textContent = '';
+              } else {
+                  isFiltered = true;
+                  rows.forEach((row, index) => {
+                      const label = row.dataset.label.toLowerCase();
+                      const file = row.dataset.file.toLowerCase();
+                      const code = row.dataset.code.toLowerCase();
+                      const question = row.dataset.question.toLowerCase();
+
+                      if (label.includes(searchTerm) || file.includes(searchTerm) ||
+                          code.includes(searchTerm) || question.includes(searchTerm)) {
+                          filteredRows.push(index);
+                      }
+                  });
+
+                  document.getElementById('filterCount').textContent = filteredRows.length > 0
+                      ? \`\${filteredRows.length} matches\`
+                      : 'No matches';
+              }
+
+              totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+              currentPage = 1;
+              initializeTable();
+          }
+
+          function copyQuestionText(index) {
+              const questionTextArea = document.getElementById('question-' + index);
+              const selectedText = questionTextArea.value.substring(
+                  questionTextArea.selectionStart,
+                  questionTextArea.selectionEnd
+              );
+              const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+
+              navigator.clipboard.writeText(textToCopy).then(() => {
+                  vscode.postMessage({
+                      type: 'showInformationMessage',
+                      message: 'Copied to clipboard: ' +
+                          (selectedText.length > 0 ? 'Selected text' : 'Full question')
+                  });
+              }).catch(err => {
+                  vscode.postMessage({
+                      type: 'showErrorMessage',
+                      message: 'Failed to copy text: ' + err
+                  });
+              });
+          }
+
+          function toggleSummaryTable() {
+              const container = document.getElementById('summaryTableContainer');
+              container.style.display = container.style.display === 'none' ? 'block' : 'none';
+          }
+
+          function refreshView() {
+              vscode.postMessage({ type: 'refreshView' });
+          }
+
+          function saveChanges(index) {
+              const updatedCode = document.getElementById('code-' + index).value;
+              const updatedQuestion = document.getElementById('question-' + index).value;
+              vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
+          }
+
+          function revertChanges(index) {
+              document.getElementById('code-' + index).value = originalData[index].highlightedCode;
+              document.getElementById('question-' + index).value = originalData[index].text;
+              document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
+          }
+
+          function toggleExclude(index) {
+              const excludeStatus = document.getElementById('exclude-' + index).checked;
+              vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
+          }
+
+          function editQuestion(index) {
+              vscode.postMessage({ type: 'editQuestion', index });
+          }
+
+          // Initialize the table when the page loads
+          window.addEventListener('load', initializeTable);
+      </script>
+  </body>
+  </html>
+      `;
 
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage((message) => {
@@ -1842,6 +1937,7 @@ function activate(context) {
       }
     });
   });
+
 
 
   let generatePersonalizedQuizCommand = vscode.commands.registerCommand(
@@ -2122,14 +2218,15 @@ ${questionText}
     }
 
     const sampleConfig = {
-      "title": " eg: Variables",
+      "title": " Brother",
       "topic": "Variable",
-      "folder": "eg: Variables",
+      "folder": "Brother",
       "pl_root": "/Users/benedictoseisefa/Desktop/pl-gvsu-cis500dev-master",
       "pl_question_root": "PersonalQuiz",
       "pl_assessment_root": "courseInstances/TemplateCourseInstance/assessments",
       "set": "Custom Quiz",
       "number": "2",
+      "quiz_directory_name": "CIS371_SERVER",
       "points_per_question": 10,
       "startDate": "2025-03-22T10:30:00",
       "endDate": "2025-03-22T16:30:40",
