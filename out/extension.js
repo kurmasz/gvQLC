@@ -125,9 +125,9 @@ function activate(context) {
         const selectedText = editor.document.getText(range);
         // Create a Webview Panel for adding a comment
         const panel = vscode.window.createWebviewPanel('addComment', // Panel ID
-        'Add Comment', // Panel title
-        vscode.ViewColumn.One, // Show in the active column
-        { enableScripts: true } // Allow JavaScript in the Webview
+            'Add Comment', // Panel title
+            vscode.ViewColumn.One, // Show in the active column
+            { enableScripts: true } // Allow JavaScript in the Webview
         );
         // HTML content for the Webview
         panel.webview.html = `
@@ -201,9 +201,9 @@ function activate(context) {
         };
         // Create a Webview Panel for viewing comments
         const panel = vscode.window.createWebviewPanel('viewComments', // Panel ID
-        'View Comments', // Panel title
-        vscode.ViewColumn.One, // Show in the active column
-        { enableScripts: true } // Allow JavaScript in the Webview
+            'View Comments', // Panel title
+            vscode.ViewColumn.One, // Show in the active column
+            { enableScripts: true } // Allow JavaScript in the Webview
         );
         // Build a table with all the comments
         const commentsTable = commentsData.map((comment, index) => {
@@ -559,9 +559,9 @@ function activate(context) {
         // (the Webview panel creation and HTML generation)
         // Create a Webview Panel for viewing questions and answers
         const panel = vscode.window.createWebviewPanel('viewQuestionsAndAnswers', // Panel ID
-        'View Questions and Answers', // Panel title
-        vscode.ViewColumn.One, // Show in the active column
-        { enableScripts: true } // Allow JavaScript in the Webview
+            'View Questions and Answers', // Panel title
+            vscode.ViewColumn.One, // Show in the active column
+            { enableScripts: true } // Allow JavaScript in the Webview
         );
         // Build a table with all the questions and answers
         const questionsTable = questionsData.map((qa, index) => {
@@ -694,7 +694,7 @@ function activate(context) {
             return [];
         });
         // Create a Webview Panel for adding a personalized question
-        const panel = vscode.window.createWebviewPanel('addPersonalizedQuestion', 'Add Personalized Question', vscode.ViewColumn.One, { enableScripts: true });
+        const panel = vscode.window.createWebviewPanel('addPersonalizedQuestion', 'Add Quiz Question', vscode.ViewColumn.One, { enableScripts: true });
         // HTML content for the Webview
         panel.webview.html = `
         <!DOCTYPE html>
@@ -702,7 +702,7 @@ function activate(context) {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Add Personalized Question</title>
+            <title>Add Quiz Question</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 textarea { width: 100%; font-size: 14px; margin-bottom: 10px; display: block; }
@@ -736,12 +736,11 @@ function activate(context) {
             </style>
         </head>
         <body>
-            <h1>Add a Personalized Question</h1>
+            <h1>Add a Quiz Question</h1>
 
             <p><strong>Edit Highlighted Code:</strong></p>
             <textarea id="codeBlock" class="code-area">${selectedText}</textarea>
             <button onclick="copyAndPasteCode()">Copy & Paste Code</button>
-            <button onclick="saveCode()">Save Code</button>
             
             <div id="question-container">
                 <p><strong>Add Your Question:</strong></p>
@@ -1000,98 +999,875 @@ function activate(context) {
     const studentNumbers = new Map();
     let studentCount = 0;
     const questionLabels = {};
+    let configData = null;
+    let studentNameMapping = {};
+    // let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
+    //   if (personalizedQuestionsData.length === 0) {
+    //     vscode.window.showInformationMessage('No personalized questions added yet!');
+    //     return;
+    //   }
+    //   // Check if we have config data, if not prompt user to select config file
+    //   if (!configData) {
+    //     try {
+    //       const configFileUri = await vscode.window.showOpenDialog({
+    //         canSelectMany: false,
+    //         openLabel: 'Select Config File',
+    //         filters: {
+    //           'JSON Files': ['json']
+    //         }
+    //       });
+    //       if (configFileUri && configFileUri[0]) {
+    //         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
+    //         configData = JSON.parse(fileData.toString());
+    //         studentNameMapping = configData.studentNameMapping || {};
+    //       } else {
+    //         vscode.window.showInformationMessage('No config file selected. Using default student names.');
+    //       }
+    //     } catch (error) {
+    //       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+    //     }
+    //   }
+    //   // Create a Webview Panel for viewing personalized questions
+    //   const panel = vscode.window.createWebviewPanel(
+    //     'viewPersonalizedQuestions',
+    //     'View Quiz Questions',
+    //     vscode.ViewColumn.One,
+    //     { enableScripts: true }
+    //   );
+    //   const getAllCISStudents = async () => {
+    //     try {
+    //       const workspaceFolders = vscode.workspace.workspaceFolders;
+    //       if (!workspaceFolders) return [];
+    //       const cisStudents = new Set();
+    //       // First, add all students who have questions
+    //       Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
+    //       // Then add students from workspace folders
+    //       for (const folder of workspaceFolders) {
+    //         const folderUri = folder.uri;
+    //         if (folderUri.fsPath.includes("CIS")) {
+    //           const files = await vscode.workspace.fs.readDirectory(folderUri);
+    //           for (const [name, type] of files) {
+    //             if (type === vscode.FileType.Directory) {
+    //               cisStudents.add(name);
+    //             }
+    //           }
+    //         }
+    //       }
+    //       return Array.from(cisStudents).sort(); // Return sorted array
+    //     } catch (error) {
+    //       console.error("Error fetching CIS students:", error);
+    //       return [];
+    //     }
+    //   };
+    //   // Function to map student name using the config
+    //   const mapStudentName = (name) => {
+    //     return studentNameMapping[name] || name;
+    //   };
+    //   // Get all CIS students
+    //   const allCISStudents = await getAllCISStudents();
+    //   // Group questions by student name
+    //   const questionsByStudent = {};
+    //   personalizedQuestionsData.forEach((question) => {
+    //     const studentName = extractStudentName(question.filePath);
+    //     if (!questionsByStudent[studentName]) {
+    //       questionsByStudent[studentName] = [];
+    //     }
+    //     questionsByStudent[studentName].push(question);
+    //   });
+    //   // Calculate question counts per student and determine max questions
+    //   const studentQuestionCounts = new Map();
+    //   let maxQuestions = 0;
+    //   for (const studentName in questionsByStudent) {
+    //     const count = questionsByStudent[studentName].length;
+    //     studentQuestionCounts.set(studentName, count);
+    //     if (count > maxQuestions) {
+    //       maxQuestions = count;
+    //     }
+    //   }
+    //   // Assign labels to questions (1a, 1b, 2a, etc.)
+    //   const questionLabels = {};
+    //   const studentNumbers = {};
+    //   let studentCounter = 1;
+    //   let questionIndex = 0;
+    //   // Process students in alphabetical order for consistent numbering
+    //   const sortedStudentNames = Object.keys(questionsByStudent).sort();
+    //   for (const studentName of sortedStudentNames) {
+    //     studentNumbers[studentName] = studentCounter;
+    //     const questions = questionsByStudent[studentName];
+    //     questions.forEach((question, qIndex) => {
+    //       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+    //       questionLabels[questionIndex] = questionLabel;
+    //       questionIndex++;
+    //     });
+    //     studentCounter++;
+    //   }
+    //   // Rebuild the questions array in the new order (grouped by student)
+    //   const reorderedQuestions = [];
+    //   for (const studentName of sortedStudentNames) {
+    //     reorderedQuestions.push(...questionsByStudent[studentName]);
+    //   }
+    //   // Build the summary table HTML
+    //   const buildSummaryTable = () => {
+    //     // Get all unique student names (from both questions and folders)
+    //     const allStudents = Array.from(new Set([
+    //       ...Object.keys(questionsByStudent),
+    //       ...allCISStudents
+    //     ])).sort();
+    //     const summaryRows = allStudents.map(student => {
+    //       const count = studentQuestionCounts.get(student) || 0;
+    //       const hasQuestions = count > 0;
+    //       let color = 'red'; // default color for zero questions
+    //       if (count === maxQuestions && maxQuestions > 0) {
+    //         color = 'green';
+    //       } else if (count > 0 && count < maxQuestions) {
+    //         color = 'yellow';
+    //       }
+    //       const displayName = mapStudentName(student);
+    //       return `
+    //       <tr style="background-color: ${color}">
+    //         <td>${displayName}</td>
+    //         <td>${hasQuestions ? count : '0'}</td>
+    //         <td>${hasQuestions ? '✓' : '✗'}</td>
+    //       </tr>
+    //     `;
+    //     }).join('');
+    //     return `
+    //     <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+    //       <h2>Student Question Summary</h2>
+    //       <table style="width: 100%; border-collapse: collapse;">
+    //         <thead>
+    //           <tr>
+    //             <th>Student Name</th>
+    //             <th>Question Count</th>
+    //             <th>Has Questions</th>
+    //           </tr>
+    //         </thead>
+    //         <tbody>
+    //           ${summaryRows}
+    //         </tbody>
+    //       </table>
+    //     </div>
+    //   `;
+    //   };
+    //   // Determine color for question labels
+    //   const getLabelColor = (studentName) => {
+    //     const count = studentQuestionCounts.get(studentName) || 0;
+    //     if (count === maxQuestions && maxQuestions > 0) return 'green';
+    //     if (count > 0 && count < maxQuestions) return 'yellow';
+    //     return 'red';
+    //   };
+    //   const truncateCharacters = (text, charLimit) => {
+    //     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
+    //   };
+    //   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
+    //   const questionsTable = reorderedQuestions.map((question, index) => {
+    //     const studentName = extractStudentName(question.filePath);
+    //     const labelColor = getLabelColor(studentName);
+    //     const filePathParts = question.filePath.split('/');
+    //     let shortenedFilePath = filePathParts.length > 2
+    //       ? `.../${filePathParts.slice(-3).join('/')}`
+    //       : question.filePath;
+    //     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
+    //     return `
+    //     <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
+    //         <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
+    //         <td title="${question.filePath}">${shortenedFilePath}</td>
+    //         <td>
+    //             <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
+    //         </td>
+    //         <td>
+    //             <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+    //         </td>
+    //         <td>
+    //             <button onclick="saveChanges(${index})">Save</button>
+    //             <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+    //             <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+    //             <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+    //             <br>
+    //             <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
+    //             <label for="exclude-${index}">Exclude from Quiz</label>
+    //         </td>
+    //     </tr>
+    //     `;
+    //   }).join('');
+    //   // HTML content for the Webview
+    //   panel.webview.html = `
+    // <!DOCTYPE html>
+    // <html lang="en">
+    // <head>
+    //     <meta charset="UTF-8">
+    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //     <title>View Quiz Questions</title>
+    //     <style>
+    //         body {
+    //             font-family: Arial, sans-serif;
+    //             margin: 20px;
+    //             background-color:rgb(255, 255, 255);
+    //             color: black;
+    //         }
+    //         .header-container {
+    //             display: flex;
+    //             justify-content: space-between;
+    //             align-items: center;
+    //             margin-bottom: 20px;
+    //             flex-wrap: wrap;
+    //         }
+    //         .controls-container {
+    //             display: flex;
+    //             gap: 10px;
+    //             margin-bottom: 20px;
+    //             align-items: center;
+    //             flex-wrap: wrap;
+    //         }
+    //         .search-container {
+    //             display: flex;
+    //             align-items: center;
+    //             gap: 10px;
+    //         }
+    //         table {
+    //             width: 100%;
+    //             border-collapse: collapse;
+    //             margin-top: 20px;
+    //             background-color: white;
+    //             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    //         }
+    //         th, td {
+    //             border: 1px solid #ddd;
+    //             padding: 12px;
+    //             text-align: left;
+    //         }
+    //         th {
+    //             background-color: #007acc;
+    //             color: white;
+    //             position: sticky;
+    //             top: 0;
+    //         }
+    //         textarea {
+    //             width: 100%;
+    //             height: 100px;
+    //             font-size: 14px;
+    //             border: 1px solid #ccc;
+    //             padding: 8px;
+    //             resize: vertical;
+    //         }
+    //         .code-area {
+    //             background-color: #1e1e1e;
+    //             color: #d4d4d4;
+    //             font-family: monospace;
+    //         }
+    //         .question-area {
+    //             background-color: #f9f9f9;
+    //             color: #333;
+    //             font-family: sans-serif;
+    //         }
+    //         button {
+    //             padding: 8px 12px;
+    //             margin: 2px;
+    //             cursor: pointer;
+    //             border: none;
+    //             border-radius: 4px;
+    //             font-weight: bold;
+    //         }
+    //         button:hover {
+    //             opacity: 0.9;
+    //         }
+    //         #refreshBtn {
+    //             background-color: #4CAF50;
+    //             color: white;
+    //         }
+    //         #toggleSummaryBtn {
+    //             background-color: #673AB7;
+    //             color: white;
+    //         }
+    //         input[type="text"] {
+    //             padding: 8px;
+    //             border: 1px solid #ddd;
+    //             border-radius: 4px;
+    //             width: 250px;
+    //         }
+    //         input[type="checkbox"] {
+    //             transform: scale(1.2);
+    //             margin-top: 5px;
+    //         }
+    //         #summaryTableContainer table th {
+    //             background-color: #007acc;
+    //             color: white;
+    //         }
+    //         #summaryTableContainer table td {
+    //             border: 1px solid #ddd;
+    //             padding: 8px;
+    //         }
+    //         .total-count {
+    //             font-size: 18px;
+    //             font-weight: bold;
+    //             color: #333;
+    //         }
+    //         .pagination-container {
+    //             display: flex;
+    //             justify-content: center;
+    //             align-items: center;
+    //             margin-top: 20px;
+    //             gap: 10px;
+    //             flex-wrap: wrap;
+    //         }
+    //         .pagination-controls {
+    //             display: flex;
+    //             gap: 5px;
+    //             align-items: center;
+    //         }
+    //         .page-btn {
+    //             padding: 5px 10px;
+    //             border: 1px solid #ddd;
+    //             background-color: white;
+    //             cursor: pointer;
+    //             border-radius: 4px;
+    //             min-width: 30px;
+    //             text-align: center;
+    //         }
+    //         .page-btn:hover:not(.active):not(:disabled) {
+    //             background-color: #f1f1f1;
+    //         }
+    //         .page-btn.active {
+    //             background-color: #007acc;
+    //             color: white;
+    //             border-color: #007acc;
+    //         }
+    //         .page-btn:disabled {
+    //             opacity: 0.5;
+    //             cursor: not-allowed;
+    //         }
+    //         .page-jump {
+    //             display: flex;
+    //             align-items: center;
+    //             gap: 5px;
+    //         }
+    //         .page-jump input {
+    //             width: 50px;
+    //             padding: 5px;
+    //             text-align: center;
+    //             border: 1px solid #ddd;
+    //             border-radius: 4px;
+    //         }
+    //         .rows-per-page {
+    //             display: flex;
+    //             align-items: center;
+    //             gap: 5px;
+    //         }
+    //         .rows-per-page select {
+    //             padding: 5px;
+    //             border-radius: 4px;
+    //             border: 1px solid #ddd;
+    //         }
+    //     </style>
+    // </head>
+    // <body>
+    //     <div class="header-container">
+    //         <h1>All Quiz Questions</h1>
+    //         <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+    //     </div>
+    //     <div class="controls-container">
+    //         <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
+    //         <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
+    //         <div class="search-container">
+    //             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+    //             <span id="filterCount"></span>
+    //         </div>
+    //     </div>
+    //     ${buildSummaryTable()}
+    //     <table id="questionsTable">
+    //         <thead>
+    //             <tr>
+    //                 <th>#</th>
+    //                 <th>File</th>
+    //                 <th>Highlighted Code</th>
+    //                 <th>Question</th>
+    //                 <th>Actions</th>
+    //             </tr>
+    //         </thead>
+    //         <tbody id="questionsTableBody">
+    //             ${questionsTable}
+    //         </tbody>
+    //     </table>
+    //     <div class="pagination-container">
+    //         <div class="pagination-controls">
+    //             <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
+    //             <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
+    //             <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+    //             <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
+    //             <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
+    //         </div>
+    //         <div class="page-jump">
+    //             <span>Go to:</span>
+    //             <input type="number" id="pageJumpInput" min="1" value="1">
+    //             <button onclick="jumpToPage()">Go</button>
+    //             <span>of <span id="totalPagesDisplay">1</span></span>
+    //         </div>
+    //         <div class="rows-per-page">
+    //             <label for="rowsPerPage">Rows per page:</label>
+    //             <select id="rowsPerPage" onchange="changeRowsPerPage()">
+    //                 <option value="10">10</option>
+    //                 <option value="15" selected>15</option>
+    //                 <option value="25">25</option>
+    //                 <option value="50">50</option>
+    //                 <option value="100">100</option>
+    //             </select>
+    //         </div>
+    //     </div>
+    //     <script>
+    //         const vscode = acquireVsCodeApi();
+    //         const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
+    //         const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
+    //         // Pagination variables
+    //         let currentPage = 1;
+    //         let rowsPerPage = 15;
+    //         let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+    //         let filteredRows = [];
+    //         let isFiltered = false;
+    //         // Initialize the table
+    //         function initializeTable() {
+    //             updatePaginationControls();
+    //             renderPageNumbers();
+    //             updateVisibleRows();
+    //         }
+    //         // Update which rows are visible based on current page
+    //         function updateVisibleRows() {
+    //             const rows = document.querySelectorAll('#questionsTableBody tr');
+    //             const startIdx = (currentPage - 1) * rowsPerPage;
+    //             const endIdx = startIdx + rowsPerPage;
+    //             rows.forEach((row, index) => {
+    //                 if (isFiltered && !filteredRows.includes(index)) {
+    //                     row.style.display = 'none';
+    //                     return;
+    //                 }
+    //                 if (index >= startIdx && index < endIdx) {
+    //                     row.style.display = '';
+    //                 } else {
+    //                     row.style.display = 'none';
+    //                 }
+    //             });
+    //         }
+    //         // Update pagination controls state
+    //         function updatePaginationControls() {
+    //             document.getElementById('firstPageBtn').disabled = currentPage === 1;
+    //             document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    //             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+    //             document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+    //             document.getElementById('pageJumpInput').value = currentPage;
+    //             document.getElementById('totalPagesDisplay').textContent = totalPages;
+    //         }
+    //         // Render page number buttons
+    //         function renderPageNumbers() {
+    //             const container = document.getElementById('pageNumbers');
+    //             container.innerHTML = '';
+    //             const maxVisiblePages = 5;
+    //             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    //             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    //             if (endPage - startPage + 1 < maxVisiblePages) {
+    //                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    //             }
+    //             if (startPage > 1) {
+    //                 const btn = document.createElement('button');
+    //                 btn.className = 'page-btn';
+    //                 btn.textContent = '1';
+    //                 btn.onclick = () => goToPage(1);
+    //                 container.appendChild(btn);
+    //                 if (startPage > 2) {
+    //                     const ellipsis = document.createElement('span');
+    //                     ellipsis.textContent = '...';
+    //                     container.appendChild(ellipsis);
+    //                 }
+    //             }
+    //             for (let i = startPage; i <= endPage; i++) {
+    //                 const btn = document.createElement('button');
+    //                 btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+    //                 btn.textContent = i;
+    //                 btn.onclick = () => goToPage(i);
+    //                 container.appendChild(btn);
+    //             }
+    //             if (endPage < totalPages) {
+    //                 if (endPage < totalPages - 1) {
+    //                     const ellipsis = document.createElement('span');
+    //                     ellipsis.textContent = '...';
+    //                     container.appendChild(ellipsis);
+    //                 }
+    //                 const btn = document.createElement('button');
+    //                 btn.className = 'page-btn';
+    //                 btn.textContent = totalPages;
+    //                 btn.onclick = () => goToPage(totalPages);
+    //                 container.appendChild(btn);
+    //             }
+    //         }
+    //         // Navigation functions
+    //         function goToPage(page) {
+    //             if (page < 1 || page > totalPages) return;
+    //             currentPage = page;
+    //             updateVisibleRows();
+    //             updatePaginationControls();
+    //             renderPageNumbers();
+    //         }
+    //         function goToFirstPage() {
+    //             goToPage(1);
+    //         }
+    //         function goToPreviousPage() {
+    //             goToPage(currentPage - 1);
+    //         }
+    //         function goToNextPage() {
+    //             goToPage(currentPage + 1);
+    //         }
+    //         function goToLastPage() {
+    //             goToPage(totalPages);
+    //         }
+    //         function jumpToPage() {
+    //             const input = document.getElementById('pageJumpInput');
+    //             const page = parseInt(input.value);
+    //             if (!isNaN(page) && page >= 1 && page <= totalPages) {
+    //                 goToPage(page);
+    //             }
+    //         }
+    //         // Change rows per page
+    //         function changeRowsPerPage() {
+    //             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+    //             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+    //             if (currentPage > totalPages) {
+    //                 currentPage = totalPages;
+    //             }
+    //             initializeTable();
+    //         }
+    //         // Filter questions based on search term
+    //         function filterQuestions() {
+    //             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    //             const rows = document.querySelectorAll('#questionsTableBody tr');
+    //             filteredRows = [];
+    //             if (searchTerm === '') {
+    //                 isFiltered = false;
+    //                 document.getElementById('filterCount').textContent = '';
+    //             } else {
+    //                 isFiltered = true;
+    //                 rows.forEach((row, index) => {
+    //                     const label = row.dataset.label.toLowerCase();
+    //                     const file = row.dataset.file.toLowerCase();
+    //                     const code = row.dataset.code.toLowerCase();
+    //                     const question = row.dataset.question.toLowerCase();
+    //                     if (label.includes(searchTerm) || file.includes(searchTerm) ||
+    //                         code.includes(searchTerm) || question.includes(searchTerm)) {
+    //                         filteredRows.push(index);
+    //                     }
+    //                 });
+    //                 document.getElementById('filterCount').textContent = filteredRows.length > 0
+    //                     ? \`\${filteredRows.length} matches\`
+    //                     : 'No matches';
+    //             }
+    //             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+    //             currentPage = 1;
+    //             initializeTable();
+    //         }
+    //         function copyQuestionText(index) {
+    //             const questionTextArea = document.getElementById('question-' + index);
+    //             const selectedText = questionTextArea.value.substring(
+    //                 questionTextArea.selectionStart,
+    //                 questionTextArea.selectionEnd
+    //             );
+    //             const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+    //             navigator.clipboard.writeText(textToCopy).then(() => {
+    //                 vscode.postMessage({
+    //                     type: 'showInformationMessage',
+    //                     message: 'Copied to clipboard: ' +
+    //                         (selectedText.length > 0 ? 'Selected text' : 'Full question')
+    //                 });
+    //             }).catch(err => {
+    //                 vscode.postMessage({
+    //                     type: 'showErrorMessage',
+    //                     message: 'Failed to copy text: ' + err
+    //                 });
+    //             });
+    //         }
+    //         function toggleSummaryTable() {
+    //             const container = document.getElementById('summaryTableContainer');
+    //             container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    //         }
+    //         function refreshView() {
+    //             vscode.postMessage({ type: 'refreshView' });
+    //         }
+    //         function saveChanges(index) {
+    //             const updatedCode = document.getElementById('code-' + index).value;
+    //             const updatedQuestion = document.getElementById('question-' + index).value;
+    //             vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
+    //         }
+    //         function revertChanges(index) {
+    //             document.getElementById('code-' + index).value = originalData[index].highlightedCode;
+    //             document.getElementById('question-' + index).value = originalData[index].text;
+    //             document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
+    //         }
+    //         function toggleExclude(index) {
+    //             const excludeStatus = document.getElementById('exclude-' + index).checked;
+    //             vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
+    //         }
+    //         function editQuestion(index) {
+    //             vscode.postMessage({ type: 'editQuestion', index });
+    //         }
+    //         // Initialize the table when the page loads
+    //         window.addEventListener('load', initializeTable);
+    //     </script>
+    // </body>
+    // </html>
+    //     `;
+    //   // Handle messages from the Webview
+    //   panel.webview.onDidReceiveMessage((message) => {
+    //     if (message.type === 'saveChanges') {
+    //       // Update the data in memory
+    //       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+    //       reorderedQuestions[message.index].text = message.updatedQuestion;
+    //       // Update the original data array as well
+    //       personalizedQuestionsData = reorderedQuestions;
+    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+    //       vscode.window.showInformationMessage('Changes saved successfully!');
+    //     }
+    //     if (message.type === 'toggleExclude') {
+    //       // Save exclude checkbox status automatically
+    //       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+    //       // Update the original data array as well
+    //       personalizedQuestionsData = reorderedQuestions;
+    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+    //     }
+    //     if (message.type === 'editQuestion') {
+    //       // Open a new webview panel for editing the question
+    //       openEditQuestionPanel(message.index);
+    //     }
+    //     if (message.type === 'refreshView') {
+    //       // Close and reopen the panel to refresh the view
+    //       panel.dispose(); // Close the current panel
+    //       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
+    //     }
+    //     if (message.type === 'showInformationMessage') {
+    //       vscode.window.showInformationMessage(message.message);
+    //     }
+    //     if (message.type === 'showErrorMessage') {
+    //       vscode.window.showErrorMessage(message.message);
+    //     }
+    //   });
+    // });
     let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', () => __awaiter(this, void 0, void 0, function* () {
         if (personalizedQuestionsData.length === 0) {
             vscode.window.showInformationMessage('No personalized questions added yet!');
             return;
         }
+        // Check if we have config data, if not prompt user to select config file
+        if (!configData) {
+            try {
+                const configFileUri = yield vscode.window.showOpenDialog({
+                    canSelectMany: false,
+                    openLabel: 'Select Config File',
+                    filters: {
+                        'JSON Files': ['json']
+                    }
+                });
+                if (configFileUri && configFileUri[0]) {
+                    const fileData = yield vscode.workspace.fs.readFile(configFileUri[0]);
+                    configData = JSON.parse(fileData.toString());
+                    studentNameMapping = configData.studentNameMapping || {};
+                }
+                else {
+                    vscode.window.showInformationMessage('No config file selected. Using default student names.');
+                }
+            }
+            catch (error) {
+                vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+            }
+        }
         // Create a Webview Panel for viewing personalized questions
-        const panel = vscode.window.createWebviewPanel('viewPersonalizedQuestions', 'View Personalized Questions', vscode.ViewColumn.One, { enableScripts: true });
-        // Function to get all CIS students from the workspace
+        const panel = vscode.window.createWebviewPanel('viewPersonalizedQuestions', 'View Quiz Questions', vscode.ViewColumn.One, { enableScripts: true });
+        // const getAllCISStudents = async () => {
+        //   try {
+        //     const workspaceFolders = vscode.workspace.workspaceFolders;
+        //     if (!workspaceFolders) return [];
+        //     const cisStudents = new Set();
+        //     // Only add folder names under CIS directories
+        //     for (const folder of workspaceFolders) {
+        //       const folderUri = folder.uri;
+        //       if (folderUri.fsPath.includes("CIS")) {
+        //         const files = await vscode.workspace.fs.readDirectory(folderUri);
+        //         for (const [name, type] of files) {
+        //           if (type === vscode.FileType.Directory) {
+        //             cisStudents.add(name);
+        //           }
+        //         }
+        //       }
+        //     }
+        //     return Array.from(cisStudents).sort();
+        //   } catch (error) {
+        //     console.error("Error fetching CIS students:", error);
+        //     return [];
+        //   }
+        // };
         const getAllCISStudents = () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const workspaceFolders = vscode.workspace.workspaceFolders;
-                if (!workspaceFolders)
+                if (!workspaceFolders || !configData || !configData.quiz_directory_name)
                     return [];
-                const cisStudents = new Set();
+                const students = new Set();
+                const quizDirName = configData.quiz_directory_name;
+                // First try: Look for quiz directory directly in workspace folders
                 for (const folder of workspaceFolders) {
                     const folderUri = folder.uri;
-                    if (folderUri.fsPath.includes("CIS")) {
+                    // Case 1: The workspace folder itself is the quiz directory
+                    if (folderUri.path.split('/').pop() === quizDirName) {
                         const files = yield vscode.workspace.fs.readDirectory(folderUri);
                         for (const [name, type] of files) {
                             if (type === vscode.FileType.Directory) {
-                                cisStudents.add(name);
+                                students.add(name);
+                            }
+                        }
+                        continue;
+                    }
+                    // Case 2: Quiz directory is a subfolder
+                    const files = yield vscode.workspace.fs.readDirectory(folderUri);
+                    for (const [name, type] of files) {
+                        if (type === vscode.FileType.Directory && name === quizDirName) {
+                            const quizDirUri = vscode.Uri.joinPath(folderUri, name);
+                            const studentFolders = yield vscode.workspace.fs.readDirectory(quizDirUri);
+                            for (const [studentName, studentType] of studentFolders) {
+                                if (studentType === vscode.FileType.Directory) {
+                                    students.add(studentName);
+                                }
                             }
                         }
                     }
                 }
-                return Array.from(cisStudents);
+                // Second try: Recursive search if not found directly
+                if (students.size === 0) {
+                    for (const folder of workspaceFolders) {
+                        const found = yield findStudentFoldersRecursive(folder.uri, quizDirName);
+                        found.forEach(student => students.add(student));
+                    }
+                }
+                return Array.from(students).sort();
             }
             catch (error) {
-                console.error("Error fetching CIS students:", error);
+                console.error("Error fetching students:", error);
                 return [];
             }
         });
+        // Helper function for recursive search
+        function findStudentFoldersRecursive(uri, quizDirName) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const students = new Set();
+                try {
+                    const files = yield vscode.workspace.fs.readDirectory(uri);
+                    for (const [name, type] of files) {
+                        if (type === vscode.FileType.Directory) {
+                            // If this is the quiz directory, add all its subdirectories as students
+                            if (name === quizDirName) {
+                                const studentFolders = yield vscode.workspace.fs.readDirectory(vscode.Uri.joinPath(uri, name));
+                                for (const [studentName, studentType] of studentFolders) {
+                                    if (studentType === vscode.FileType.Directory) {
+                                        students.add(studentName);
+                                    }
+                                }
+                            }
+                            // Otherwise search deeper
+                            else {
+                                const found = yield findStudentFoldersRecursive(vscode.Uri.joinPath(uri, name), quizDirName);
+                                found.forEach(student => students.add(student));
+                            }
+                        }
+                    }
+                }
+                catch (error) {
+                    console.error(`Error searching ${uri.fsPath}:`, error);
+                }
+                return Array.from(students);
+            });
+        }
+        // Function to map student name using the config
+        const mapStudentName = (name) => {
+            return studentNameMapping[name] || name;
+        };
         // Get all CIS students
         const allCISStudents = yield getAllCISStudents();
-        // Calculate question counts per student
+        // Group questions by student name
+        const questionsByStudent = {};
+        personalizedQuestionsData.forEach((question) => {
+            const studentName = extractStudentName(question.filePath);
+            if (!questionsByStudent[studentName]) {
+                questionsByStudent[studentName] = [];
+            }
+            questionsByStudent[studentName].push(question);
+        });
+        // Calculate question counts per student and determine max questions
         const studentQuestionCounts = new Map();
         let maxQuestions = 0;
-        // Rebuild the questionLabels since we need it for the webview
-        const studentNumbers = new Map();
-        let studentCount = 0;
+        for (const studentName in questionsByStudent) {
+            const count = questionsByStudent[studentName].length;
+            studentQuestionCounts.set(studentName, count);
+            if (count > maxQuestions) {
+                maxQuestions = count;
+            }
+        }
+        // Assign labels to questions (1a, 1b, 2a, etc.)
         const questionLabels = {};
-        personalizedQuestionsData.forEach((question, index) => {
-            const studentName = extractStudentName(question.filePath);
-            if (!studentNumbers.has(studentName)) {
-                studentCount++;
-                studentNumbers.set(studentName, { count: 0, label: studentCount });
-            }
-            const studentInfo = studentNumbers.get(studentName);
-            studentInfo.count++;
-            const questionLabel = String.fromCharCode(96 + studentInfo.count); // Convert 1 -> 'a', 2 -> 'b', etc.
-            questionLabels[index] = `${studentInfo.label}${questionLabel}`;
-            // Count questions per student for coloring
-            const count = studentQuestionCounts.get(studentName) || 0;
-            studentQuestionCounts.set(studentName, count + 1);
-            if (count + 1 > maxQuestions) {
-                maxQuestions = count + 1;
-            }
-        });
+        const studentNumbers = {};
+        let studentCounter = 1;
+        let questionIndex = 0;
+        // Process students in alphabetical order for consistent numbering
+        const sortedStudentNames = Object.keys(questionsByStudent).sort();
+        for (const studentName of sortedStudentNames) {
+            studentNumbers[studentName] = studentCounter;
+            const questions = questionsByStudent[studentName];
+            questions.forEach((question, qIndex) => {
+                const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+                questionLabels[questionIndex] = questionLabel;
+                questionIndex++;
+            });
+            studentCounter++;
+        }
+        // Rebuild the questions array in the new order (grouped by student)
+        const reorderedQuestions = [];
+        for (const studentName of sortedStudentNames) {
+            reorderedQuestions.push(...questionsByStudent[studentName]);
+        }
         // Build the summary table HTML
         const buildSummaryTable = () => {
-            const summaryRows = allCISStudents.map(student => {
+            // Get all unique student names (from both questions and folders)
+            const allStudents = Array.from(new Set([
+                ...Object.keys(questionsByStudent),
+                ...allCISStudents
+            ])).sort();
+            const summaryRows = allStudents.map(student => {
                 const count = studentQuestionCounts.get(student) || 0;
-                let color = 'red'; // default for zero questions
+                const hasQuestions = count > 0;
+                let color = 'red'; // default color for zero questions
                 if (count === maxQuestions && maxQuestions > 0) {
                     color = 'green';
                 }
                 else if (count > 0 && count < maxQuestions) {
                     color = 'yellow';
                 }
+                const displayName = mapStudentName(student);
                 return `
-                <tr style="background-color: ${color}">
-                    <td>${student}</td>
-                    <td>${count}</td>
-                </tr>
-            `;
+      <tr style="background-color: ${color}">
+        <td>${displayName}</td>
+        <td>${count}</td>
+        <td>${hasQuestions ? '✓' : '✗'}</td>
+      </tr>
+    `;
             }).join('');
             return `
-            <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
-                <h2>Student Question Summary</h2>
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th>Student Name</th>
-                            <th>Question Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${summaryRows}
-                    </tbody>
-                </table>
-            </div>
-        `;
+    <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+      <h2>Student Question Summary</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Question Count</th>
+            <th>Has Questions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${summaryRows}
+        </tbody>
+      </table>
+    </div>
+  `;
         };
         // Determine color for question labels
         const getLabelColor = (studentName) => {
@@ -1106,7 +1882,7 @@ function activate(context) {
             return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
         };
         // Build a table with editable fields, revert button, and a checkbox inside the Actions column
-        const questionsTable = personalizedQuestionsData.map((question, index) => {
+        const questionsTable = reorderedQuestions.map((question, index) => {
             const studentName = extractStudentName(question.filePath);
             const labelColor = getLabelColor(studentName);
             const filePathParts = question.filePath.split('/');
@@ -1115,505 +1891,508 @@ function activate(context) {
                 : question.filePath;
             shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
             return `
-        <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
-            <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-            <td title="${question.filePath}">${shortenedFilePath}</td>
-            <td>
-                <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
-            </td>
-            <td>
-                <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
-            </td>
-            <td>
-                <button onclick="saveChanges(${index})">Save</button>
-                <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
-                <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
-                <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
-                <br>
-                <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
-                <label for="exclude-${index}">Exclude from Quiz</label>
-            </td>
-        </tr>
-        `;
+    <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
+        <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
+        <td title="${question.filePath}">${shortenedFilePath}</td>
+        <td>
+            <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
+        </td>
+        <td>
+            <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+        </td>
+        <td>
+            <button onclick="saveChanges(${index})">Save</button>
+            <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+            <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+            <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+            <br>
+            <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
+            <label for="exclude-${index}">Exclude from Quiz</label>
+        </td>
+    </tr>
+    `;
         }).join('');
         // HTML content for the Webview
         panel.webview.html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Personalized Questions</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px; 
-            background-color:rgb(255, 255, 255);
-            color: black;
-        }
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .controls-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .search-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 20px; 
-            background-color: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: left; 
-        }
-        th { 
-            background-color: #007acc; 
-            color: white; 
-            position: sticky;
-            top: 0;
-        }
-        textarea { 
-            width: 100%; 
-            height: 100px; 
-            font-size: 14px; 
-            border: 1px solid #ccc; 
-            padding: 8px; 
-            resize: vertical;
-        }
-        .code-area { 
-            background-color: #1e1e1e; 
-            color: #d4d4d4; 
-            font-family: monospace; 
-        }
-        .question-area { 
-            background-color: #f9f9f9; 
-            color: #333; 
-            font-family: sans-serif; 
-        }
-        button { 
-            padding: 8px 12px; 
-            margin: 2px; 
-            cursor: pointer; 
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        button:hover {
-            opacity: 0.9;
-        }
-        #refreshBtn {
-            background-color: #4CAF50; 
-            color: white;
-        }
-        #toggleSummaryBtn {
-            background-color: #673AB7;
-            color: white;
-        }
-        input[type="text"] {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 250px;
-        }
-        input[type="checkbox"] { 
-            transform: scale(1.2); 
-            margin-top: 5px; 
-        }
-        #summaryTableContainer table th { 
-            background-color: #007acc; 
-            color: white; 
-        }
-        #summaryTableContainer table td { 
-            border: 1px solid #ddd; 
-            padding: 8px; 
-        }
-        .total-count {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
-        .pagination-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .pagination-controls {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .page-btn {
-            padding: 5px 10px;
-            border: 1px solid #ddd;
-            background-color: white;
-            cursor: pointer;
-            border-radius: 4px;
-            min-width: 30px;
-            text-align: center;
-        }
-        .page-btn:hover:not(.active):not(:disabled) {
-            background-color: #f1f1f1;
-        }
-        .page-btn.active {
-            background-color: #007acc;
-            color: white;
-            border-color: #007acc;
-        }
-        .page-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        .page-jump {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .page-jump input {
-            width: 50px;
-            padding: 5px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .rows-per-page {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .rows-per-page select {
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-    </style>
-</head>
-<body>
-    <div class="header-container">
-        <h1>All Personalized Questions</h1>
-        <div class="total-count">Total Questions: ${personalizedQuestionsData.length}</div>
-    </div>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>View Quiz Questions</title>
+      <style>
+          body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              background-color:rgb(255, 255, 255);
+              color: black;
+          }
+          .header-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+              flex-wrap: wrap;
+          }
+          .controls-container {
+              display: flex;
+              gap: 10px;
+              margin-bottom: 20px;
+              align-items: center;
+              flex-wrap: wrap;
+          }
+          .search-container {
+              display: flex;
+              align-items: center;
+              gap: 10px;
+          }
+          table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              background-color: white;
+              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          th, td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+          }
+          th {
+              background-color: #007acc;
+              color: white;
+              position: sticky;
+              top: 0;
+          }
+          textarea {
+              width: 100%;
+              height: 100px;
+              font-size: 14px;
+              border: 1px solid #ccc;
+              padding: 8px;
+              resize: vertical;
+          }
+          .code-area {
+              background-color: #1e1e1e;
+              color: #d4d4d4;
+              font-family: monospace;
+          }
+          .question-area {
+              background-color: #f9f9f9;
+              color: #333;
+              font-family: sans-serif;
+          }
+          button {
+              padding: 8px 12px;
+              margin: 2px;
+              cursor: pointer;
+              border: none;
+              border-radius: 4px;
+              font-weight: bold;
+          }
+          button:hover {
+              opacity: 0.9;
+          }
+          #refreshBtn {
+              background-color: #4CAF50;
+              color: white;
+          }
+          #toggleSummaryBtn {
+              background-color: #673AB7;
+              color: white;
+          }
+          input[type="text"] {
+              padding: 8px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              width: 250px;
+          }
+          input[type="checkbox"] {
+              transform: scale(1.2);
+              margin-top: 5px;
+          }
+          #summaryTableContainer table th {
+              background-color: #007acc;
+              color: white;
+          }
+          #summaryTableContainer table td {
+              border: 1px solid #ddd;
+              padding: 8px;
+          }
+          .total-count {
+              font-size: 18px;
+              font-weight: bold;
+              color: #333;
+          }
+          .pagination-container {
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              margin-top: 20px;
+              gap: 10px;
+              flex-wrap: wrap;
+          }
+          .pagination-controls {
+              display: flex;
+              gap: 5px;
+              align-items: center;
+          }
+          .page-btn {
+              padding: 5px 10px;
+              border: 1px solid #ddd;
+              background-color: white;
+              cursor: pointer;
+              border-radius: 4px;
+              min-width: 30px;
+              text-align: center;
+          }
+          .page-btn:hover:not(.active):not(:disabled) {
+              background-color: #f1f1f1;
+          }
+          .page-btn.active {
+              background-color: #007acc;
+              color: white;
+              border-color: #007acc;
+          }
+          .page-btn:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+          }
+          .page-jump {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+          }
+          .page-jump input {
+              width: 50px;
+              padding: 5px;
+              text-align: center;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+          }
+          .rows-per-page {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+          }
+          .rows-per-page select {
+              padding: 5px;
+              border-radius: 4px;
+              border: 1px solid #ddd;
+          }
+      </style>
+  </head>
+  <body>
+      <div class="header-container">
+          <h1>All Quiz Questions</h1>
+          <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+      </div>
 
-    <div class="controls-container">
-        <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
-        <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
-            <span id="filterCount"></span>
-        </div>
-    </div>
+      <div class="controls-container">
+          <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
+          <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
+          <div class="search-container">
+              <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+              <span id="filterCount"></span>
+          </div>
+      </div>
 
-    ${buildSummaryTable()}
-    
-    <table id="questionsTable">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>File</th>
-                <th>Highlighted Code</th>
-                <th>Question</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="questionsTableBody">
-            ${questionsTable}
-        </tbody>
-    </table>
+      ${buildSummaryTable()}
 
-    <div class="pagination-container">
-        <div class="pagination-controls">
-            <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
-            <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
-            
-            <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
-            
-            <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
-            <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
-        </div>
-        
-        <div class="page-jump">
-            <span>Go to:</span>
-            <input type="number" id="pageJumpInput" min="1" value="1">
-            <button onclick="jumpToPage()">Go</button>
-            <span>of <span id="totalPagesDisplay">1</span></span>
-        </div>
-        
-        <div class="rows-per-page">
-            <label for="rowsPerPage">Rows per page:</label>
-            <select id="rowsPerPage" onchange="changeRowsPerPage()">
-                <option value="10">10</option>
-                <option value="15" selected>15</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-            </select>
-        </div>
-    </div>
+      <table id="questionsTable">
+          <thead>
+              <tr>
+                  <th>#</th>
+                  <th>File</th>
+                  <th>Highlighted Code</th>
+                  <th>Question</th>
+                  <th>Actions</th>
+              </tr>
+          </thead>
+          <tbody id="questionsTableBody">
+              ${questionsTable}
+          </tbody>
+      </table>
 
-    <script>
-        const vscode = acquireVsCodeApi();
-        const originalData = JSON.parse(JSON.stringify(${JSON.stringify(personalizedQuestionsData)}));
-        const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
-        
-        // Pagination variables
-        let currentPage = 1;
-        let rowsPerPage = 15;
-        let totalPages = Math.ceil(${personalizedQuestionsData.length} / rowsPerPage);
-        let filteredRows = [];
-        let isFiltered = false;
+      <div class="pagination-container">
+          <div class="pagination-controls">
+              <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
+              <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
 
-        // Initialize the table
-        function initializeTable() {
-            updatePaginationControls();
-            renderPageNumbers();
-            updateVisibleRows();
-        }
+              <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
 
-        // Update which rows are visible based on current page
-        function updateVisibleRows() {
-            const rows = document.querySelectorAll('#questionsTableBody tr');
-            const startIdx = (currentPage - 1) * rowsPerPage;
-            const endIdx = startIdx + rowsPerPage;
-            
-            rows.forEach((row, index) => {
-                if (isFiltered && !filteredRows.includes(index)) {
-                    row.style.display = 'none';
-                    return;
-                }
-                
-                if (index >= startIdx && index < endIdx) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
+              <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
+              <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
+          </div>
 
-        // Update pagination controls state
-        function updatePaginationControls() {
-            document.getElementById('firstPageBtn').disabled = currentPage === 1;
-            document.getElementById('prevPageBtn').disabled = currentPage === 1;
-            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
-            document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
-            document.getElementById('pageJumpInput').value = currentPage;
-            document.getElementById('totalPagesDisplay').textContent = totalPages;
-        }
+          <div class="page-jump">
+              <span>Go to:</span>
+              <input type="number" id="pageJumpInput" min="1" value="1">
+              <button onclick="jumpToPage()">Go</button>
+              <span>of <span id="totalPagesDisplay">1</span></span>
+          </div>
 
-        // Render page number buttons
-        function renderPageNumbers() {
-            const container = document.getElementById('pageNumbers');
-            container.innerHTML = '';
-            
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-            
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-            
-            if (startPage > 1) {
-                const btn = document.createElement('button');
-                btn.className = 'page-btn';
-                btn.textContent = '1';
-                btn.onclick = () => goToPage(1);
-                container.appendChild(btn);
-                
-                if (startPage > 2) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    container.appendChild(ellipsis);
-                }
-            }
-            
-            for (let i = startPage; i <= endPage; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-                btn.textContent = i;
-                btn.onclick = () => goToPage(i);
-                container.appendChild(btn);
-            }
-            
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    container.appendChild(ellipsis);
-                }
-                
-                const btn = document.createElement('button');
-                btn.className = 'page-btn';
-                btn.textContent = totalPages;
-                btn.onclick = () => goToPage(totalPages);
-                container.appendChild(btn);
-            }
-        }
+          <div class="rows-per-page">
+              <label for="rowsPerPage">Rows per page:</label>
+              <select id="rowsPerPage" onchange="changeRowsPerPage()">
+                  <option value="10">10</option>
+                  <option value="15" selected>15</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+              </select>
+          </div>
+      </div>
 
-        // Navigation functions
-        function goToPage(page) {
-            if (page < 1 || page > totalPages) return;
-            currentPage = page;
-            updateVisibleRows();
-            updatePaginationControls();
-            renderPageNumbers();
-        }
+      <script>
+          const vscode = acquireVsCodeApi();
+          const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
+          const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
 
-        function goToFirstPage() {
-            goToPage(1);
-        }
+          // Pagination variables
+          let currentPage = 1;
+          let rowsPerPage = 15;
+          let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+          let filteredRows = [];
+          let isFiltered = false;
 
-        function goToPreviousPage() {
-            goToPage(currentPage - 1);
-        }
+          // Initialize the table
+          function initializeTable() {
+              updatePaginationControls();
+              renderPageNumbers();
+              updateVisibleRows();
+          }
 
-        function goToNextPage() {
-            goToPage(currentPage + 1);
-        }
+          // Update which rows are visible based on current page
+          function updateVisibleRows() {
+              const rows = document.querySelectorAll('#questionsTableBody tr');
+              const startIdx = (currentPage - 1) * rowsPerPage;
+              const endIdx = startIdx + rowsPerPage;
 
-        function goToLastPage() {
-            goToPage(totalPages);
-        }
+              rows.forEach((row, index) => {
+                  if (isFiltered && !filteredRows.includes(index)) {
+                      row.style.display = 'none';
+                      return;
+                  }
 
-        function jumpToPage() {
-            const input = document.getElementById('pageJumpInput');
-            const page = parseInt(input.value);
-            if (!isNaN(page) && page >= 1 && page <= totalPages) {
-                goToPage(page);
-            }
-        }
+                  if (index >= startIdx && index < endIdx) {
+                      row.style.display = '';
+                  } else {
+                      row.style.display = 'none';
+                  }
+              });
+          }
 
-        // Change rows per page
-        function changeRowsPerPage() {
-            rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${personalizedQuestionsData.length} / rowsPerPage);
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
-            initializeTable();
-        }
+          // Update pagination controls state
+          function updatePaginationControls() {
+              document.getElementById('firstPageBtn').disabled = currentPage === 1;
+              document.getElementById('prevPageBtn').disabled = currentPage === 1;
+              document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+              document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+              document.getElementById('pageJumpInput').value = currentPage;
+              document.getElementById('totalPagesDisplay').textContent = totalPages;
+          }
 
-        // Filter questions based on search term
-        function filterQuestions() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#questionsTableBody tr');
-            filteredRows = [];
-            
-            if (searchTerm === '') {
-                isFiltered = false;
-                document.getElementById('filterCount').textContent = '';
-            } else {
-                isFiltered = true;
-                rows.forEach((row, index) => {
-                    const label = row.dataset.label.toLowerCase();
-                    const file = row.dataset.file.toLowerCase();
-                    const code = row.dataset.code.toLowerCase();
-                    const question = row.dataset.question.toLowerCase();
-                    
-                    if (label.includes(searchTerm) || file.includes(searchTerm) || 
-                        code.includes(searchTerm) || question.includes(searchTerm)) {
-                        filteredRows.push(index);
-                    }
-                });
-                
-                document.getElementById('filterCount').textContent = filteredRows.length > 0 
-                    ? \`\${filteredRows.length} matches\` 
-                    : 'No matches';
-            }
-            
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${personalizedQuestionsData.length} / rowsPerPage);
-            currentPage = 1;
-            initializeTable();
-        }
+          // Render page number buttons
+          function renderPageNumbers() {
+              const container = document.getElementById('pageNumbers');
+              container.innerHTML = '';
 
-        // [Rest of your existing functions remain unchanged]
-        function copyQuestionText(index) {
-            const questionTextArea = document.getElementById('question-' + index);
-            const selectedText = questionTextArea.value.substring(
-                questionTextArea.selectionStart,
-                questionTextArea.selectionEnd
-            );
-            const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+              const maxVisiblePages = 5;
+              let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+              let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                vscode.postMessage({ 
-                    type: 'showInformationMessage', 
-                    message: 'Copied to clipboard: ' + 
-                        (selectedText.length > 0 ? 'Selected text' : 'Full question')
-                });
-            }).catch(err => {
-                vscode.postMessage({ 
-                    type: 'showErrorMessage', 
-                    message: 'Failed to copy text: ' + err 
-                });
-            });
-        }
+              if (endPage - startPage + 1 < maxVisiblePages) {
+                  startPage = Math.max(1, endPage - maxVisiblePages + 1);
+              }
 
-        function toggleSummaryTable() {
-            const container = document.getElementById('summaryTableContainer');
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
-        }
+              if (startPage > 1) {
+                  const btn = document.createElement('button');
+                  btn.className = 'page-btn';
+                  btn.textContent = '1';
+                  btn.onclick = () => goToPage(1);
+                  container.appendChild(btn);
 
-        function refreshView() {
-            vscode.postMessage({ type: 'refreshView' });
-        }
+                  if (startPage > 2) {
+                      const ellipsis = document.createElement('span');
+                      ellipsis.textContent = '...';
+                      container.appendChild(ellipsis);
+                  }
+              }
 
-        function saveChanges(index) {
-            const updatedCode = document.getElementById('code-' + index).value;
-            const updatedQuestion = document.getElementById('question-' + index).value;
-            vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
-        }
+              for (let i = startPage; i <= endPage; i++) {
+                  const btn = document.createElement('button');
+                  btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+                  btn.textContent = i;
+                  btn.onclick = () => goToPage(i);
+                  container.appendChild(btn);
+              }
 
-        function revertChanges(index) {
-            document.getElementById('code-' + index).value = originalData[index].highlightedCode;
-            document.getElementById('question-' + index).value = originalData[index].text;
-            document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
-        }
+              if (endPage < totalPages) {
+                  if (endPage < totalPages - 1) {
+                      const ellipsis = document.createElement('span');
+                      ellipsis.textContent = '...';
+                      container.appendChild(ellipsis);
+                  }
 
-        function toggleExclude(index) {
-            const excludeStatus = document.getElementById('exclude-' + index).checked;
-            vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
-        }
+                  const btn = document.createElement('button');
+                  btn.className = 'page-btn';
+                  btn.textContent = totalPages;
+                  btn.onclick = () => goToPage(totalPages);
+                  container.appendChild(btn);
+              }
+          }
 
-        function editQuestion(index) {
-            vscode.postMessage({ type: 'editQuestion', index });
-        }
-        
-        // Initialize the table when the page loads
-        window.addEventListener('load', initializeTable);
-    </script>
-</body>
-</html>
-    `;
+          // Navigation functions
+          function goToPage(page) {
+              if (page < 1 || page > totalPages) return;
+              currentPage = page;
+              updateVisibleRows();
+              updatePaginationControls();
+              renderPageNumbers();
+          }
+
+          function goToFirstPage() {
+              goToPage(1);
+          }
+
+          function goToPreviousPage() {
+              goToPage(currentPage - 1);
+          }
+
+          function goToNextPage() {
+              goToPage(currentPage + 1);
+          }
+
+          function goToLastPage() {
+              goToPage(totalPages);
+          }
+
+          function jumpToPage() {
+              const input = document.getElementById('pageJumpInput');
+              const page = parseInt(input.value);
+              if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                  goToPage(page);
+              }
+          }
+
+          // Change rows per page
+          function changeRowsPerPage() {
+              rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+              totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+              if (currentPage > totalPages) {
+                  currentPage = totalPages;
+              }
+              initializeTable();
+          }
+
+          // Filter questions based on search term
+          function filterQuestions() {
+              const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+              const rows = document.querySelectorAll('#questionsTableBody tr');
+              filteredRows = [];
+
+              if (searchTerm === '') {
+                  isFiltered = false;
+                  document.getElementById('filterCount').textContent = '';
+              } else {
+                  isFiltered = true;
+                  rows.forEach((row, index) => {
+                      const label = row.dataset.label.toLowerCase();
+                      const file = row.dataset.file.toLowerCase();
+                      const code = row.dataset.code.toLowerCase();
+                      const question = row.dataset.question.toLowerCase();
+
+                      if (label.includes(searchTerm) || file.includes(searchTerm) ||
+                          code.includes(searchTerm) || question.includes(searchTerm)) {
+                          filteredRows.push(index);
+                      }
+                  });
+
+                  document.getElementById('filterCount').textContent = filteredRows.length > 0
+                      ? \`\${filteredRows.length} matches\`
+                      : 'No matches';
+              }
+
+              totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+              currentPage = 1;
+              initializeTable();
+          }
+
+          function copyQuestionText(index) {
+              const questionTextArea = document.getElementById('question-' + index);
+              const selectedText = questionTextArea.value.substring(
+                  questionTextArea.selectionStart,
+                  questionTextArea.selectionEnd
+              );
+              const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+
+              navigator.clipboard.writeText(textToCopy).then(() => {
+                  vscode.postMessage({
+                      type: 'showInformationMessage',
+                      message: 'Copied to clipboard: ' +
+                          (selectedText.length > 0 ? 'Selected text' : 'Full question')
+                  });
+              }).catch(err => {
+                  vscode.postMessage({
+                      type: 'showErrorMessage',
+                      message: 'Failed to copy text: ' + err
+                  });
+              });
+          }
+
+          function toggleSummaryTable() {
+              const container = document.getElementById('summaryTableContainer');
+              container.style.display = container.style.display === 'none' ? 'block' : 'none';
+          }
+
+          function refreshView() {
+              vscode.postMessage({ type: 'refreshView' });
+          }
+
+          function saveChanges(index) {
+              const updatedCode = document.getElementById('code-' + index).value;
+              const updatedQuestion = document.getElementById('question-' + index).value;
+              vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
+          }
+
+          function revertChanges(index) {
+              document.getElementById('code-' + index).value = originalData[index].highlightedCode;
+              document.getElementById('question-' + index).value = originalData[index].text;
+              document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
+          }
+
+          function toggleExclude(index) {
+              const excludeStatus = document.getElementById('exclude-' + index).checked;
+              vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
+          }
+
+          function editQuestion(index) {
+              vscode.postMessage({ type: 'editQuestion', index });
+          }
+
+          // Initialize the table when the page loads
+          window.addEventListener('load', initializeTable);
+      </script>
+  </body>
+  </html>
+      `;
         // Handle messages from the Webview
         panel.webview.onDidReceiveMessage((message) => {
             if (message.type === 'saveChanges') {
                 // Update the data in memory
-                personalizedQuestionsData[message.index].highlightedCode = message.updatedCode;
-                personalizedQuestionsData[message.index].text = message.updatedQuestion;
+                reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+                reorderedQuestions[message.index].text = message.updatedQuestion;
+                // Update the original data array as well
+                personalizedQuestionsData = reorderedQuestions;
                 saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
                 vscode.window.showInformationMessage('Changes saved successfully!');
             }
             if (message.type === 'toggleExclude') {
                 // Save exclude checkbox status automatically
-                personalizedQuestionsData[message.index].excludeFromQuiz = message.excludeStatus;
+                reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+                // Update the original data array as well
+                personalizedQuestionsData = reorderedQuestions;
                 saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
             }
             if (message.type === 'editQuestion') {
@@ -1633,6 +2412,674 @@ function activate(context) {
             }
         });
     }));
+    // let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
+    //   if (personalizedQuestionsData.length === 0) {
+    //     vscode.window.showInformationMessage('No personalized questions added yet!');
+    //     return;
+    //   }
+    //   // Check if we have config data, if not prompt user to select config file
+    //   if (!configData) {
+    //     try {
+    //       const configFileUri = await vscode.window.showOpenDialog({
+    //         canSelectMany: false,
+    //         openLabel: 'Select Config File',
+    //         filters: {
+    //           'JSON Files': ['json']
+    //         }
+    //       });
+    //       if (configFileUri && configFileUri[0]) {
+    //         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
+    //         configData = JSON.parse(fileData.toString());
+    //         studentNameMapping = configData.studentNameMapping || {};
+    //       } else {
+    //         vscode.window.showInformationMessage('No config file selected. Using default student names.');
+    //       }
+    //     } catch (error) {
+    //       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+    //     }
+    //   }
+    //   // Create a Webview Panel for viewing personalized questions
+    //   const panel = vscode.window.createWebviewPanel(
+    //     'viewPersonalizedQuestions',
+    //     'View Quiz Questions',
+    //     vscode.ViewColumn.One,
+    //     { enableScripts: true }
+    //   );
+    //   // const getAllCISStudents = async () => {
+    //   //   try {
+    //   //     const workspaceFolders = vscode.workspace.workspaceFolders;
+    //   //     if (!workspaceFolders) return [];
+    //   //     const cisStudents = new Set();
+    //   //     // First, add all students who have questions
+    //   //     Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
+    //   //     // Then add students from workspace folders
+    //   //     for (const folder of workspaceFolders) {
+    //   //       const folderUri = folder.uri;
+    //   //       if (folderUri.fsPath.includes("CIS")) {
+    //   //         const files = await vscode.workspace.fs.readDirectory(folderUri);
+    //   //         for (const [name, type] of files) {
+    //   //           if (type === vscode.FileType.Directory) {
+    //   //             cisStudents.add(name);
+    //   //           }
+    //   //         }
+    //   //       }
+    //   //     }
+    //   //     return Array.from(cisStudents).sort(); // Return sorted array
+    //   //   } catch (error) {
+    //   //     console.error("Error fetching CIS students:", error);
+    //   //     return [];
+    //   //   }
+    //   // };
+    //   const getAllCISStudents = async () => {
+    //     try {
+    //       const workspaceFolders = vscode.workspace.workspaceFolders;
+    //       if (!workspaceFolders) return [];
+    //       const cisStudents = new Set();
+    //       // Only add folder names under CIS directories
+    //       for (const folder of workspaceFolders) {
+    //         const folderUri = folder.uri;
+    //         if (folderUri.fsPath.includes("CIS")) {
+    //           const files = await vscode.workspace.fs.readDirectory(folderUri);
+    //           for (const [name, type] of files) {
+    //             if (type === vscode.FileType.Directory) {
+    //               cisStudents.add(name);
+    //             }
+    //           }
+    //         }
+    //       }
+    //       return Array.from(cisStudents).sort();
+    //     } catch (error) {
+    //       console.error("Error fetching CIS students:", error);
+    //       return [];
+    //     }
+    //   };
+    //   // Function to map student name using the config
+    //   const mapStudentName = (name) => {
+    //     return studentNameMapping[name] || name;
+    //   };
+    //   // Get all CIS students
+    //   const allCISStudents = await getAllCISStudents();
+    //   // Group questions by student name
+    //   const questionsByStudent = {};
+    //   personalizedQuestionsData.forEach((question) => {
+    //     const studentName = extractStudentName(question.filePath);
+    //     if (!questionsByStudent[studentName]) {
+    //       questionsByStudent[studentName] = [];
+    //     }
+    //     questionsByStudent[studentName].push(question);
+    //   });
+    //   // Calculate question counts per student and determine max questions
+    //   const studentQuestionCounts = new Map();
+    //   let maxQuestions = 0;
+    //   for (const studentName in questionsByStudent) {
+    //     const count = questionsByStudent[studentName].length;
+    //     studentQuestionCounts.set(studentName, count);
+    //     if (count > maxQuestions) {
+    //       maxQuestions = count;
+    //     }
+    //   }
+    //   // Assign labels to questions (1a, 1b, 2a, etc.)
+    //   const questionLabels = {};
+    //   const studentNumbers = {};
+    //   let studentCounter = 1;
+    //   let questionIndex = 0;
+    //   // Process students in alphabetical order for consistent numbering
+    //   const sortedStudentNames = Object.keys(questionsByStudent).sort();
+    //   for (const studentName of sortedStudentNames) {
+    //     studentNumbers[studentName] = studentCounter;
+    //     const questions = questionsByStudent[studentName];
+    //     questions.forEach((question, qIndex) => {
+    //       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+    //       questionLabels[questionIndex] = questionLabel;
+    //       questionIndex++;
+    //     });
+    //     studentCounter++;
+    //   }
+    //   // Rebuild the questions array in the new order (grouped by student)
+    //   const reorderedQuestions = [];
+    //   for (const studentName of sortedStudentNames) {
+    //     reorderedQuestions.push(...questionsByStudent[studentName]);
+    //   }
+    //   // Build the summary table HTML
+    //   const buildSummaryTable = () => {
+    //     // Get all unique student names (from both questions and folders)
+    //     const allStudents = Array.from(new Set([
+    //       ...Object.keys(questionsByStudent),
+    //       ...allCISStudents
+    //     ])).sort();
+    //     const summaryRows = allStudents.map(student => {
+    //       const count = studentQuestionCounts.get(student) || 0;
+    //       const hasQuestions = count > 0;
+    //       let color = 'red'; // default color for zero questions
+    //       if (count === maxQuestions && maxQuestions > 0) {
+    //         color = 'green';
+    //       } else if (count > 0 && count < maxQuestions) {
+    //         color = 'yellow';
+    //       }
+    //       const displayName = mapStudentName(student);
+    //       return `
+    //     <tr style="background-color: ${color}">
+    //       <td>${displayName}</td>
+    //       <td>${count}</td>
+    //       <td>${hasQuestions ? '✓' : '✗'}</td>
+    //     </tr>
+    //   `;
+    //     }).join('');
+    //     return `
+    //   <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+    //     <h2>Student Question Summary</h2>
+    //     <table style="width: 100%; border-collapse: collapse;">
+    //       <thead>
+    //         <tr>
+    //           <th>Student Name</th>
+    //           <th>Question Count</th>
+    //           <th>Has Questions</th>
+    //         </tr>
+    //       </thead>
+    //       <tbody>
+    //         ${summaryRows}
+    //       </tbody>
+    //     </table>
+    //   </div>
+    // `;
+    //   };
+    //   // Determine color for question labels
+    //   const getLabelColor = (studentName) => {
+    //     const count = studentQuestionCounts.get(studentName) || 0;
+    //     if (count === maxQuestions && maxQuestions > 0) return 'green';
+    //     if (count > 0 && count < maxQuestions) return 'yellow';
+    //     return 'red';
+    //   };
+    //   const truncateCharacters = (text, charLimit) => {
+    //     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
+    //   };
+    //   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
+    //   const questionsTable = reorderedQuestions.map((question, index) => {
+    //     const studentName = extractStudentName(question.filePath);
+    //     const labelColor = getLabelColor(studentName);
+    //     const filePathParts = question.filePath.split('/');
+    //     let shortenedFilePath = filePathParts.length > 2
+    //       ? `.../${filePathParts.slice(-3).join('/')}`
+    //       : question.filePath;
+    //     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
+    //     return `
+    //   <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
+    //       <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
+    //       <td title="${question.filePath}">${shortenedFilePath}</td>
+    //       <td>
+    //           <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
+    //       </td>
+    //       <td>
+    //           <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+    //       </td>
+    //       <td>
+    //           <button onclick="saveChanges(${index})">Save</button>
+    //           <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+    //           <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+    //           <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+    //           <br>
+    //           <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
+    //           <label for="exclude-${index}">Exclude from Quiz</label>
+    //       </td>
+    //   </tr>
+    //   `;
+    //   }).join('');
+    //   // HTML content for the Webview
+    //   panel.webview.html = `
+    // <!DOCTYPE html>
+    // <html lang="en">
+    // <head>
+    //     <meta charset="UTF-8">
+    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //     <title>View Quiz Questions</title>
+    //     <style>
+    //         body {
+    //             font-family: Arial, sans-serif;
+    //             margin: 20px;
+    //             background-color:rgb(255, 255, 255);
+    //             color: black;
+    //         }
+    //         .header-container {
+    //             display: flex;
+    //             justify-content: space-between;
+    //             align-items: center;
+    //             margin-bottom: 20px;
+    //             flex-wrap: wrap;
+    //         }
+    //         .controls-container {
+    //             display: flex;
+    //             gap: 10px;
+    //             margin-bottom: 20px;
+    //             align-items: center;
+    //             flex-wrap: wrap;
+    //         }
+    //         .search-container {
+    //             display: flex;
+    //             align-items: center;
+    //             gap: 10px;
+    //         }
+    //         table {
+    //             width: 100%;
+    //             border-collapse: collapse;
+    //             margin-top: 20px;
+    //             background-color: white;
+    //             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    //         }
+    //         th, td {
+    //             border: 1px solid #ddd;
+    //             padding: 12px;
+    //             text-align: left;
+    //         }
+    //         th {
+    //             background-color: #007acc;
+    //             color: white;
+    //             position: sticky;
+    //             top: 0;
+    //         }
+    //         textarea {
+    //             width: 100%;
+    //             height: 100px;
+    //             font-size: 14px;
+    //             border: 1px solid #ccc;
+    //             padding: 8px;
+    //             resize: vertical;
+    //         }
+    //         .code-area {
+    //             background-color: #1e1e1e;
+    //             color: #d4d4d4;
+    //             font-family: monospace;
+    //         }
+    //         .question-area {
+    //             background-color: #f9f9f9;
+    //             color: #333;
+    //             font-family: sans-serif;
+    //         }
+    //         button {
+    //             padding: 8px 12px;
+    //             margin: 2px;
+    //             cursor: pointer;
+    //             border: none;
+    //             border-radius: 4px;
+    //             font-weight: bold;
+    //         }
+    //         button:hover {
+    //             opacity: 0.9;
+    //         }
+    //         #refreshBtn {
+    //             background-color: #4CAF50;
+    //             color: white;
+    //         }
+    //         #toggleSummaryBtn {
+    //             background-color: #673AB7;
+    //             color: white;
+    //         }
+    //         input[type="text"] {
+    //             padding: 8px;
+    //             border: 1px solid #ddd;
+    //             border-radius: 4px;
+    //             width: 250px;
+    //         }
+    //         input[type="checkbox"] {
+    //             transform: scale(1.2);
+    //             margin-top: 5px;
+    //         }
+    //         #summaryTableContainer table th {
+    //             background-color: #007acc;
+    //             color: white;
+    //         }
+    //         #summaryTableContainer table td {
+    //             border: 1px solid #ddd;
+    //             padding: 8px;
+    //         }
+    //         .total-count {
+    //             font-size: 18px;
+    //             font-weight: bold;
+    //             color: #333;
+    //         }
+    //         .pagination-container {
+    //             display: flex;
+    //             justify-content: center;
+    //             align-items: center;
+    //             margin-top: 20px;
+    //             gap: 10px;
+    //             flex-wrap: wrap;
+    //         }
+    //         .pagination-controls {
+    //             display: flex;
+    //             gap: 5px;
+    //             align-items: center;
+    //         }
+    //         .page-btn {
+    //             padding: 5px 10px;
+    //             border: 1px solid #ddd;
+    //             background-color: white;
+    //             cursor: pointer;
+    //             border-radius: 4px;
+    //             min-width: 30px;
+    //             text-align: center;
+    //         }
+    //         .page-btn:hover:not(.active):not(:disabled) {
+    //             background-color: #f1f1f1;
+    //         }
+    //         .page-btn.active {
+    //             background-color: #007acc;
+    //             color: white;
+    //             border-color: #007acc;
+    //         }
+    //         .page-btn:disabled {
+    //             opacity: 0.5;
+    //             cursor: not-allowed;
+    //         }
+    //         .page-jump {
+    //             display: flex;
+    //             align-items: center;
+    //             gap: 5px;
+    //         }
+    //         .page-jump input {
+    //             width: 50px;
+    //             padding: 5px;
+    //             text-align: center;
+    //             border: 1px solid #ddd;
+    //             border-radius: 4px;
+    //         }
+    //         .rows-per-page {
+    //             display: flex;
+    //             align-items: center;
+    //             gap: 5px;
+    //         }
+    //         .rows-per-page select {
+    //             padding: 5px;
+    //             border-radius: 4px;
+    //             border: 1px solid #ddd;
+    //         }
+    //     </style>
+    // </head>
+    // <body>
+    //     <div class="header-container">
+    //         <h1>All Quiz Questions</h1>
+    //         <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+    //     </div>
+    //     <div class="controls-container">
+    //         <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
+    //         <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
+    //         <div class="search-container">
+    //             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+    //             <span id="filterCount"></span>
+    //         </div>
+    //     </div>
+    //     ${buildSummaryTable()}
+    //     <table id="questionsTable">
+    //         <thead>
+    //             <tr>
+    //                 <th>#</th>
+    //                 <th>File</th>
+    //                 <th>Highlighted Code</th>
+    //                 <th>Question</th>
+    //                 <th>Actions</th>
+    //             </tr>
+    //         </thead>
+    //         <tbody id="questionsTableBody">
+    //             ${questionsTable}
+    //         </tbody>
+    //     </table>
+    //     <div class="pagination-container">
+    //         <div class="pagination-controls">
+    //             <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
+    //             <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
+    //             <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+    //             <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
+    //             <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
+    //         </div>
+    //         <div class="page-jump">
+    //             <span>Go to:</span>
+    //             <input type="number" id="pageJumpInput" min="1" value="1">
+    //             <button onclick="jumpToPage()">Go</button>
+    //             <span>of <span id="totalPagesDisplay">1</span></span>
+    //         </div>
+    //         <div class="rows-per-page">
+    //             <label for="rowsPerPage">Rows per page:</label>
+    //             <select id="rowsPerPage" onchange="changeRowsPerPage()">
+    //                 <option value="10">10</option>
+    //                 <option value="15" selected>15</option>
+    //                 <option value="25">25</option>
+    //                 <option value="50">50</option>
+    //                 <option value="100">100</option>
+    //             </select>
+    //         </div>
+    //     </div>
+    //     <script>
+    //         const vscode = acquireVsCodeApi();
+    //         const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
+    //         const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
+    //         // Pagination variables
+    //         let currentPage = 1;
+    //         let rowsPerPage = 15;
+    //         let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+    //         let filteredRows = [];
+    //         let isFiltered = false;
+    //         // Initialize the table
+    //         function initializeTable() {
+    //             updatePaginationControls();
+    //             renderPageNumbers();
+    //             updateVisibleRows();
+    //         }
+    //         // Update which rows are visible based on current page
+    //         function updateVisibleRows() {
+    //             const rows = document.querySelectorAll('#questionsTableBody tr');
+    //             const startIdx = (currentPage - 1) * rowsPerPage;
+    //             const endIdx = startIdx + rowsPerPage;
+    //             rows.forEach((row, index) => {
+    //                 if (isFiltered && !filteredRows.includes(index)) {
+    //                     row.style.display = 'none';
+    //                     return;
+    //                 }
+    //                 if (index >= startIdx && index < endIdx) {
+    //                     row.style.display = '';
+    //                 } else {
+    //                     row.style.display = 'none';
+    //                 }
+    //             });
+    //         }
+    //         // Update pagination controls state
+    //         function updatePaginationControls() {
+    //             document.getElementById('firstPageBtn').disabled = currentPage === 1;
+    //             document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    //             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+    //             document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+    //             document.getElementById('pageJumpInput').value = currentPage;
+    //             document.getElementById('totalPagesDisplay').textContent = totalPages;
+    //         }
+    //         // Render page number buttons
+    //         function renderPageNumbers() {
+    //             const container = document.getElementById('pageNumbers');
+    //             container.innerHTML = '';
+    //             const maxVisiblePages = 5;
+    //             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    //             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    //             if (endPage - startPage + 1 < maxVisiblePages) {
+    //                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    //             }
+    //             if (startPage > 1) {
+    //                 const btn = document.createElement('button');
+    //                 btn.className = 'page-btn';
+    //                 btn.textContent = '1';
+    //                 btn.onclick = () => goToPage(1);
+    //                 container.appendChild(btn);
+    //                 if (startPage > 2) {
+    //                     const ellipsis = document.createElement('span');
+    //                     ellipsis.textContent = '...';
+    //                     container.appendChild(ellipsis);
+    //                 }
+    //             }
+    //             for (let i = startPage; i <= endPage; i++) {
+    //                 const btn = document.createElement('button');
+    //                 btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+    //                 btn.textContent = i;
+    //                 btn.onclick = () => goToPage(i);
+    //                 container.appendChild(btn);
+    //             }
+    //             if (endPage < totalPages) {
+    //                 if (endPage < totalPages - 1) {
+    //                     const ellipsis = document.createElement('span');
+    //                     ellipsis.textContent = '...';
+    //                     container.appendChild(ellipsis);
+    //                 }
+    //                 const btn = document.createElement('button');
+    //                 btn.className = 'page-btn';
+    //                 btn.textContent = totalPages;
+    //                 btn.onclick = () => goToPage(totalPages);
+    //                 container.appendChild(btn);
+    //             }
+    //         }
+    //         // Navigation functions
+    //         function goToPage(page) {
+    //             if (page < 1 || page > totalPages) return;
+    //             currentPage = page;
+    //             updateVisibleRows();
+    //             updatePaginationControls();
+    //             renderPageNumbers();
+    //         }
+    //         function goToFirstPage() {
+    //             goToPage(1);
+    //         }
+    //         function goToPreviousPage() {
+    //             goToPage(currentPage - 1);
+    //         }
+    //         function goToNextPage() {
+    //             goToPage(currentPage + 1);
+    //         }
+    //         function goToLastPage() {
+    //             goToPage(totalPages);
+    //         }
+    //         function jumpToPage() {
+    //             const input = document.getElementById('pageJumpInput');
+    //             const page = parseInt(input.value);
+    //             if (!isNaN(page) && page >= 1 && page <= totalPages) {
+    //                 goToPage(page);
+    //             }
+    //         }
+    //         // Change rows per page
+    //         function changeRowsPerPage() {
+    //             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+    //             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+    //             if (currentPage > totalPages) {
+    //                 currentPage = totalPages;
+    //             }
+    //             initializeTable();
+    //         }
+    //         // Filter questions based on search term
+    //         function filterQuestions() {
+    //             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    //             const rows = document.querySelectorAll('#questionsTableBody tr');
+    //             filteredRows = [];
+    //             if (searchTerm === '') {
+    //                 isFiltered = false;
+    //                 document.getElementById('filterCount').textContent = '';
+    //             } else {
+    //                 isFiltered = true;
+    //                 rows.forEach((row, index) => {
+    //                     const label = row.dataset.label.toLowerCase();
+    //                     const file = row.dataset.file.toLowerCase();
+    //                     const code = row.dataset.code.toLowerCase();
+    //                     const question = row.dataset.question.toLowerCase();
+    //                     if (label.includes(searchTerm) || file.includes(searchTerm) ||
+    //                         code.includes(searchTerm) || question.includes(searchTerm)) {
+    //                         filteredRows.push(index);
+    //                     }
+    //                 });
+    //                 document.getElementById('filterCount').textContent = filteredRows.length > 0
+    //                     ? \`\${filteredRows.length} matches\`
+    //                     : 'No matches';
+    //             }
+    //             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+    //             currentPage = 1;
+    //             initializeTable();
+    //         }
+    //         function copyQuestionText(index) {
+    //             const questionTextArea = document.getElementById('question-' + index);
+    //             const selectedText = questionTextArea.value.substring(
+    //                 questionTextArea.selectionStart,
+    //                 questionTextArea.selectionEnd
+    //             );
+    //             const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+    //             navigator.clipboard.writeText(textToCopy).then(() => {
+    //                 vscode.postMessage({
+    //                     type: 'showInformationMessage',
+    //                     message: 'Copied to clipboard: ' +
+    //                         (selectedText.length > 0 ? 'Selected text' : 'Full question')
+    //                 });
+    //             }).catch(err => {
+    //                 vscode.postMessage({
+    //                     type: 'showErrorMessage',
+    //                     message: 'Failed to copy text: ' + err
+    //                 });
+    //             });
+    //         }
+    //         function toggleSummaryTable() {
+    //             const container = document.getElementById('summaryTableContainer');
+    //             container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    //         }
+    //         function refreshView() {
+    //             vscode.postMessage({ type: 'refreshView' });
+    //         }
+    //         function saveChanges(index) {
+    //             const updatedCode = document.getElementById('code-' + index).value;
+    //             const updatedQuestion = document.getElementById('question-' + index).value;
+    //             vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
+    //         }
+    //         function revertChanges(index) {
+    //             document.getElementById('code-' + index).value = originalData[index].highlightedCode;
+    //             document.getElementById('question-' + index).value = originalData[index].text;
+    //             document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
+    //         }
+    //         function toggleExclude(index) {
+    //             const excludeStatus = document.getElementById('exclude-' + index).checked;
+    //             vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
+    //         }
+    //         function editQuestion(index) {
+    //             vscode.postMessage({ type: 'editQuestion', index });
+    //         }
+    //         // Initialize the table when the page loads
+    //         window.addEventListener('load', initializeTable);
+    //     </script>
+    // </body>
+    // </html>
+    //     `;
+    //   // Handle messages from the Webview
+    //   panel.webview.onDidReceiveMessage((message) => {
+    //     if (message.type === 'saveChanges') {
+    //       // Update the data in memory
+    //       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+    //       reorderedQuestions[message.index].text = message.updatedQuestion;
+    //       // Update the original data array as well
+    //       personalizedQuestionsData = reorderedQuestions;
+    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+    //       vscode.window.showInformationMessage('Changes saved successfully!');
+    //     }
+    //     if (message.type === 'toggleExclude') {
+    //       // Save exclude checkbox status automatically
+    //       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+    //       // Update the original data array as well
+    //       personalizedQuestionsData = reorderedQuestions;
+    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+    //     }
+    //     if (message.type === 'editQuestion') {
+    //       // Open a new webview panel for editing the question
+    //       openEditQuestionPanel(message.index);
+    //     }
+    //     if (message.type === 'refreshView') {
+    //       // Close and reopen the panel to refresh the view
+    //       panel.dispose(); // Close the current panel
+    //       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
+    //     }
+    //     if (message.type === 'showInformationMessage') {
+    //       vscode.window.showInformationMessage(message.message);
+    //     }
+    //     if (message.type === 'showErrorMessage') {
+    //       vscode.window.showErrorMessage(message.message);
+    //     }
+    //   });
+    // });
     let generatePersonalizedQuizCommand = vscode.commands.registerCommand('extension.generatePersonalizedQuiz', () => __awaiter(this, void 0, void 0, function* () {
         if (personalizedQuestionsData.length === 0) {
             vscode.window.showErrorMessage('No personalized questions available to generate the quiz!');
@@ -1827,10 +3274,10 @@ ${questionText}
                 {
                     title: "Combined Questions",
                     questions: [{
-                            id: `${config.pl_question_root}/${config.quiz_directory_name}/instructor/combined_questions`,
-                            points: 0,
-                            description: "All student questions combined"
-                        }]
+                        id: `${config.pl_question_root}/${config.quiz_directory_name}/instructor/combined_questions`,
+                        points: 0,
+                        description: "All student questions combined"
+                    }]
                 }
             ]
         };
@@ -1841,8 +3288,50 @@ ${questionText}
             `Instructor combined view: ${instructorQuestionFolderPath}\n` +
             `Instructor assessment: ${instructorAssessmentPath}`, { modal: true });
     }));
+    let createConfigCommand = vscode.commands.registerCommand('extension.createConfig', () => __awaiter(this, void 0, void 0, function* () {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            vscode.window.showErrorMessage('No workspace folder is open');
+            return;
+        }
+        const workspaceRoot = workspaceFolders[0].uri.fsPath;
+        const configPath = path.join(workspaceRoot, 'cqlc.config.json');
+        if (fs.existsSync(configPath)) {
+            const overwrite = yield vscode.window.showWarningMessage('Config file already exists. Overwrite?', { modal: true }, 'Yes', 'No');
+            if (overwrite !== 'Yes')
+                return;
+        }
+        const sampleConfig = {
+            "title": " Brother",
+            "topic": "Variable",
+            "folder": "Brother",
+            "pl_root": "/Users/benedictoseisefa/Desktop/pl-gvsu-cis500dev-master",
+            "pl_question_root": "PersonalQuiz",
+            "pl_assessment_root": "courseInstances/TemplateCourseInstance/assessments",
+            "set": "Custom Quiz",
+            "number": "2",
+            "quiz_directory_name": "CIS371_SERVER",
+            "points_per_question": 10,
+            "startDate": "2025-03-22T10:30:00",
+            "endDate": "2025-03-22T16:30:40",
+            "timeLimitMin": 30,
+            "daysForGrading": 7,
+            "reviewEndDate": "2025-04-21T23:59:59",
+            "password": "letMeIn",
+            "language": "python",
+            "studentNameMapping": {
+                "benedictosefaosei": "oseisefb@mail.gvsu.edu",
+                "william_williams": "williamsw@mail.gvsu.edu",
+                "sam": "sam.test@mail.gvsu.edu",
+                "antonio": "anto.test@ug.edu.gh",
+                "caleb": "caleb.test@ug.edu.gh"
+            }
+        };
+        fs.writeFileSync(configPath, JSON.stringify(sampleConfig, null, 2));
+        vscode.window.showInformationMessage(`Config file created at ${configPath}`);
+    }));
     // Register all commands
-    context.subscriptions.push(highlightAndCommentCommand, viewCommentsCommand, askQuestionCommand, answerQuestionCommand, viewQuestionsAndAnswersCommand, addPersonalizedQuestionCommand, viewPersonalizedQuestionsCommand, generatePersonalizedQuizCommand);
+    context.subscriptions.push(highlightAndCommentCommand, viewCommentsCommand, askQuestionCommand, answerQuestionCommand, viewQuestionsAndAnswersCommand, addPersonalizedQuestionCommand, viewPersonalizedQuestionsCommand, generatePersonalizedQuizCommand, createConfigCommand);
 }
 /**
  * Deactivate the extension
@@ -1852,3 +3341,1531 @@ module.exports = {
     activate,
     deactivate,
 };
+
+
+
+
+
+
+
+
+// let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
+//   if (personalizedQuestionsData.length === 0) {
+//     vscode.window.showInformationMessage('No personalized questions added yet!');
+//     return;
+//   }
+
+//   // Check if we have config data, if not prompt user to select config file
+//   if (!configData) {
+//     try {
+//       const configFileUri = await vscode.window.showOpenDialog({
+//         canSelectMany: false,
+//         openLabel: 'Select Config File',
+//         filters: {
+//           'JSON Files': ['json']
+//         }
+//       });
+
+//       if (configFileUri && configFileUri[0]) {
+//         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
+//         configData = JSON.parse(fileData.toString());
+//         studentNameMapping = configData.studentNameMapping || {};
+//       } else {
+//         vscode.window.showInformationMessage('No config file selected. Using default student names.');
+//       }
+//     } catch (error) {
+//       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+//     }
+//   }
+
+//   // Create a Webview Panel for viewing personalized questions
+//   const panel = vscode.window.createWebviewPanel(
+//     'viewPersonalizedQuestions',
+//     'View Quiz Questions',
+//     vscode.ViewColumn.One,
+//     { enableScripts: true }
+//   );
+
+
+//   const getAllCISStudents = async () => {
+//     try {
+//       const workspaceFolders = vscode.workspace.workspaceFolders;
+//       if (!workspaceFolders) return [];
+
+//       const cisStudents = new Set();
+
+//       // First, add all students who have questions
+//       Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
+
+//       // Then add students from workspace folders
+//       for (const folder of workspaceFolders) {
+//         const folderUri = folder.uri;
+//         if (folderUri.fsPath.includes("CIS")) {
+//           const files = await vscode.workspace.fs.readDirectory(folderUri);
+//           for (const [name, type] of files) {
+//             if (type === vscode.FileType.Directory) {
+//               cisStudents.add(name);
+//             }
+//           }
+//         }
+//       }
+//       return Array.from(cisStudents).sort(); // Return sorted array
+//     } catch (error) {
+//       console.error("Error fetching CIS students:", error);
+//       return [];
+//     }
+//   };
+
+
+//   // Function to map student name using the config
+//   const mapStudentName = (name) => {
+//     return studentNameMapping[name] || name;
+//   };
+
+//   // Get all CIS students
+//   const allCISStudents = await getAllCISStudents();
+
+//   // Group questions by student name
+//   const questionsByStudent = {};
+//   personalizedQuestionsData.forEach((question) => {
+//     const studentName = extractStudentName(question.filePath);
+//     if (!questionsByStudent[studentName]) {
+//       questionsByStudent[studentName] = [];
+//     }
+//     questionsByStudent[studentName].push(question);
+//   });
+
+
+//   // Calculate question counts per student and determine max questions
+//   const studentQuestionCounts = new Map();
+//   let maxQuestions = 0;
+
+//   for (const studentName in questionsByStudent) {
+//     const count = questionsByStudent[studentName].length;
+//     studentQuestionCounts.set(studentName, count);
+//     if (count > maxQuestions) {
+//       maxQuestions = count;
+//     }
+//   }
+
+
+
+
+//   // Assign labels to questions (1a, 1b, 2a, etc.)
+//   const questionLabels = {};
+//   const studentNumbers = {};
+//   let studentCounter = 1;
+//   let questionIndex = 0;
+
+//   // Process students in alphabetical order for consistent numbering
+//   const sortedStudentNames = Object.keys(questionsByStudent).sort();
+
+//   for (const studentName of sortedStudentNames) {
+//     studentNumbers[studentName] = studentCounter;
+//     const questions = questionsByStudent[studentName];
+
+//     questions.forEach((question, qIndex) => {
+//       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+//       questionLabels[questionIndex] = questionLabel;
+//       questionIndex++;
+//     });
+
+//     studentCounter++;
+//   }
+
+//   // Rebuild the questions array in the new order (grouped by student)
+//   const reorderedQuestions = [];
+//   for (const studentName of sortedStudentNames) {
+//     reorderedQuestions.push(...questionsByStudent[studentName]);
+//   }
+
+
+
+//   // Build the summary table HTML
+//   const buildSummaryTable = () => {
+//     // Get all unique student names (from both questions and folders)
+//     const allStudents = Array.from(new Set([
+//       ...Object.keys(questionsByStudent),
+//       ...allCISStudents
+//     ])).sort();
+
+//     const summaryRows = allStudents.map(student => {
+//       const count = studentQuestionCounts.get(student) || 0;
+//       const hasQuestions = count > 0;
+
+//       let color = 'red'; // default color for zero questions
+//       if (count === maxQuestions && maxQuestions > 0) {
+//         color = 'green';
+//       } else if (count > 0 && count < maxQuestions) {
+//         color = 'yellow';
+//       }
+
+//       const displayName = mapStudentName(student);
+
+//       return `
+//       <tr style="background-color: ${color}">
+//         <td>${displayName}</td>
+//         <td>${hasQuestions ? count : '0'}</td>
+//         <td>${hasQuestions ? '✓' : '✗'}</td>
+//       </tr>
+//     `;
+//     }).join('');
+
+//     return `
+//     <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+//       <h2>Student Question Summary</h2>
+//       <table style="width: 100%; border-collapse: collapse;">
+//         <thead>
+//           <tr>
+//             <th>Student Name</th>
+//             <th>Question Count</th>
+//             <th>Has Questions</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           ${summaryRows}
+//         </tbody>
+//       </table>
+//     </div>
+//   `;
+//   };
+
+
+
+
+
+
+//   // Determine color for question labels
+//   const getLabelColor = (studentName) => {
+//     const count = studentQuestionCounts.get(studentName) || 0;
+//     if (count === maxQuestions && maxQuestions > 0) return 'green';
+//     if (count > 0 && count < maxQuestions) return 'yellow';
+//     return 'red';
+//   };
+
+//   const truncateCharacters = (text, charLimit) => {
+//     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
+//   };
+
+//   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
+//   const questionsTable = reorderedQuestions.map((question, index) => {
+//     const studentName = extractStudentName(question.filePath);
+//     const labelColor = getLabelColor(studentName);
+
+//     const filePathParts = question.filePath.split('/');
+//     let shortenedFilePath = filePathParts.length > 2
+//       ? `.../${filePathParts.slice(-3).join('/')}`
+//       : question.filePath;
+
+//     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
+
+//     return `
+//     <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
+//         <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
+//         <td title="${question.filePath}">${shortenedFilePath}</td>
+//         <td>
+//             <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
+//         </td>
+//         <td>
+//             <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+//         </td>
+//         <td>
+//             <button onclick="saveChanges(${index})">Save</button>
+//             <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+//             <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+//             <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+//             <br>
+//             <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
+//             <label for="exclude-${index}">Exclude from Quiz</label>
+//         </td>
+//     </tr>
+//     `;
+//   }).join('');
+
+//   // HTML content for the Webview
+//   panel.webview.html = `
+// <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <title>View Quiz Questions</title>
+//     <style>
+//         body {
+//             font-family: Arial, sans-serif;
+//             margin: 20px;
+//             background-color:rgb(255, 255, 255);
+//             color: black;
+//         }
+//         .header-container {
+//             display: flex;
+//             justify-content: space-between;
+//             align-items: center;
+//             margin-bottom: 20px;
+//             flex-wrap: wrap;
+//         }
+//         .controls-container {
+//             display: flex;
+//             gap: 10px;
+//             margin-bottom: 20px;
+//             align-items: center;
+//             flex-wrap: wrap;
+//         }
+//         .search-container {
+//             display: flex;
+//             align-items: center;
+//             gap: 10px;
+//         }
+//         table {
+//             width: 100%;
+//             border-collapse: collapse;
+//             margin-top: 20px;
+//             background-color: white;
+//             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+//         }
+//         th, td {
+//             border: 1px solid #ddd;
+//             padding: 12px;
+//             text-align: left;
+//         }
+//         th {
+//             background-color: #007acc;
+//             color: white;
+//             position: sticky;
+//             top: 0;
+//         }
+//         textarea {
+//             width: 100%;
+//             height: 100px;
+//             font-size: 14px;
+//             border: 1px solid #ccc;
+//             padding: 8px;
+//             resize: vertical;
+//         }
+//         .code-area {
+//             background-color: #1e1e1e;
+//             color: #d4d4d4;
+//             font-family: monospace;
+//         }
+//         .question-area {
+//             background-color: #f9f9f9;
+//             color: #333;
+//             font-family: sans-serif;
+//         }
+//         button {
+//             padding: 8px 12px;
+//             margin: 2px;
+//             cursor: pointer;
+//             border: none;
+//             border-radius: 4px;
+//             font-weight: bold;
+//         }
+//         button:hover {
+//             opacity: 0.9;
+//         }
+//         #refreshBtn {
+//             background-color: #4CAF50;
+//             color: white;
+//         }
+//         #toggleSummaryBtn {
+//             background-color: #673AB7;
+//             color: white;
+//         }
+//         input[type="text"] {
+//             padding: 8px;
+//             border: 1px solid #ddd;
+//             border-radius: 4px;
+//             width: 250px;
+//         }
+//         input[type="checkbox"] {
+//             transform: scale(1.2);
+//             margin-top: 5px;
+//         }
+//         #summaryTableContainer table th {
+//             background-color: #007acc;
+//             color: white;
+//         }
+//         #summaryTableContainer table td {
+//             border: 1px solid #ddd;
+//             padding: 8px;
+//         }
+//         .total-count {
+//             font-size: 18px;
+//             font-weight: bold;
+//             color: #333;
+//         }
+//         .pagination-container {
+//             display: flex;
+//             justify-content: center;
+//             align-items: center;
+//             margin-top: 20px;
+//             gap: 10px;
+//             flex-wrap: wrap;
+//         }
+//         .pagination-controls {
+//             display: flex;
+//             gap: 5px;
+//             align-items: center;
+//         }
+//         .page-btn {
+//             padding: 5px 10px;
+//             border: 1px solid #ddd;
+//             background-color: white;
+//             cursor: pointer;
+//             border-radius: 4px;
+//             min-width: 30px;
+//             text-align: center;
+//         }
+//         .page-btn:hover:not(.active):not(:disabled) {
+//             background-color: #f1f1f1;
+//         }
+//         .page-btn.active {
+//             background-color: #007acc;
+//             color: white;
+//             border-color: #007acc;
+//         }
+//         .page-btn:disabled {
+//             opacity: 0.5;
+//             cursor: not-allowed;
+//         }
+//         .page-jump {
+//             display: flex;
+//             align-items: center;
+//             gap: 5px;
+//         }
+//         .page-jump input {
+//             width: 50px;
+//             padding: 5px;
+//             text-align: center;
+//             border: 1px solid #ddd;
+//             border-radius: 4px;
+//         }
+//         .rows-per-page {
+//             display: flex;
+//             align-items: center;
+//             gap: 5px;
+//         }
+//         .rows-per-page select {
+//             padding: 5px;
+//             border-radius: 4px;
+//             border: 1px solid #ddd;
+//         }
+//     </style>
+// </head>
+// <body>
+//     <div class="header-container">
+//         <h1>All Quiz Questions</h1>
+//         <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+//     </div>
+
+//     <div class="controls-container">
+//         <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
+//         <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
+//         <div class="search-container">
+//             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+//             <span id="filterCount"></span>
+//         </div>
+//     </div>
+
+//     ${buildSummaryTable()}
+
+//     <table id="questionsTable">
+//         <thead>
+//             <tr>
+//                 <th>#</th>
+//                 <th>File</th>
+//                 <th>Highlighted Code</th>
+//                 <th>Question</th>
+//                 <th>Actions</th>
+//             </tr>
+//         </thead>
+//         <tbody id="questionsTableBody">
+//             ${questionsTable}
+//         </tbody>
+//     </table>
+
+//     <div class="pagination-container">
+//         <div class="pagination-controls">
+//             <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
+//             <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
+
+//             <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+
+//             <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
+//             <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
+//         </div>
+
+//         <div class="page-jump">
+//             <span>Go to:</span>
+//             <input type="number" id="pageJumpInput" min="1" value="1">
+//             <button onclick="jumpToPage()">Go</button>
+//             <span>of <span id="totalPagesDisplay">1</span></span>
+//         </div>
+
+//         <div class="rows-per-page">
+//             <label for="rowsPerPage">Rows per page:</label>
+//             <select id="rowsPerPage" onchange="changeRowsPerPage()">
+//                 <option value="10">10</option>
+//                 <option value="15" selected>15</option>
+//                 <option value="25">25</option>
+//                 <option value="50">50</option>
+//                 <option value="100">100</option>
+//             </select>
+//         </div>
+//     </div>
+
+//     <script>
+//         const vscode = acquireVsCodeApi();
+//         const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
+//         const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
+
+//         // Pagination variables
+//         let currentPage = 1;
+//         let rowsPerPage = 15;
+//         let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+//         let filteredRows = [];
+//         let isFiltered = false;
+
+//         // Initialize the table
+//         function initializeTable() {
+//             updatePaginationControls();
+//             renderPageNumbers();
+//             updateVisibleRows();
+//         }
+
+//         // Update which rows are visible based on current page
+//         function updateVisibleRows() {
+//             const rows = document.querySelectorAll('#questionsTableBody tr');
+//             const startIdx = (currentPage - 1) * rowsPerPage;
+//             const endIdx = startIdx + rowsPerPage;
+
+//             rows.forEach((row, index) => {
+//                 if (isFiltered && !filteredRows.includes(index)) {
+//                     row.style.display = 'none';
+//                     return;
+//                 }
+
+//                 if (index >= startIdx && index < endIdx) {
+//                     row.style.display = '';
+//                 } else {
+//                     row.style.display = 'none';
+//                 }
+//             });
+//         }
+
+//         // Update pagination controls state
+//         function updatePaginationControls() {
+//             document.getElementById('firstPageBtn').disabled = currentPage === 1;
+//             document.getElementById('prevPageBtn').disabled = currentPage === 1;
+//             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+//             document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+//             document.getElementById('pageJumpInput').value = currentPage;
+//             document.getElementById('totalPagesDisplay').textContent = totalPages;
+//         }
+
+//         // Render page number buttons
+//         function renderPageNumbers() {
+//             const container = document.getElementById('pageNumbers');
+//             container.innerHTML = '';
+
+//             const maxVisiblePages = 5;
+//             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+//             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+//             if (endPage - startPage + 1 < maxVisiblePages) {
+//                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
+//             }
+
+//             if (startPage > 1) {
+//                 const btn = document.createElement('button');
+//                 btn.className = 'page-btn';
+//                 btn.textContent = '1';
+//                 btn.onclick = () => goToPage(1);
+//                 container.appendChild(btn);
+
+//                 if (startPage > 2) {
+//                     const ellipsis = document.createElement('span');
+//                     ellipsis.textContent = '...';
+//                     container.appendChild(ellipsis);
+//                 }
+//             }
+
+//             for (let i = startPage; i <= endPage; i++) {
+//                 const btn = document.createElement('button');
+//                 btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+//                 btn.textContent = i;
+//                 btn.onclick = () => goToPage(i);
+//                 container.appendChild(btn);
+//             }
+
+//             if (endPage < totalPages) {
+//                 if (endPage < totalPages - 1) {
+//                     const ellipsis = document.createElement('span');
+//                     ellipsis.textContent = '...';
+//                     container.appendChild(ellipsis);
+//                 }
+
+//                 const btn = document.createElement('button');
+//                 btn.className = 'page-btn';
+//                 btn.textContent = totalPages;
+//                 btn.onclick = () => goToPage(totalPages);
+//                 container.appendChild(btn);
+//             }
+//         }
+
+//         // Navigation functions
+//         function goToPage(page) {
+//             if (page < 1 || page > totalPages) return;
+//             currentPage = page;
+//             updateVisibleRows();
+//             updatePaginationControls();
+//             renderPageNumbers();
+//         }
+
+//         function goToFirstPage() {
+//             goToPage(1);
+//         }
+
+//         function goToPreviousPage() {
+//             goToPage(currentPage - 1);
+//         }
+
+//         function goToNextPage() {
+//             goToPage(currentPage + 1);
+//         }
+
+//         function goToLastPage() {
+//             goToPage(totalPages);
+//         }
+
+//         function jumpToPage() {
+//             const input = document.getElementById('pageJumpInput');
+//             const page = parseInt(input.value);
+//             if (!isNaN(page) && page >= 1 && page <= totalPages) {
+//                 goToPage(page);
+//             }
+//         }
+
+//         // Change rows per page
+//         function changeRowsPerPage() {
+//             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+//             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+//             if (currentPage > totalPages) {
+//                 currentPage = totalPages;
+//             }
+//             initializeTable();
+//         }
+
+//         // Filter questions based on search term
+//         function filterQuestions() {
+//             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+//             const rows = document.querySelectorAll('#questionsTableBody tr');
+//             filteredRows = [];
+
+//             if (searchTerm === '') {
+//                 isFiltered = false;
+//                 document.getElementById('filterCount').textContent = '';
+//             } else {
+//                 isFiltered = true;
+//                 rows.forEach((row, index) => {
+//                     const label = row.dataset.label.toLowerCase();
+//                     const file = row.dataset.file.toLowerCase();
+//                     const code = row.dataset.code.toLowerCase();
+//                     const question = row.dataset.question.toLowerCase();
+
+//                     if (label.includes(searchTerm) || file.includes(searchTerm) ||
+//                         code.includes(searchTerm) || question.includes(searchTerm)) {
+//                         filteredRows.push(index);
+//                     }
+//                 });
+
+//                 document.getElementById('filterCount').textContent = filteredRows.length > 0
+//                     ? \`\${filteredRows.length} matches\`
+//                     : 'No matches';
+//             }
+
+//             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+//             currentPage = 1;
+//             initializeTable();
+//         }
+
+//         function copyQuestionText(index) {
+//             const questionTextArea = document.getElementById('question-' + index);
+//             const selectedText = questionTextArea.value.substring(
+//                 questionTextArea.selectionStart,
+//                 questionTextArea.selectionEnd
+//             );
+//             const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+
+//             navigator.clipboard.writeText(textToCopy).then(() => {
+//                 vscode.postMessage({
+//                     type: 'showInformationMessage',
+//                     message: 'Copied to clipboard: ' +
+//                         (selectedText.length > 0 ? 'Selected text' : 'Full question')
+//                 });
+//             }).catch(err => {
+//                 vscode.postMessage({
+//                     type: 'showErrorMessage',
+//                     message: 'Failed to copy text: ' + err
+//                 });
+//             });
+//         }
+
+//         function toggleSummaryTable() {
+//             const container = document.getElementById('summaryTableContainer');
+//             container.style.display = container.style.display === 'none' ? 'block' : 'none';
+//         }
+
+//         function refreshView() {
+//             vscode.postMessage({ type: 'refreshView' });
+//         }
+
+//         function saveChanges(index) {
+//             const updatedCode = document.getElementById('code-' + index).value;
+//             const updatedQuestion = document.getElementById('question-' + index).value;
+//             vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
+//         }
+
+//         function revertChanges(index) {
+//             document.getElementById('code-' + index).value = originalData[index].highlightedCode;
+//             document.getElementById('question-' + index).value = originalData[index].text;
+//             document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
+//         }
+
+//         function toggleExclude(index) {
+//             const excludeStatus = document.getElementById('exclude-' + index).checked;
+//             vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
+//         }
+
+//         function editQuestion(index) {
+//             vscode.postMessage({ type: 'editQuestion', index });
+//         }
+
+//         // Initialize the table when the page loads
+//         window.addEventListener('load', initializeTable);
+//     </script>
+// </body>
+// </html>
+//     `;
+
+//   // Handle messages from the Webview
+//   panel.webview.onDidReceiveMessage((message) => {
+//     if (message.type === 'saveChanges') {
+//       // Update the data in memory
+//       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+//       reorderedQuestions[message.index].text = message.updatedQuestion;
+
+//       // Update the original data array as well
+//       personalizedQuestionsData = reorderedQuestions;
+//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+//       vscode.window.showInformationMessage('Changes saved successfully!');
+//     }
+
+//     if (message.type === 'toggleExclude') {
+//       // Save exclude checkbox status automatically
+//       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+//       // Update the original data array as well
+//       personalizedQuestionsData = reorderedQuestions;
+//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+//     }
+
+//     if (message.type === 'editQuestion') {
+//       // Open a new webview panel for editing the question
+//       openEditQuestionPanel(message.index);
+//     }
+
+//     if (message.type === 'refreshView') {
+//       // Close and reopen the panel to refresh the view
+//       panel.dispose(); // Close the current panel
+//       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
+//     }
+
+//     if (message.type === 'showInformationMessage') {
+//       vscode.window.showInformationMessage(message.message);
+//     }
+
+//     if (message.type === 'showErrorMessage') {
+//       vscode.window.showErrorMessage(message.message);
+//     }
+//   });
+// });
+
+
+
+
+
+
+
+// let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
+//   if (personalizedQuestionsData.length === 0) {
+//     vscode.window.showInformationMessage('No personalized questions added yet!');
+//     return;
+//   }
+
+//   // Check if we have config data, if not prompt user to select config file
+//   if (!configData) {
+//     try {
+//       const configFileUri = await vscode.window.showOpenDialog({
+//         canSelectMany: false,
+//         openLabel: 'Select Config File',
+//         filters: {
+//           'JSON Files': ['json']
+//         }
+//       });
+
+//       if (configFileUri && configFileUri[0]) {
+//         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
+//         configData = JSON.parse(fileData.toString());
+//         studentNameMapping = configData.studentNameMapping || {};
+//       } else {
+//         vscode.window.showInformationMessage('No config file selected. Using default student names.');
+//       }
+//     } catch (error) {
+//       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+//     }
+//   }
+
+//   // Create a Webview Panel for viewing personalized questions
+//   const panel = vscode.window.createWebviewPanel(
+//     'viewPersonalizedQuestions',
+//     'View Quiz Questions',
+//     vscode.ViewColumn.One,
+//     { enableScripts: true }
+//   );
+
+//   // const getAllCISStudents = async () => {
+//   //   try {
+//   //     const workspaceFolders = vscode.workspace.workspaceFolders;
+//   //     if (!workspaceFolders) return [];
+
+//   //     const cisStudents = new Set();
+
+//   //     // First, add all students who have questions
+//   //     Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
+
+//   //     // Then add students from workspace folders
+//   //     for (const folder of workspaceFolders) {
+//   //       const folderUri = folder.uri;
+//   //       if (folderUri.fsPath.includes("CIS")) {
+//   //         const files = await vscode.workspace.fs.readDirectory(folderUri);
+//   //         for (const [name, type] of files) {
+//   //           if (type === vscode.FileType.Directory) {
+//   //             cisStudents.add(name);
+//   //           }
+//   //         }
+//   //       }
+//   //     }
+//   //     return Array.from(cisStudents).sort(); // Return sorted array
+//   //   } catch (error) {
+//   //     console.error("Error fetching CIS students:", error);
+//   //     return [];
+//   //   }
+//   // };
+
+
+//   const getAllCISStudents = async () => {
+//     try {
+//       const workspaceFolders = vscode.workspace.workspaceFolders;
+//       if (!workspaceFolders) return [];
+
+//       const cisStudents = new Set();
+
+//       // Only add folder names under CIS directories
+//       for (const folder of workspaceFolders) {
+//         const folderUri = folder.uri;
+//         if (folderUri.fsPath.includes("CIS")) {
+//           const files = await vscode.workspace.fs.readDirectory(folderUri);
+//           for (const [name, type] of files) {
+//             if (type === vscode.FileType.Directory) {
+//               cisStudents.add(name);
+//             }
+//           }
+//         }
+//       }
+//       return Array.from(cisStudents).sort();
+//     } catch (error) {
+//       console.error("Error fetching CIS students:", error);
+//       return [];
+//     }
+//   };
+
+
+//   // Function to map student name using the config
+//   const mapStudentName = (name) => {
+//     return studentNameMapping[name] || name;
+//   };
+
+//   // Get all CIS students
+//   const allCISStudents = await getAllCISStudents();
+
+//   // Group questions by student name
+//   const questionsByStudent = {};
+//   personalizedQuestionsData.forEach((question) => {
+//     const studentName = extractStudentName(question.filePath);
+//     if (!questionsByStudent[studentName]) {
+//       questionsByStudent[studentName] = [];
+//     }
+//     questionsByStudent[studentName].push(question);
+//   });
+
+//   // Calculate question counts per student and determine max questions
+//   const studentQuestionCounts = new Map();
+//   let maxQuestions = 0;
+
+//   for (const studentName in questionsByStudent) {
+//     const count = questionsByStudent[studentName].length;
+//     studentQuestionCounts.set(studentName, count);
+//     if (count > maxQuestions) {
+//       maxQuestions = count;
+//     }
+//   }
+
+//   // Assign labels to questions (1a, 1b, 2a, etc.)
+//   const questionLabels = {};
+//   const studentNumbers = {};
+//   let studentCounter = 1;
+//   let questionIndex = 0;
+
+//   // Process students in alphabetical order for consistent numbering
+//   const sortedStudentNames = Object.keys(questionsByStudent).sort();
+
+//   for (const studentName of sortedStudentNames) {
+//     studentNumbers[studentName] = studentCounter;
+//     const questions = questionsByStudent[studentName];
+
+//     questions.forEach((question, qIndex) => {
+//       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+//       questionLabels[questionIndex] = questionLabel;
+//       questionIndex++;
+//     });
+
+//     studentCounter++;
+//   }
+
+//   // Rebuild the questions array in the new order (grouped by student)
+//   const reorderedQuestions = [];
+//   for (const studentName of sortedStudentNames) {
+//     reorderedQuestions.push(...questionsByStudent[studentName]);
+//   }
+
+
+
+//   // Build the summary table HTML
+//   const buildSummaryTable = () => {
+//     // Get all unique student names (from both questions and folders)
+//     const allStudents = Array.from(new Set([
+//       ...Object.keys(questionsByStudent),
+//       ...allCISStudents
+//     ])).sort();
+
+//     const summaryRows = allStudents.map(student => {
+//       const count = studentQuestionCounts.get(student) || 0;
+//       const hasQuestions = count > 0;
+
+//       let color = 'red'; // default color for zero questions
+//       if (count === maxQuestions && maxQuestions > 0) {
+//         color = 'green';
+//       } else if (count > 0 && count < maxQuestions) {
+//         color = 'yellow';
+//       }
+
+//       const displayName = mapStudentName(student);
+
+//       return `
+//     <tr style="background-color: ${color}">
+//       <td>${displayName}</td>
+//       <td>${count}</td>
+//       <td>${hasQuestions ? '✓' : '✗'}</td>
+//     </tr>
+//   `;
+//     }).join('');
+
+//     return `
+//   <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+//     <h2>Student Question Summary</h2>
+//     <table style="width: 100%; border-collapse: collapse;">
+//       <thead>
+//         <tr>
+//           <th>Student Name</th>
+//           <th>Question Count</th>
+//           <th>Has Questions</th>
+//         </tr>
+//       </thead>
+//       <tbody>
+//         ${summaryRows}
+//       </tbody>
+//     </table>
+//   </div>
+// `;
+//   };
+
+//   // Determine color for question labels
+//   const getLabelColor = (studentName) => {
+//     const count = studentQuestionCounts.get(studentName) || 0;
+//     if (count === maxQuestions && maxQuestions > 0) return 'green';
+//     if (count > 0 && count < maxQuestions) return 'yellow';
+//     return 'red';
+//   };
+
+//   const truncateCharacters = (text, charLimit) => {
+//     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
+//   };
+
+//   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
+//   const questionsTable = reorderedQuestions.map((question, index) => {
+//     const studentName = extractStudentName(question.filePath);
+//     const labelColor = getLabelColor(studentName);
+
+//     const filePathParts = question.filePath.split('/');
+//     let shortenedFilePath = filePathParts.length > 2
+//       ? `.../${filePathParts.slice(-3).join('/')}`
+//       : question.filePath;
+
+//     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
+
+//     return `
+//   <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
+//       <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
+//       <td title="${question.filePath}">${shortenedFilePath}</td>
+//       <td>
+//           <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
+//       </td>
+//       <td>
+//           <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+//       </td>
+//       <td>
+//           <button onclick="saveChanges(${index})">Save</button>
+//           <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+//           <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+//           <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+//           <br>
+//           <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
+//           <label for="exclude-${index}">Exclude from Quiz</label>
+//       </td>
+//   </tr>
+//   `;
+//   }).join('');
+
+//   // HTML content for the Webview
+//   panel.webview.html = `
+// <!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <title>View Quiz Questions</title>
+//     <style>
+//         body {
+//             font-family: Arial, sans-serif;
+//             margin: 20px;
+//             background-color:rgb(255, 255, 255);
+//             color: black;
+//         }
+//         .header-container {
+//             display: flex;
+//             justify-content: space-between;
+//             align-items: center;
+//             margin-bottom: 20px;
+//             flex-wrap: wrap;
+//         }
+//         .controls-container {
+//             display: flex;
+//             gap: 10px;
+//             margin-bottom: 20px;
+//             align-items: center;
+//             flex-wrap: wrap;
+//         }
+//         .search-container {
+//             display: flex;
+//             align-items: center;
+//             gap: 10px;
+//         }
+//         table {
+//             width: 100%;
+//             border-collapse: collapse;
+//             margin-top: 20px;
+//             background-color: white;
+//             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+//         }
+//         th, td {
+//             border: 1px solid #ddd;
+//             padding: 12px;
+//             text-align: left;
+//         }
+//         th {
+//             background-color: #007acc;
+//             color: white;
+//             position: sticky;
+//             top: 0;
+//         }
+//         textarea {
+//             width: 100%;
+//             height: 100px;
+//             font-size: 14px;
+//             border: 1px solid #ccc;
+//             padding: 8px;
+//             resize: vertical;
+//         }
+//         .code-area {
+//             background-color: #1e1e1e;
+//             color: #d4d4d4;
+//             font-family: monospace;
+//         }
+//         .question-area {
+//             background-color: #f9f9f9;
+//             color: #333;
+//             font-family: sans-serif;
+//         }
+//         button {
+//             padding: 8px 12px;
+//             margin: 2px;
+//             cursor: pointer;
+//             border: none;
+//             border-radius: 4px;
+//             font-weight: bold;
+//         }
+//         button:hover {
+//             opacity: 0.9;
+//         }
+//         #refreshBtn {
+//             background-color: #4CAF50;
+//             color: white;
+//         }
+//         #toggleSummaryBtn {
+//             background-color: #673AB7;
+//             color: white;
+//         }
+//         input[type="text"] {
+//             padding: 8px;
+//             border: 1px solid #ddd;
+//             border-radius: 4px;
+//             width: 250px;
+//         }
+//         input[type="checkbox"] {
+//             transform: scale(1.2);
+//             margin-top: 5px;
+//         }
+//         #summaryTableContainer table th {
+//             background-color: #007acc;
+//             color: white;
+//         }
+//         #summaryTableContainer table td {
+//             border: 1px solid #ddd;
+//             padding: 8px;
+//         }
+//         .total-count {
+//             font-size: 18px;
+//             font-weight: bold;
+//             color: #333;
+//         }
+//         .pagination-container {
+//             display: flex;
+//             justify-content: center;
+//             align-items: center;
+//             margin-top: 20px;
+//             gap: 10px;
+//             flex-wrap: wrap;
+//         }
+//         .pagination-controls {
+//             display: flex;
+//             gap: 5px;
+//             align-items: center;
+//         }
+//         .page-btn {
+//             padding: 5px 10px;
+//             border: 1px solid #ddd;
+//             background-color: white;
+//             cursor: pointer;
+//             border-radius: 4px;
+//             min-width: 30px;
+//             text-align: center;
+//         }
+//         .page-btn:hover:not(.active):not(:disabled) {
+//             background-color: #f1f1f1;
+//         }
+//         .page-btn.active {
+//             background-color: #007acc;
+//             color: white;
+//             border-color: #007acc;
+//         }
+//         .page-btn:disabled {
+//             opacity: 0.5;
+//             cursor: not-allowed;
+//         }
+//         .page-jump {
+//             display: flex;
+//             align-items: center;
+//             gap: 5px;
+//         }
+//         .page-jump input {
+//             width: 50px;
+//             padding: 5px;
+//             text-align: center;
+//             border: 1px solid #ddd;
+//             border-radius: 4px;
+//         }
+//         .rows-per-page {
+//             display: flex;
+//             align-items: center;
+//             gap: 5px;
+//         }
+//         .rows-per-page select {
+//             padding: 5px;
+//             border-radius: 4px;
+//             border: 1px solid #ddd;
+//         }
+//     </style>
+// </head>
+// <body>
+//     <div class="header-container">
+//         <h1>All Quiz Questions</h1>
+//         <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+//     </div>
+
+//     <div class="controls-container">
+//         <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
+//         <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
+//         <div class="search-container">
+//             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+//             <span id="filterCount"></span>
+//         </div>
+//     </div>
+
+//     ${buildSummaryTable()}
+
+//     <table id="questionsTable">
+//         <thead>
+//             <tr>
+//                 <th>#</th>
+//                 <th>File</th>
+//                 <th>Highlighted Code</th>
+//                 <th>Question</th>
+//                 <th>Actions</th>
+//             </tr>
+//         </thead>
+//         <tbody id="questionsTableBody">
+//             ${questionsTable}
+//         </tbody>
+//     </table>
+
+//     <div class="pagination-container">
+//         <div class="pagination-controls">
+//             <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
+//             <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
+
+//             <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+
+//             <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
+//             <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
+//         </div>
+
+//         <div class="page-jump">
+//             <span>Go to:</span>
+//             <input type="number" id="pageJumpInput" min="1" value="1">
+//             <button onclick="jumpToPage()">Go</button>
+//             <span>of <span id="totalPagesDisplay">1</span></span>
+//         </div>
+
+//         <div class="rows-per-page">
+//             <label for="rowsPerPage">Rows per page:</label>
+//             <select id="rowsPerPage" onchange="changeRowsPerPage()">
+//                 <option value="10">10</option>
+//                 <option value="15" selected>15</option>
+//                 <option value="25">25</option>
+//                 <option value="50">50</option>
+//                 <option value="100">100</option>
+//             </select>
+//         </div>
+//     </div>
+
+//     <script>
+//         const vscode = acquireVsCodeApi();
+//         const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
+//         const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
+
+//         // Pagination variables
+//         let currentPage = 1;
+//         let rowsPerPage = 15;
+//         let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+//         let filteredRows = [];
+//         let isFiltered = false;
+
+//         // Initialize the table
+//         function initializeTable() {
+//             updatePaginationControls();
+//             renderPageNumbers();
+//             updateVisibleRows();
+//         }
+
+//         // Update which rows are visible based on current page
+//         function updateVisibleRows() {
+//             const rows = document.querySelectorAll('#questionsTableBody tr');
+//             const startIdx = (currentPage - 1) * rowsPerPage;
+//             const endIdx = startIdx + rowsPerPage;
+
+//             rows.forEach((row, index) => {
+//                 if (isFiltered && !filteredRows.includes(index)) {
+//                     row.style.display = 'none';
+//                     return;
+//                 }
+
+//                 if (index >= startIdx && index < endIdx) {
+//                     row.style.display = '';
+//                 } else {
+//                     row.style.display = 'none';
+//                 }
+//             });
+//         }
+
+//         // Update pagination controls state
+//         function updatePaginationControls() {
+//             document.getElementById('firstPageBtn').disabled = currentPage === 1;
+//             document.getElementById('prevPageBtn').disabled = currentPage === 1;
+//             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+//             document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+//             document.getElementById('pageJumpInput').value = currentPage;
+//             document.getElementById('totalPagesDisplay').textContent = totalPages;
+//         }
+
+//         // Render page number buttons
+//         function renderPageNumbers() {
+//             const container = document.getElementById('pageNumbers');
+//             container.innerHTML = '';
+
+//             const maxVisiblePages = 5;
+//             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+//             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+//             if (endPage - startPage + 1 < maxVisiblePages) {
+//                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
+//             }
+
+//             if (startPage > 1) {
+//                 const btn = document.createElement('button');
+//                 btn.className = 'page-btn';
+//                 btn.textContent = '1';
+//                 btn.onclick = () => goToPage(1);
+//                 container.appendChild(btn);
+
+//                 if (startPage > 2) {
+//                     const ellipsis = document.createElement('span');
+//                     ellipsis.textContent = '...';
+//                     container.appendChild(ellipsis);
+//                 }
+//             }
+
+//             for (let i = startPage; i <= endPage; i++) {
+//                 const btn = document.createElement('button');
+//                 btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+//                 btn.textContent = i;
+//                 btn.onclick = () => goToPage(i);
+//                 container.appendChild(btn);
+//             }
+
+//             if (endPage < totalPages) {
+//                 if (endPage < totalPages - 1) {
+//                     const ellipsis = document.createElement('span');
+//                     ellipsis.textContent = '...';
+//                     container.appendChild(ellipsis);
+//                 }
+
+//                 const btn = document.createElement('button');
+//                 btn.className = 'page-btn';
+//                 btn.textContent = totalPages;
+//                 btn.onclick = () => goToPage(totalPages);
+//                 container.appendChild(btn);
+//             }
+//         }
+
+//         // Navigation functions
+//         function goToPage(page) {
+//             if (page < 1 || page > totalPages) return;
+//             currentPage = page;
+//             updateVisibleRows();
+//             updatePaginationControls();
+//             renderPageNumbers();
+//         }
+
+//         function goToFirstPage() {
+//             goToPage(1);
+//         }
+
+//         function goToPreviousPage() {
+//             goToPage(currentPage - 1);
+//         }
+
+//         function goToNextPage() {
+//             goToPage(currentPage + 1);
+//         }
+
+//         function goToLastPage() {
+//             goToPage(totalPages);
+//         }
+
+//         function jumpToPage() {
+//             const input = document.getElementById('pageJumpInput');
+//             const page = parseInt(input.value);
+//             if (!isNaN(page) && page >= 1 && page <= totalPages) {
+//                 goToPage(page);
+//             }
+//         }
+
+//         // Change rows per page
+//         function changeRowsPerPage() {
+//             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+//             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+//             if (currentPage > totalPages) {
+//                 currentPage = totalPages;
+//             }
+//             initializeTable();
+//         }
+
+//         // Filter questions based on search term
+//         function filterQuestions() {
+//             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+//             const rows = document.querySelectorAll('#questionsTableBody tr');
+//             filteredRows = [];
+
+//             if (searchTerm === '') {
+//                 isFiltered = false;
+//                 document.getElementById('filterCount').textContent = '';
+//             } else {
+//                 isFiltered = true;
+//                 rows.forEach((row, index) => {
+//                     const label = row.dataset.label.toLowerCase();
+//                     const file = row.dataset.file.toLowerCase();
+//                     const code = row.dataset.code.toLowerCase();
+//                     const question = row.dataset.question.toLowerCase();
+
+//                     if (label.includes(searchTerm) || file.includes(searchTerm) ||
+//                         code.includes(searchTerm) || question.includes(searchTerm)) {
+//                         filteredRows.push(index);
+//                     }
+//                 });
+
+//                 document.getElementById('filterCount').textContent = filteredRows.length > 0
+//                     ? \`\${filteredRows.length} matches\`
+//                     : 'No matches';
+//             }
+
+//             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+//             currentPage = 1;
+//             initializeTable();
+//         }
+
+//         function copyQuestionText(index) {
+//             const questionTextArea = document.getElementById('question-' + index);
+//             const selectedText = questionTextArea.value.substring(
+//                 questionTextArea.selectionStart,
+//                 questionTextArea.selectionEnd
+//             );
+//             const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+
+//             navigator.clipboard.writeText(textToCopy).then(() => {
+//                 vscode.postMessage({
+//                     type: 'showInformationMessage',
+//                     message: 'Copied to clipboard: ' +
+//                         (selectedText.length > 0 ? 'Selected text' : 'Full question')
+//                 });
+//             }).catch(err => {
+//                 vscode.postMessage({
+//                     type: 'showErrorMessage',
+//                     message: 'Failed to copy text: ' + err
+//                 });
+//             });
+//         }
+
+//         function toggleSummaryTable() {
+//             const container = document.getElementById('summaryTableContainer');
+//             container.style.display = container.style.display === 'none' ? 'block' : 'none';
+//         }
+
+//         function refreshView() {
+//             vscode.postMessage({ type: 'refreshView' });
+//         }
+
+//         function saveChanges(index) {
+//             const updatedCode = document.getElementById('code-' + index).value;
+//             const updatedQuestion = document.getElementById('question-' + index).value;
+//             vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
+//         }
+
+//         function revertChanges(index) {
+//             document.getElementById('code-' + index).value = originalData[index].highlightedCode;
+//             document.getElementById('question-' + index).value = originalData[index].text;
+//             document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
+//         }
+
+//         function toggleExclude(index) {
+//             const excludeStatus = document.getElementById('exclude-' + index).checked;
+//             vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
+//         }
+
+//         function editQuestion(index) {
+//             vscode.postMessage({ type: 'editQuestion', index });
+//         }
+
+//         // Initialize the table when the page loads
+//         window.addEventListener('load', initializeTable);
+//     </script>
+// </body>
+// </html>
+//     `;
+
+//   // Handle messages from the Webview
+//   panel.webview.onDidReceiveMessage((message) => {
+//     if (message.type === 'saveChanges') {
+//       // Update the data in memory
+//       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+//       reorderedQuestions[message.index].text = message.updatedQuestion;
+
+//       // Update the original data array as well
+//       personalizedQuestionsData = reorderedQuestions;
+//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+//       vscode.window.showInformationMessage('Changes saved successfully!');
+//     }
+
+//     if (message.type === 'toggleExclude') {
+//       // Save exclude checkbox status automatically
+//       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+//       // Update the original data array as well
+//       personalizedQuestionsData = reorderedQuestions;
+//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+//     }
+
+//     if (message.type === 'editQuestion') {
+//       // Open a new webview panel for editing the question
+//       openEditQuestionPanel(message.index);
+//     }
+
+//     if (message.type === 'refreshView') {
+//       // Close and reopen the panel to refresh the view
+//       panel.dispose(); // Close the current panel
+//       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
+//     }
+
+//     if (message.type === 'showInformationMessage') {
+//       vscode.window.showInformationMessage(message.message);
+//     }
+
+//     if (message.type === 'showErrorMessage') {
+//       vscode.window.showErrorMessage(message.message);
+//     }
+//   });
+// });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
