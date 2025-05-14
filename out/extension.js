@@ -304,7 +304,7 @@ function activate(context) {
             }
         });
     }));
-    // Helper function to get the base workspace directory (CIS500_P1)
+    // Helper function to get the base workspace directory (eg: CIS500_P1)
     function getBaseWorkspaceDirectory() {
         if (vscode.workspace.workspaceFolders) {
             return vscode.workspace.workspaceFolders[0].uri.fsPath;
@@ -555,8 +555,6 @@ function activate(context) {
         // Update in-memory data
         questionsData.length = 0;
         questionsData.push(...uniqueQuestions);
-        // Rest of your existing viewQuestionsAndAnswersCommand implementation...
-        // (the Webview panel creation and HTML generation)
         // Create a Webview Panel for viewing questions and answers
         const panel = vscode.window.createWebviewPanel('viewQuestionsAndAnswers', // Panel ID
             'View Questions and Answers', // Panel title
@@ -663,16 +661,22 @@ function activate(context) {
         }
         const range = new vscode.Range(selection.start, selection.end);
         let selectedText = editor.document.getText(range);
+        // Get workspace root and calculate relative path
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            vscode.window.showErrorMessage('No workspace folder is open.');
+            return;
+        }
+        const workspaceRoot = workspaceFolders[0].uri.fsPath;
+        const absolutePath = editor.document.uri.fsPath;
+        const relativePath = path.relative(workspaceRoot, absolutePath);
         // Get existing questions for suggestions
         let existingQuestions = [];
         try {
-            const workspaceFolders = vscode.workspace.workspaceFolders;
-            if (workspaceFolders) {
-                const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/personalizedQuestions.json`);
-                const fileContent = yield vscode.workspace.fs.readFile(uri);
-                const data = JSON.parse(fileContent.toString());
-                existingQuestions = data.map(item => item.text).filter(Boolean);
-            }
+            const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/personalizedQuestions.json`);
+            const fileContent = yield vscode.workspace.fs.readFile(uri);
+            const data = JSON.parse(fileContent.toString());
+            existingQuestions = data.map(item => item.text).filter(Boolean);
         }
         catch (error) {
             console.log('Could not load existing questions:', error);
@@ -680,221 +684,207 @@ function activate(context) {
         // Function to load existing answers
         const loadExistingAnswers = () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const workspaceFolders = vscode.workspace.workspaceFolders;
-                if (workspaceFolders) {
-                    const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
-                    const fileContent = yield vscode.workspace.fs.readFile(uri);
-                    return JSON.parse(fileContent.toString());
-                }
+                const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
+                const fileContent = yield vscode.workspace.fs.readFile(uri);
+                return JSON.parse(fileContent.toString());
             }
             catch (error) {
-                // File doesn't exist yet, return empty array
                 return [];
             }
-            return [];
         });
         // Create a Webview Panel for adding a personalized question
         const panel = vscode.window.createWebviewPanel('addPersonalizedQuestion', 'Add Quiz Question', vscode.ViewColumn.One, { enableScripts: true });
         // HTML content for the Webview
         panel.webview.html = `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Add Quiz Question</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                textarea { width: 100%; font-size: 14px; margin-bottom: 10px; display: block; }
-                button { padding: 10px 20px; background: #007acc; color: white; border: none; cursor: pointer; margin-right: 10px; }
-                button:hover { background: #005a9e; }
-                .code-area { width: 100%; height: 120px; font-family: monospace; background: #f4f4f4; padding: 10px; border-radius: 5px; }
-                .optional { color: #666; font-style: italic; }
-                #suggestions { 
-                    position: absolute; 
-                    background: white;
-                    color: red;
-                    border: 1px solid #ddd; 
-                    max-height: 200px; 
-                    overflow-y: auto; 
-                    z-index: 1000;
-                    display: none;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                .suggestion-item {
-                    padding: 8px;
-                    cursor: pointer;
-                    border-bottom: 1px solid #eee;
-                }
-                .suggestion-item:hover {
-                    background-color: #f0f0f0;
-                }
-                #question-container {
-                    position: relative;
-                }
-            </style>
-        </head>
-        <body>
-            <h1>Add a Quiz Question</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Quiz Question</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; font-size: 14px; margin-bottom: 10px; display: block; }
+        button { padding: 10px 20px; background: #007acc; color: white; border: none; cursor: pointer; margin-right: 10px; }
+        button:hover { background: #005a9e; }
+        .code-area { width: 100%; height: 120px; font-family: monospace; background: #f4f4f4; padding: 10px; border-radius: 5px; }
+        .optional { color: #666; font-style: italic; }
+        #suggestions { 
+            position: absolute; 
+            background: white;
+            color: red;
+            border: 1px solid #ddd; 
+            max-height: 200px; 
+            overflow-y: auto; 
+            z-index: 1000;
+            display: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .suggestion-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+        #question-container {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add a Quiz Question</h1>
 
-            <p><strong>Edit Highlighted Code:</strong></p>
-            <textarea id="codeBlock" class="code-area">${selectedText}</textarea>
-            <button onclick="copyAndPasteCode()">Copy & Paste Code</button>
+    <p><strong>Edit Highlighted Code:</strong></p>
+    <textarea id="codeBlock" class="code-area">${selectedText}</textarea>
+    <button onclick="copyAndPasteCode()">Copy & Paste Code</button>
+    
+    <div id="question-container">
+        <p><strong>Add Your Question:</strong></p>
+        <textarea id="question" placeholder="Type your personalized question here..." rows="4"></textarea>
+        <div id="suggestions"></div>
+    </div>
+    
+    <p><strong>Add Answer (Optional):</strong></p>
+    <textarea id="answer" placeholder="Type the answer to your question (optional)..." rows="4"></textarea>
+    
+    <button onclick="submitPersonalizedQuestion()">Submit</button>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+        const existingQuestions = ${JSON.stringify(existingQuestions)};
+        let currentInput = '';
+        let activeSuggestionIndex = -1;
+
+        // Setup question textarea event listeners
+        const questionInput = document.getElementById('question');
+        const suggestionsContainer = document.getElementById('suggestions');
+
+        questionInput.addEventListener('input', function(e) {
+            currentInput = e.target.value.toLowerCase();
+            showSuggestions();
+        });
+
+        questionInput.addEventListener('keydown', function(e) {
+            const suggestions = document.querySelectorAll('.suggestion-item');
             
-            <div id="question-container">
-                <p><strong>Add Your Question:</strong></p>
-                <textarea id="question" placeholder="Type your personalized question here..." rows="4"></textarea>
-                <div id="suggestions"></div>
-            </div>
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, suggestions.length - 1);
+                highlightSuggestion();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+                highlightSuggestion();
+            } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
+                e.preventDefault();
+                selectSuggestion(suggestions[activeSuggestionIndex]);
+            } else if (e.key === 'Escape') {
+                hideSuggestions();
+            }
+        });
+
+        function showSuggestions() {
+            if (!currentInput) {
+                hideSuggestions();
+                return;
+            }
+
+            const filtered = existingQuestions.filter(q => 
+                q && q.toLowerCase().includes(currentInput))
+                .slice(0, 5);
+
+            if (filtered.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestionsContainer.innerHTML = filtered.map(q => {
+                const escapedText = q.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return \`<div class="suggestion-item">\${escapedText}</div>\`;
+            }).join('');
+
+            document.querySelectorAll('.suggestion-item').forEach((item, index) => {
+                item.addEventListener('click', () => selectSuggestion(item));
+            });
+
+            suggestionsContainer.style.display = 'block';
+            activeSuggestionIndex = -1;
+        }
+
+        function hideSuggestions() {
+            suggestionsContainer.style.display = 'none';
+            activeSuggestionIndex = -1;
+        }
+
+        function highlightSuggestion() {
+            const suggestions = document.querySelectorAll('.suggestion-item');
+            suggestions.forEach((item, index) => {
+                if (index === activeSuggestionIndex) {
+                    item.style.backgroundColor = '#007acc';
+                    item.style.color = 'white';
+                } else {
+                    item.style.backgroundColor = '';
+                    item.style.color = '';
+                }
+            });
+        }
+
+        function selectSuggestion(suggestionElement) {
+            questionInput.value = suggestionElement.textContent;
+            hideSuggestions();
+            questionInput.focus();
+        }
+
+        function copyAndPasteCode() {
+            const codeTextArea = document.getElementById('codeBlock');
+            const questionArea = document.getElementById('question');
+            const existingContent = questionArea.value.trim();
             
-            <p><strong>Add Answer (Optional):</strong></p>
-            <textarea id="answer" placeholder="Type the answer to your question (optional)..." rows="4"></textarea>
+            const selectedCode = codeTextArea.value.substring(
+                codeTextArea.selectionStart,
+                codeTextArea.selectionEnd
+            );
             
-            <button onclick="submitPersonalizedQuestion()">Submit</button>
+            const codeToInsert = selectedCode || codeTextArea.value;
+            const formattedCode = \`~~~\\n\${codeToInsert}\\n~~~\`;
 
-            <script>
-                const vscode = acquireVsCodeApi();
-                const existingQuestions = ${JSON.stringify(existingQuestions)};
-                let currentInput = '';
-                let activeSuggestionIndex = -1;
+            if (existingContent) {
+                questionArea.value = existingContent + "\\n\\n" + formattedCode;
+            } else {
+                questionArea.value = formattedCode;
+            }
+        }
 
-                // Setup question textarea event listeners
-                const questionInput = document.getElementById('question');
-                const suggestionsContainer = document.getElementById('suggestions');
+        function submitPersonalizedQuestion() {
+            const question = document.getElementById('question').value;
+            const answer = document.getElementById('answer').value;
+            const editedCode = document.getElementById('codeBlock').value;
+            
+            if (question.trim() === '') {
+                alert('Question cannot be empty!');
+                return;
+            }
 
-                questionInput.addEventListener('input', function(e) {
-                    currentInput = e.target.value.toLowerCase();
-                    showSuggestions();
-                });
-
-                questionInput.addEventListener('keydown', function(e) {
-                    const suggestions = document.querySelectorAll('.suggestion-item');
-                    
-                    if (e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, suggestions.length - 1);
-                        highlightSuggestion();
-                    } else if (e.key === 'ArrowUp') {
-                        e.preventDefault();
-                        activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
-                        highlightSuggestion();
-                    } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
-                        e.preventDefault();
-                        selectSuggestion(suggestions[activeSuggestionIndex]);
-                    } else if (e.key === 'Escape') {
-                        hideSuggestions();
-                    }
-                });
-
-                function showSuggestions() {
-                    if (!currentInput) {
-                        hideSuggestions();
-                        return;
-                    }
-
-                    const filtered = existingQuestions.filter(q => 
-                        q && q.toLowerCase().includes(currentInput))
-                        .slice(0, 5);
-
-                    if (filtered.length === 0) {
-                        hideSuggestions();
-                        return;
-                    }
-
-                    suggestionsContainer.innerHTML = filtered.map(q => {
-                        const escapedText = q.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                        return \`<div class="suggestion-item">\${escapedText}</div>\`;
-                    }).join('');
-
-                    document.querySelectorAll('.suggestion-item').forEach((item, index) => {
-                        item.addEventListener('click', () => selectSuggestion(item));
-                    });
-
-                    suggestionsContainer.style.display = 'block';
-                    activeSuggestionIndex = -1;
-                }
-
-                function hideSuggestions() {
-                    suggestionsContainer.style.display = 'none';
-                    activeSuggestionIndex = -1;
-                }
-
-                function highlightSuggestion() {
-                    const suggestions = document.querySelectorAll('.suggestion-item');
-                    suggestions.forEach((item, index) => {
-                        if (index === activeSuggestionIndex) {
-                            item.style.backgroundColor = '#007acc';
-                            item.style.color = 'white';
-                        } else {
-                            item.style.backgroundColor = '';
-                            item.style.color = '';
-                        }
-                    });
-                }
-
-                function selectSuggestion(suggestionElement) {
-                    questionInput.value = suggestionElement.textContent;
-                    hideSuggestions();
-                    questionInput.focus();
-                }
-
-                function copyAndPasteCode() {
-                    const codeTextArea = document.getElementById('codeBlock');
-                    const questionArea = document.getElementById('question');
-                    const existingContent = questionArea.value.trim();
-                    
-                    const selectedCode = codeTextArea.value.substring(
-                        codeTextArea.selectionStart,
-                        codeTextArea.selectionEnd
-                    );
-                    
-                    const codeToInsert = selectedCode || codeTextArea.value;
-                    const formattedCode = \`~~~\\n\${codeToInsert}\\n~~~\`;
-
-                    if (existingContent) {
-                        questionArea.value = existingContent + "\\n\\n" + formattedCode;
-                    } else {
-                        questionArea.value = formattedCode;
-                    }
-                }
-
-                function saveCode() {
-                    const updatedCode = document.getElementById('codeBlock').value;
-                    vscode.postMessage({ type: 'updateCode', updatedCode });
-                }
-
-                function submitPersonalizedQuestion() {
-                    const question = document.getElementById('question').value;
-                    const answer = document.getElementById('answer').value;
-                    const editedCode = document.getElementById('codeBlock').value;
-                    
-                    if (question.trim() === '') {
-                        alert('Question cannot be empty!');
-                        return;
-                    }
-
-                    vscode.postMessage({ 
-                        type: 'submitQuestion', 
-                        question, 
-                        answer, 
-                        editedCode 
-                    });
-                }
-            </script>
-        </body>
-        </html>
+            vscode.postMessage({ 
+                type: 'submitQuestion', 
+                question, 
+                answer, 
+                editedCode 
+            });
+        }
+    </script>
+</body>
+</html>
     `;
         // Handle messages from the Webview
         panel.webview.onDidReceiveMessage((message) => __awaiter(this, void 0, void 0, function* () {
-            if (message.type === 'updateCode') {
-                vscode.window.showInformationMessage('Code updated successfully!');
-                selectedText = message.updatedCode;
-            }
             if (message.type === 'submitQuestion') {
                 const studentName = extractStudentName(editor.document.uri.fsPath);
                 const questionData = {
-                    filePath: editor.document.uri.fsPath,
+                    filePath: relativePath, // Using relative path here
                     range: {
                         start: { line: selection.start.line, character: selection.start.character },
                         end: { line: selection.end.line, character: selection.end.character },
@@ -909,19 +899,16 @@ function activate(context) {
                 // Save answer to quiz_questions_answers.json if provided
                 if (message.answer && message.answer.trim() !== '') {
                     try {
-                        // Load existing answers
                         let answersData = yield loadExistingAnswers();
-                        // Add new answer
                         answersData.push({
                             questionId: personalizedQuestionsData.length - 1,
                             questionText: message.question,
                             answer: message.answer.trim(),
                             studentName: studentName,
-                            filePath: editor.document.uri.fsPath,
+                            filePath: relativePath, // Using relative path here too
                             timestamp: new Date().toISOString(),
                             highlightedCode: message.editedCode
                         });
-                        // Save back to file
                         yield saveDataToFile('quiz_questions_answers.json', answersData);
                         vscode.window.showInformationMessage('Answer saved successfully!');
                     }
@@ -934,6 +921,267 @@ function activate(context) {
             }
         }));
     }));
+    // let addPersonalizedQuestionCommand = vscode.commands.registerCommand('extension.addPersonalizedQuestion', async () => {
+    //   console.log('Command executed!');
+    //   const editor = vscode.window.activeTextEditor;
+    //   if (!editor) {
+    //     vscode.window.showErrorMessage('No active editor found.');
+    //     return;
+    //   }
+    //   const selection = editor.selection;
+    //   if (selection.isEmpty) {
+    //     vscode.window.showErrorMessage('Please select a code snippet to add a personalized question.');
+    //     return;
+    //   }
+    //   const range = new vscode.Range(selection.start, selection.end);
+    //   let selectedText = editor.document.getText(range);
+    //   // Get existing questions for suggestions
+    //   let existingQuestions = [];
+    //   try {
+    //     const workspaceFolders = vscode.workspace.workspaceFolders;
+    //     if (workspaceFolders) {
+    //       const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/personalizedQuestions.json`);
+    //       const fileContent = await vscode.workspace.fs.readFile(uri);
+    //       const data = JSON.parse(fileContent.toString());
+    //       existingQuestions = data.map(item => item.text).filter(Boolean);
+    //     }
+    //   } catch (error) {
+    //     console.log('Could not load existing questions:', error);
+    //   }
+    //   // Function to load existing answers
+    //   const loadExistingAnswers = async () => {
+    //     try {
+    //       const workspaceFolders = vscode.workspace.workspaceFolders;
+    //       if (workspaceFolders) {
+    //         const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
+    //         const fileContent = await vscode.workspace.fs.readFile(uri);
+    //         return JSON.parse(fileContent.toString());
+    //       }
+    //     } catch (error) {
+    //       // File doesn't exist yet, return empty array
+    //       return [];
+    //     }
+    //     return [];
+    //   };
+    //   // Create a Webview Panel for adding a personalized question
+    //   const panel = vscode.window.createWebviewPanel(
+    //     'addPersonalizedQuestion',
+    //     'Add Quiz Question',
+    //     vscode.ViewColumn.One,
+    //     { enableScripts: true }
+    //   );
+    //   // HTML content for the Webview
+    //   panel.webview.html = `
+    //       <!DOCTYPE html>
+    //       <html lang="en">
+    //       <head>
+    //           <meta charset="UTF-8">
+    //           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //           <title>Add Quiz Question</title>
+    //           <style>
+    //               body { font-family: Arial, sans-serif; margin: 20px; }
+    //               textarea { width: 100%; font-size: 14px; margin-bottom: 10px; display: block; }
+    //               button { padding: 10px 20px; background: #007acc; color: white; border: none; cursor: pointer; margin-right: 10px; }
+    //               button:hover { background: #005a9e; }
+    //               .code-area { width: 100%; height: 120px; font-family: monospace; background: #f4f4f4; padding: 10px; border-radius: 5px; }
+    //               .optional { color: #666; font-style: italic; }
+    //               #suggestions { 
+    //                   position: absolute; 
+    //                   background: white;
+    //                   color: red;
+    //                   border: 1px solid #ddd; 
+    //                   max-height: 200px; 
+    //                   overflow-y: auto; 
+    //                   z-index: 1000;
+    //                   display: none;
+    //                   width: 100%;
+    //                   box-sizing: border-box;
+    //               }
+    //               .suggestion-item {
+    //                   padding: 8px;
+    //                   cursor: pointer;
+    //                   border-bottom: 1px solid #eee;
+    //               }
+    //               .suggestion-item:hover {
+    //                   background-color: #f0f0f0;
+    //               }
+    //               #question-container {
+    //                   position: relative;
+    //               }
+    //           </style>
+    //       </head>
+    //       <body>
+    //           <h1>Add a Quiz Question</h1>
+    //           <p><strong>Edit Highlighted Code:</strong></p>
+    //           <textarea id="codeBlock" class="code-area">${selectedText}</textarea>
+    //           <button onclick="copyAndPasteCode()">Copy & Paste Code</button>
+    //           <div id="question-container">
+    //               <p><strong>Add Your Question:</strong></p>
+    //               <textarea id="question" placeholder="Type your personalized question here..." rows="4"></textarea>
+    //               <div id="suggestions"></div>
+    //           </div>
+    //           <p><strong>Add Answer (Optional):</strong></p>
+    //           <textarea id="answer" placeholder="Type the answer to your question (optional)..." rows="4"></textarea>
+    //           <button onclick="submitPersonalizedQuestion()">Submit</button>
+    //           <script>
+    //               const vscode = acquireVsCodeApi();
+    //               const existingQuestions = ${JSON.stringify(existingQuestions)};
+    //               let currentInput = '';
+    //               let activeSuggestionIndex = -1;
+    //               // Setup question textarea event listeners
+    //               const questionInput = document.getElementById('question');
+    //               const suggestionsContainer = document.getElementById('suggestions');
+    //               questionInput.addEventListener('input', function(e) {
+    //                   currentInput = e.target.value.toLowerCase();
+    //                   showSuggestions();
+    //               });
+    //               questionInput.addEventListener('keydown', function(e) {
+    //                   const suggestions = document.querySelectorAll('.suggestion-item');
+    //                   if (e.key === 'ArrowDown') {
+    //                       e.preventDefault();
+    //                       activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, suggestions.length - 1);
+    //                       highlightSuggestion();
+    //                   } else if (e.key === 'ArrowUp') {
+    //                       e.preventDefault();
+    //                       activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+    //                       highlightSuggestion();
+    //                   } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
+    //                       e.preventDefault();
+    //                       selectSuggestion(suggestions[activeSuggestionIndex]);
+    //                   } else if (e.key === 'Escape') {
+    //                       hideSuggestions();
+    //                   }
+    //               });
+    //               function showSuggestions() {
+    //                   if (!currentInput) {
+    //                       hideSuggestions();
+    //                       return;
+    //                   }
+    //                   const filtered = existingQuestions.filter(q => 
+    //                       q && q.toLowerCase().includes(currentInput))
+    //                       .slice(0, 5);
+    //                   if (filtered.length === 0) {
+    //                       hideSuggestions();
+    //                       return;
+    //                   }
+    //                   suggestionsContainer.innerHTML = filtered.map(q => {
+    //                       const escapedText = q.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    //                       return \`<div class="suggestion-item">\${escapedText}</div>\`;
+    //                   }).join('');
+    //                   document.querySelectorAll('.suggestion-item').forEach((item, index) => {
+    //                       item.addEventListener('click', () => selectSuggestion(item));
+    //                   });
+    //                   suggestionsContainer.style.display = 'block';
+    //                   activeSuggestionIndex = -1;
+    //               }
+    //               function hideSuggestions() {
+    //                   suggestionsContainer.style.display = 'none';
+    //                   activeSuggestionIndex = -1;
+    //               }
+    //               function highlightSuggestion() {
+    //                   const suggestions = document.querySelectorAll('.suggestion-item');
+    //                   suggestions.forEach((item, index) => {
+    //                       if (index === activeSuggestionIndex) {
+    //                           item.style.backgroundColor = '#007acc';
+    //                           item.style.color = 'white';
+    //                       } else {
+    //                           item.style.backgroundColor = '';
+    //                           item.style.color = '';
+    //                       }
+    //                   });
+    //               }
+    //               function selectSuggestion(suggestionElement) {
+    //                   questionInput.value = suggestionElement.textContent;
+    //                   hideSuggestions();
+    //                   questionInput.focus();
+    //               }
+    //               function copyAndPasteCode() {
+    //                   const codeTextArea = document.getElementById('codeBlock');
+    //                   const questionArea = document.getElementById('question');
+    //                   const existingContent = questionArea.value.trim();
+    //                   const selectedCode = codeTextArea.value.substring(
+    //                       codeTextArea.selectionStart,
+    //                       codeTextArea.selectionEnd
+    //                   );
+    //                   const codeToInsert = selectedCode || codeTextArea.value;
+    //                   const formattedCode = \`~~~\\n\${codeToInsert}\\n~~~\`;
+    //                   if (existingContent) {
+    //                       questionArea.value = existingContent + "\\n\\n" + formattedCode;
+    //                   } else {
+    //                       questionArea.value = formattedCode;
+    //                   }
+    //               }
+    //               function saveCode() {
+    //                   const updatedCode = document.getElementById('codeBlock').value;
+    //                   vscode.postMessage({ type: 'updateCode', updatedCode });
+    //               }
+    //               function submitPersonalizedQuestion() {
+    //                   const question = document.getElementById('question').value;
+    //                   const answer = document.getElementById('answer').value;
+    //                   const editedCode = document.getElementById('codeBlock').value;
+    //                   if (question.trim() === '') {
+    //                       alert('Question cannot be empty!');
+    //                       return;
+    //                   }
+    //                   vscode.postMessage({ 
+    //                       type: 'submitQuestion', 
+    //                       question, 
+    //                       answer, 
+    //                       editedCode 
+    //                   });
+    //               }
+    //           </script>
+    //       </body>
+    //       </html>
+    //   `;
+    //   // Handle messages from the Webview
+    //   panel.webview.onDidReceiveMessage(async (message) => {
+    //     if (message.type === 'updateCode') {
+    //       vscode.window.showInformationMessage('Code updated successfully!');
+    //       selectedText = message.updatedCode;
+    //     }
+    //     if (message.type === 'submitQuestion') {
+    //       const studentName = extractStudentName(editor.document.uri.fsPath);
+    //       const questionData = {
+    //         filePath: editor.document.uri.fsPath,
+    //         range: {
+    //           start: { line: selection.start.line, character: selection.start.character },
+    //           end: { line: selection.end.line, character: selection.end.character },
+    //         },
+    //         text: message.question,
+    //         highlightedCode: message.editedCode,
+    //         excludeFromQuiz: false
+    //       };
+    //       // Save to personalizedQuestions.json
+    //       personalizedQuestionsData.push(questionData);
+    //       await saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+    //       // Save answer to quiz_questions_answers.json if provided
+    //       if (message.answer && message.answer.trim() !== '') {
+    //         try {
+    //           // Load existing answers
+    //           let answersData = await loadExistingAnswers();
+    //           // Add new answer
+    //           answersData.push({
+    //             questionId: personalizedQuestionsData.length - 1,
+    //             questionText: message.question,
+    //             answer: message.answer.trim(),
+    //             studentName: studentName,
+    //             filePath: editor.document.uri.fsPath,
+    //             timestamp: new Date().toISOString(),
+    //             highlightedCode: message.editedCode
+    //           });
+    //           // Save back to file
+    //           await saveDataToFile('quiz_questions_answers.json', answersData);
+    //           vscode.window.showInformationMessage('Answer saved successfully!');
+    //         } catch (error) {
+    //           vscode.window.showErrorMessage(`Failed to save answer: ${error.message}`);
+    //         }
+    //       }
+    //       vscode.window.showInformationMessage('Personalized question added successfully!');
+    //       panel.dispose();
+    //     }
+    //   });
+    // });
     //Helper function to save data to a file
     function saveDataToFile(filename, data) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -1001,799 +1249,83 @@ function activate(context) {
     const questionLabels = {};
     let configData = null;
     let studentNameMapping = {};
-    // let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
-    //   if (personalizedQuestionsData.length === 0) {
-    //     vscode.window.showInformationMessage('No personalized questions added yet!');
-    //     return;
-    //   }
-    //   // Check if we have config data, if not prompt user to select config file
-    //   if (!configData) {
-    //     try {
-    //       const configFileUri = await vscode.window.showOpenDialog({
-    //         canSelectMany: false,
-    //         openLabel: 'Select Config File',
-    //         filters: {
-    //           'JSON Files': ['json']
-    //         }
-    //       });
-    //       if (configFileUri && configFileUri[0]) {
-    //         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
-    //         configData = JSON.parse(fileData.toString());
-    //         studentNameMapping = configData.studentNameMapping || {};
-    //       } else {
-    //         vscode.window.showInformationMessage('No config file selected. Using default student names.');
-    //       }
-    //     } catch (error) {
-    //       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
-    //     }
-    //   }
-    //   // Create a Webview Panel for viewing personalized questions
-    //   const panel = vscode.window.createWebviewPanel(
-    //     'viewPersonalizedQuestions',
-    //     'View Quiz Questions',
-    //     vscode.ViewColumn.One,
-    //     { enableScripts: true }
-    //   );
-    //   const getAllCISStudents = async () => {
-    //     try {
-    //       const workspaceFolders = vscode.workspace.workspaceFolders;
-    //       if (!workspaceFolders) return [];
-    //       const cisStudents = new Set();
-    //       // First, add all students who have questions
-    //       Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
-    //       // Then add students from workspace folders
-    //       for (const folder of workspaceFolders) {
-    //         const folderUri = folder.uri;
-    //         if (folderUri.fsPath.includes("CIS")) {
-    //           const files = await vscode.workspace.fs.readDirectory(folderUri);
-    //           for (const [name, type] of files) {
-    //             if (type === vscode.FileType.Directory) {
-    //               cisStudents.add(name);
-    //             }
-    //           }
-    //         }
-    //       }
-    //       return Array.from(cisStudents).sort(); // Return sorted array
-    //     } catch (error) {
-    //       console.error("Error fetching CIS students:", error);
-    //       return [];
-    //     }
-    //   };
-    //   // Function to map student name using the config
-    //   const mapStudentName = (name) => {
-    //     return studentNameMapping[name] || name;
-    //   };
-    //   // Get all CIS students
-    //   const allCISStudents = await getAllCISStudents();
-    //   // Group questions by student name
-    //   const questionsByStudent = {};
-    //   personalizedQuestionsData.forEach((question) => {
-    //     const studentName = extractStudentName(question.filePath);
-    //     if (!questionsByStudent[studentName]) {
-    //       questionsByStudent[studentName] = [];
-    //     }
-    //     questionsByStudent[studentName].push(question);
-    //   });
-    //   // Calculate question counts per student and determine max questions
-    //   const studentQuestionCounts = new Map();
-    //   let maxQuestions = 0;
-    //   for (const studentName in questionsByStudent) {
-    //     const count = questionsByStudent[studentName].length;
-    //     studentQuestionCounts.set(studentName, count);
-    //     if (count > maxQuestions) {
-    //       maxQuestions = count;
-    //     }
-    //   }
-    //   // Assign labels to questions (1a, 1b, 2a, etc.)
-    //   const questionLabels = {};
-    //   const studentNumbers = {};
-    //   let studentCounter = 1;
-    //   let questionIndex = 0;
-    //   // Process students in alphabetical order for consistent numbering
-    //   const sortedStudentNames = Object.keys(questionsByStudent).sort();
-    //   for (const studentName of sortedStudentNames) {
-    //     studentNumbers[studentName] = studentCounter;
-    //     const questions = questionsByStudent[studentName];
-    //     questions.forEach((question, qIndex) => {
-    //       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
-    //       questionLabels[questionIndex] = questionLabel;
-    //       questionIndex++;
-    //     });
-    //     studentCounter++;
-    //   }
-    //   // Rebuild the questions array in the new order (grouped by student)
-    //   const reorderedQuestions = [];
-    //   for (const studentName of sortedStudentNames) {
-    //     reorderedQuestions.push(...questionsByStudent[studentName]);
-    //   }
-    //   // Build the summary table HTML
-    //   const buildSummaryTable = () => {
-    //     // Get all unique student names (from both questions and folders)
-    //     const allStudents = Array.from(new Set([
-    //       ...Object.keys(questionsByStudent),
-    //       ...allCISStudents
-    //     ])).sort();
-    //     const summaryRows = allStudents.map(student => {
-    //       const count = studentQuestionCounts.get(student) || 0;
-    //       const hasQuestions = count > 0;
-    //       let color = 'red'; // default color for zero questions
-    //       if (count === maxQuestions && maxQuestions > 0) {
-    //         color = 'green';
-    //       } else if (count > 0 && count < maxQuestions) {
-    //         color = 'yellow';
-    //       }
-    //       const displayName = mapStudentName(student);
-    //       return `
-    //       <tr style="background-color: ${color}">
-    //         <td>${displayName}</td>
-    //         <td>${hasQuestions ? count : '0'}</td>
-    //         <td>${hasQuestions ? '✓' : '✗'}</td>
-    //       </tr>
-    //     `;
-    //     }).join('');
-    //     return `
-    //     <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
-    //       <h2>Student Question Summary</h2>
-    //       <table style="width: 100%; border-collapse: collapse;">
-    //         <thead>
-    //           <tr>
-    //             <th>Student Name</th>
-    //             <th>Question Count</th>
-    //             <th>Has Questions</th>
-    //           </tr>
-    //         </thead>
-    //         <tbody>
-    //           ${summaryRows}
-    //         </tbody>
-    //       </table>
-    //     </div>
-    //   `;
-    //   };
-    //   // Determine color for question labels
-    //   const getLabelColor = (studentName) => {
-    //     const count = studentQuestionCounts.get(studentName) || 0;
-    //     if (count === maxQuestions && maxQuestions > 0) return 'green';
-    //     if (count > 0 && count < maxQuestions) return 'yellow';
-    //     return 'red';
-    //   };
-    //   const truncateCharacters = (text, charLimit) => {
-    //     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
-    //   };
-    //   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
-    //   const questionsTable = reorderedQuestions.map((question, index) => {
-    //     const studentName = extractStudentName(question.filePath);
-    //     const labelColor = getLabelColor(studentName);
-    //     const filePathParts = question.filePath.split('/');
-    //     let shortenedFilePath = filePathParts.length > 2
-    //       ? `.../${filePathParts.slice(-3).join('/')}`
-    //       : question.filePath;
-    //     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
-    //     return `
-    //     <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
-    //         <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-    //         <td title="${question.filePath}">${shortenedFilePath}</td>
-    //         <td>
-    //             <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
-    //         </td>
-    //         <td>
-    //             <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
-    //         </td>
-    //         <td>
-    //             <button onclick="saveChanges(${index})">Save</button>
-    //             <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
-    //             <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
-    //             <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
-    //             <br>
-    //             <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
-    //             <label for="exclude-${index}">Exclude from Quiz</label>
-    //         </td>
-    //     </tr>
-    //     `;
-    //   }).join('');
-    //   // HTML content for the Webview
-    //   panel.webview.html = `
-    // <!DOCTYPE html>
-    // <html lang="en">
-    // <head>
-    //     <meta charset="UTF-8">
-    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    //     <title>View Quiz Questions</title>
-    //     <style>
-    //         body {
-    //             font-family: Arial, sans-serif;
-    //             margin: 20px;
-    //             background-color:rgb(255, 255, 255);
-    //             color: black;
-    //         }
-    //         .header-container {
-    //             display: flex;
-    //             justify-content: space-between;
-    //             align-items: center;
-    //             margin-bottom: 20px;
-    //             flex-wrap: wrap;
-    //         }
-    //         .controls-container {
-    //             display: flex;
-    //             gap: 10px;
-    //             margin-bottom: 20px;
-    //             align-items: center;
-    //             flex-wrap: wrap;
-    //         }
-    //         .search-container {
-    //             display: flex;
-    //             align-items: center;
-    //             gap: 10px;
-    //         }
-    //         table {
-    //             width: 100%;
-    //             border-collapse: collapse;
-    //             margin-top: 20px;
-    //             background-color: white;
-    //             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    //         }
-    //         th, td {
-    //             border: 1px solid #ddd;
-    //             padding: 12px;
-    //             text-align: left;
-    //         }
-    //         th {
-    //             background-color: #007acc;
-    //             color: white;
-    //             position: sticky;
-    //             top: 0;
-    //         }
-    //         textarea {
-    //             width: 100%;
-    //             height: 100px;
-    //             font-size: 14px;
-    //             border: 1px solid #ccc;
-    //             padding: 8px;
-    //             resize: vertical;
-    //         }
-    //         .code-area {
-    //             background-color: #1e1e1e;
-    //             color: #d4d4d4;
-    //             font-family: monospace;
-    //         }
-    //         .question-area {
-    //             background-color: #f9f9f9;
-    //             color: #333;
-    //             font-family: sans-serif;
-    //         }
-    //         button {
-    //             padding: 8px 12px;
-    //             margin: 2px;
-    //             cursor: pointer;
-    //             border: none;
-    //             border-radius: 4px;
-    //             font-weight: bold;
-    //         }
-    //         button:hover {
-    //             opacity: 0.9;
-    //         }
-    //         #refreshBtn {
-    //             background-color: #4CAF50;
-    //             color: white;
-    //         }
-    //         #toggleSummaryBtn {
-    //             background-color: #673AB7;
-    //             color: white;
-    //         }
-    //         input[type="text"] {
-    //             padding: 8px;
-    //             border: 1px solid #ddd;
-    //             border-radius: 4px;
-    //             width: 250px;
-    //         }
-    //         input[type="checkbox"] {
-    //             transform: scale(1.2);
-    //             margin-top: 5px;
-    //         }
-    //         #summaryTableContainer table th {
-    //             background-color: #007acc;
-    //             color: white;
-    //         }
-    //         #summaryTableContainer table td {
-    //             border: 1px solid #ddd;
-    //             padding: 8px;
-    //         }
-    //         .total-count {
-    //             font-size: 18px;
-    //             font-weight: bold;
-    //             color: #333;
-    //         }
-    //         .pagination-container {
-    //             display: flex;
-    //             justify-content: center;
-    //             align-items: center;
-    //             margin-top: 20px;
-    //             gap: 10px;
-    //             flex-wrap: wrap;
-    //         }
-    //         .pagination-controls {
-    //             display: flex;
-    //             gap: 5px;
-    //             align-items: center;
-    //         }
-    //         .page-btn {
-    //             padding: 5px 10px;
-    //             border: 1px solid #ddd;
-    //             background-color: white;
-    //             cursor: pointer;
-    //             border-radius: 4px;
-    //             min-width: 30px;
-    //             text-align: center;
-    //         }
-    //         .page-btn:hover:not(.active):not(:disabled) {
-    //             background-color: #f1f1f1;
-    //         }
-    //         .page-btn.active {
-    //             background-color: #007acc;
-    //             color: white;
-    //             border-color: #007acc;
-    //         }
-    //         .page-btn:disabled {
-    //             opacity: 0.5;
-    //             cursor: not-allowed;
-    //         }
-    //         .page-jump {
-    //             display: flex;
-    //             align-items: center;
-    //             gap: 5px;
-    //         }
-    //         .page-jump input {
-    //             width: 50px;
-    //             padding: 5px;
-    //             text-align: center;
-    //             border: 1px solid #ddd;
-    //             border-radius: 4px;
-    //         }
-    //         .rows-per-page {
-    //             display: flex;
-    //             align-items: center;
-    //             gap: 5px;
-    //         }
-    //         .rows-per-page select {
-    //             padding: 5px;
-    //             border-radius: 4px;
-    //             border: 1px solid #ddd;
-    //         }
-    //     </style>
-    // </head>
-    // <body>
-    //     <div class="header-container">
-    //         <h1>All Quiz Questions</h1>
-    //         <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
-    //     </div>
-    //     <div class="controls-container">
-    //         <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
-    //         <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
-    //         <div class="search-container">
-    //             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
-    //             <span id="filterCount"></span>
-    //         </div>
-    //     </div>
-    //     ${buildSummaryTable()}
-    //     <table id="questionsTable">
-    //         <thead>
-    //             <tr>
-    //                 <th>#</th>
-    //                 <th>File</th>
-    //                 <th>Highlighted Code</th>
-    //                 <th>Question</th>
-    //                 <th>Actions</th>
-    //             </tr>
-    //         </thead>
-    //         <tbody id="questionsTableBody">
-    //             ${questionsTable}
-    //         </tbody>
-    //     </table>
-    //     <div class="pagination-container">
-    //         <div class="pagination-controls">
-    //             <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
-    //             <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
-    //             <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
-    //             <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
-    //             <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
-    //         </div>
-    //         <div class="page-jump">
-    //             <span>Go to:</span>
-    //             <input type="number" id="pageJumpInput" min="1" value="1">
-    //             <button onclick="jumpToPage()">Go</button>
-    //             <span>of <span id="totalPagesDisplay">1</span></span>
-    //         </div>
-    //         <div class="rows-per-page">
-    //             <label for="rowsPerPage">Rows per page:</label>
-    //             <select id="rowsPerPage" onchange="changeRowsPerPage()">
-    //                 <option value="10">10</option>
-    //                 <option value="15" selected>15</option>
-    //                 <option value="25">25</option>
-    //                 <option value="50">50</option>
-    //                 <option value="100">100</option>
-    //             </select>
-    //         </div>
-    //     </div>
-    //     <script>
-    //         const vscode = acquireVsCodeApi();
-    //         const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
-    //         const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
-    //         // Pagination variables
-    //         let currentPage = 1;
-    //         let rowsPerPage = 15;
-    //         let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
-    //         let filteredRows = [];
-    //         let isFiltered = false;
-    //         // Initialize the table
-    //         function initializeTable() {
-    //             updatePaginationControls();
-    //             renderPageNumbers();
-    //             updateVisibleRows();
-    //         }
-    //         // Update which rows are visible based on current page
-    //         function updateVisibleRows() {
-    //             const rows = document.querySelectorAll('#questionsTableBody tr');
-    //             const startIdx = (currentPage - 1) * rowsPerPage;
-    //             const endIdx = startIdx + rowsPerPage;
-    //             rows.forEach((row, index) => {
-    //                 if (isFiltered && !filteredRows.includes(index)) {
-    //                     row.style.display = 'none';
-    //                     return;
-    //                 }
-    //                 if (index >= startIdx && index < endIdx) {
-    //                     row.style.display = '';
-    //                 } else {
-    //                     row.style.display = 'none';
-    //                 }
-    //             });
-    //         }
-    //         // Update pagination controls state
-    //         function updatePaginationControls() {
-    //             document.getElementById('firstPageBtn').disabled = currentPage === 1;
-    //             document.getElementById('prevPageBtn').disabled = currentPage === 1;
-    //             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
-    //             document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
-    //             document.getElementById('pageJumpInput').value = currentPage;
-    //             document.getElementById('totalPagesDisplay').textContent = totalPages;
-    //         }
-    //         // Render page number buttons
-    //         function renderPageNumbers() {
-    //             const container = document.getElementById('pageNumbers');
-    //             container.innerHTML = '';
-    //             const maxVisiblePages = 5;
-    //             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    //             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    //             if (endPage - startPage + 1 < maxVisiblePages) {
-    //                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    //             }
-    //             if (startPage > 1) {
-    //                 const btn = document.createElement('button');
-    //                 btn.className = 'page-btn';
-    //                 btn.textContent = '1';
-    //                 btn.onclick = () => goToPage(1);
-    //                 container.appendChild(btn);
-    //                 if (startPage > 2) {
-    //                     const ellipsis = document.createElement('span');
-    //                     ellipsis.textContent = '...';
-    //                     container.appendChild(ellipsis);
-    //                 }
-    //             }
-    //             for (let i = startPage; i <= endPage; i++) {
-    //                 const btn = document.createElement('button');
-    //                 btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-    //                 btn.textContent = i;
-    //                 btn.onclick = () => goToPage(i);
-    //                 container.appendChild(btn);
-    //             }
-    //             if (endPage < totalPages) {
-    //                 if (endPage < totalPages - 1) {
-    //                     const ellipsis = document.createElement('span');
-    //                     ellipsis.textContent = '...';
-    //                     container.appendChild(ellipsis);
-    //                 }
-    //                 const btn = document.createElement('button');
-    //                 btn.className = 'page-btn';
-    //                 btn.textContent = totalPages;
-    //                 btn.onclick = () => goToPage(totalPages);
-    //                 container.appendChild(btn);
-    //             }
-    //         }
-    //         // Navigation functions
-    //         function goToPage(page) {
-    //             if (page < 1 || page > totalPages) return;
-    //             currentPage = page;
-    //             updateVisibleRows();
-    //             updatePaginationControls();
-    //             renderPageNumbers();
-    //         }
-    //         function goToFirstPage() {
-    //             goToPage(1);
-    //         }
-    //         function goToPreviousPage() {
-    //             goToPage(currentPage - 1);
-    //         }
-    //         function goToNextPage() {
-    //             goToPage(currentPage + 1);
-    //         }
-    //         function goToLastPage() {
-    //             goToPage(totalPages);
-    //         }
-    //         function jumpToPage() {
-    //             const input = document.getElementById('pageJumpInput');
-    //             const page = parseInt(input.value);
-    //             if (!isNaN(page) && page >= 1 && page <= totalPages) {
-    //                 goToPage(page);
-    //             }
-    //         }
-    //         // Change rows per page
-    //         function changeRowsPerPage() {
-    //             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-    //             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-    //             if (currentPage > totalPages) {
-    //                 currentPage = totalPages;
-    //             }
-    //             initializeTable();
-    //         }
-    //         // Filter questions based on search term
-    //         function filterQuestions() {
-    //             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    //             const rows = document.querySelectorAll('#questionsTableBody tr');
-    //             filteredRows = [];
-    //             if (searchTerm === '') {
-    //                 isFiltered = false;
-    //                 document.getElementById('filterCount').textContent = '';
-    //             } else {
-    //                 isFiltered = true;
-    //                 rows.forEach((row, index) => {
-    //                     const label = row.dataset.label.toLowerCase();
-    //                     const file = row.dataset.file.toLowerCase();
-    //                     const code = row.dataset.code.toLowerCase();
-    //                     const question = row.dataset.question.toLowerCase();
-    //                     if (label.includes(searchTerm) || file.includes(searchTerm) ||
-    //                         code.includes(searchTerm) || question.includes(searchTerm)) {
-    //                         filteredRows.push(index);
-    //                     }
-    //                 });
-    //                 document.getElementById('filterCount').textContent = filteredRows.length > 0
-    //                     ? \`\${filteredRows.length} matches\`
-    //                     : 'No matches';
-    //             }
-    //             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-    //             currentPage = 1;
-    //             initializeTable();
-    //         }
-    //         function copyQuestionText(index) {
-    //             const questionTextArea = document.getElementById('question-' + index);
-    //             const selectedText = questionTextArea.value.substring(
-    //                 questionTextArea.selectionStart,
-    //                 questionTextArea.selectionEnd
-    //             );
-    //             const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
-    //             navigator.clipboard.writeText(textToCopy).then(() => {
-    //                 vscode.postMessage({
-    //                     type: 'showInformationMessage',
-    //                     message: 'Copied to clipboard: ' +
-    //                         (selectedText.length > 0 ? 'Selected text' : 'Full question')
-    //                 });
-    //             }).catch(err => {
-    //                 vscode.postMessage({
-    //                     type: 'showErrorMessage',
-    //                     message: 'Failed to copy text: ' + err
-    //                 });
-    //             });
-    //         }
-    //         function toggleSummaryTable() {
-    //             const container = document.getElementById('summaryTableContainer');
-    //             container.style.display = container.style.display === 'none' ? 'block' : 'none';
-    //         }
-    //         function refreshView() {
-    //             vscode.postMessage({ type: 'refreshView' });
-    //         }
-    //         function saveChanges(index) {
-    //             const updatedCode = document.getElementById('code-' + index).value;
-    //             const updatedQuestion = document.getElementById('question-' + index).value;
-    //             vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
-    //         }
-    //         function revertChanges(index) {
-    //             document.getElementById('code-' + index).value = originalData[index].highlightedCode;
-    //             document.getElementById('question-' + index).value = originalData[index].text;
-    //             document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
-    //         }
-    //         function toggleExclude(index) {
-    //             const excludeStatus = document.getElementById('exclude-' + index).checked;
-    //             vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
-    //         }
-    //         function editQuestion(index) {
-    //             vscode.postMessage({ type: 'editQuestion', index });
-    //         }
-    //         // Initialize the table when the page loads
-    //         window.addEventListener('load', initializeTable);
-    //     </script>
-    // </body>
-    // </html>
-    //     `;
-    //   // Handle messages from the Webview
-    //   panel.webview.onDidReceiveMessage((message) => {
-    //     if (message.type === 'saveChanges') {
-    //       // Update the data in memory
-    //       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
-    //       reorderedQuestions[message.index].text = message.updatedQuestion;
-    //       // Update the original data array as well
-    //       personalizedQuestionsData = reorderedQuestions;
-    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-    //       vscode.window.showInformationMessage('Changes saved successfully!');
-    //     }
-    //     if (message.type === 'toggleExclude') {
-    //       // Save exclude checkbox status automatically
-    //       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
-    //       // Update the original data array as well
-    //       personalizedQuestionsData = reorderedQuestions;
-    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-    //     }
-    //     if (message.type === 'editQuestion') {
-    //       // Open a new webview panel for editing the question
-    //       openEditQuestionPanel(message.index);
-    //     }
-    //     if (message.type === 'refreshView') {
-    //       // Close and reopen the panel to refresh the view
-    //       panel.dispose(); // Close the current panel
-    //       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
-    //     }
-    //     if (message.type === 'showInformationMessage') {
-    //       vscode.window.showInformationMessage(message.message);
-    //     }
-    //     if (message.type === 'showErrorMessage') {
-    //       vscode.window.showErrorMessage(message.message);
-    //     }
-    //   });
-    // });
     let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', () => __awaiter(this, void 0, void 0, function* () {
         if (personalizedQuestionsData.length === 0) {
             vscode.window.showInformationMessage('No personalized questions added yet!');
             return;
         }
-        // Check if we have config data, if not prompt user to select config file
+        // Get workspace root path
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            vscode.window.showErrorMessage('No workspace folder is open.');
+            return;
+        }
+        const workspaceRoot = workspaceFolders[0].uri.fsPath;
+        // Convert relative paths to absolute paths for display
+        const questionsWithAbsolutePaths = personalizedQuestionsData.map(question => {
+            return Object.assign(Object.assign({}, question), { filePath: path.join(workspaceRoot, question.filePath), relativePath: question.filePath });
+        });
         if (!configData) {
             try {
-                const configFileUri = yield vscode.window.showOpenDialog({
-                    canSelectMany: false,
-                    openLabel: 'Select Config File',
-                    filters: {
-                        'JSON Files': ['json']
+                const configFilenames = ['cqlc.config.json', 'gvqlc.config.json'];
+                let configFileUri = null;
+                for (const filename of configFilenames) {
+                    try {
+                        const fileUri = vscode.Uri.joinPath(workspaceFolders[0].uri, filename);
+                        yield vscode.workspace.fs.stat(fileUri);
+                        configFileUri = fileUri;
+                        break;
                     }
-                });
-                if (configFileUri && configFileUri[0]) {
-                    const fileData = yield vscode.workspace.fs.readFile(configFileUri[0]);
+                    catch (err) { }
+                }
+                if (configFileUri) {
+                    const fileData = yield vscode.workspace.fs.readFile(configFileUri);
                     configData = JSON.parse(fileData.toString());
                     studentNameMapping = configData.studentNameMapping || {};
                 }
                 else {
-                    vscode.window.showInformationMessage('No config file selected. Using default student names.');
+                    vscode.window.showErrorMessage('No config file found. Press Command + Shift + P and select "Create Sample Config File".', { modal: true });
+                    return;
                 }
             }
             catch (error) {
                 vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+                return;
             }
         }
-        // Create a Webview Panel for viewing personalized questions
-        const panel = vscode.window.createWebviewPanel('viewPersonalizedQuestions', 'View Quiz Questions', vscode.ViewColumn.One, { enableScripts: true });
-        // const getAllCISStudents = async () => {
-        //   try {
-        //     const workspaceFolders = vscode.workspace.workspaceFolders;
-        //     if (!workspaceFolders) return [];
-        //     const cisStudents = new Set();
-        //     // Only add folder names under CIS directories
-        //     for (const folder of workspaceFolders) {
-        //       const folderUri = folder.uri;
-        //       if (folderUri.fsPath.includes("CIS")) {
-        //         const files = await vscode.workspace.fs.readDirectory(folderUri);
-        //         for (const [name, type] of files) {
-        //           if (type === vscode.FileType.Directory) {
-        //             cisStudents.add(name);
-        //           }
-        //         }
-        //       }
-        //     }
-        //     return Array.from(cisStudents).sort();
-        //   } catch (error) {
-        //     console.error("Error fetching CIS students:", error);
-        //     return [];
-        //   }
-        // };
         const getAllCISStudents = () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const workspaceFolders = vscode.workspace.workspaceFolders;
-                if (!workspaceFolders || !configData || !configData.quiz_directory_name)
-                    return [];
-                const students = new Set();
-                const quizDirName = configData.quiz_directory_name;
-                // First try: Look for quiz directory directly in workspace folders
+                const cisStudents = new Set();
                 for (const folder of workspaceFolders) {
                     const folderUri = folder.uri;
-                    // Case 1: The workspace folder itself is the quiz directory
-                    if (folderUri.path.split('/').pop() === quizDirName) {
+                    if (folderUri.fsPath.includes("CIS")) {
                         const files = yield vscode.workspace.fs.readDirectory(folderUri);
                         for (const [name, type] of files) {
                             if (type === vscode.FileType.Directory) {
-                                students.add(name);
-                            }
-                        }
-                        continue;
-                    }
-                    // Case 2: Quiz directory is a subfolder
-                    const files = yield vscode.workspace.fs.readDirectory(folderUri);
-                    for (const [name, type] of files) {
-                        if (type === vscode.FileType.Directory && name === quizDirName) {
-                            const quizDirUri = vscode.Uri.joinPath(folderUri, name);
-                            const studentFolders = yield vscode.workspace.fs.readDirectory(quizDirUri);
-                            for (const [studentName, studentType] of studentFolders) {
-                                if (studentType === vscode.FileType.Directory) {
-                                    students.add(studentName);
-                                }
+                                cisStudents.add(name);
                             }
                         }
                     }
                 }
-                // Second try: Recursive search if not found directly
-                if (students.size === 0) {
-                    for (const folder of workspaceFolders) {
-                        const found = yield findStudentFoldersRecursive(folder.uri, quizDirName);
-                        found.forEach(student => students.add(student));
-                    }
-                }
-                return Array.from(students).sort();
+                return Array.from(cisStudents).sort();
             }
             catch (error) {
-                console.error("Error fetching students:", error);
+                console.error("Error fetching CIS students:", error);
                 return [];
             }
         });
-        // Helper function for recursive search
-        function findStudentFoldersRecursive(uri, quizDirName) {
-            return __awaiter(this, void 0, void 0, function* () {
-                const students = new Set();
-                try {
-                    const files = yield vscode.workspace.fs.readDirectory(uri);
-                    for (const [name, type] of files) {
-                        if (type === vscode.FileType.Directory) {
-                            // If this is the quiz directory, add all its subdirectories as students
-                            if (name === quizDirName) {
-                                const studentFolders = yield vscode.workspace.fs.readDirectory(vscode.Uri.joinPath(uri, name));
-                                for (const [studentName, studentType] of studentFolders) {
-                                    if (studentType === vscode.FileType.Directory) {
-                                        students.add(studentName);
-                                    }
-                                }
-                            }
-                            // Otherwise search deeper
-                            else {
-                                const found = yield findStudentFoldersRecursive(vscode.Uri.joinPath(uri, name), quizDirName);
-                                found.forEach(student => students.add(student));
-                            }
-                        }
-                    }
-                }
-                catch (error) {
-                    console.error(`Error searching ${uri.fsPath}:`, error);
-                }
-                return Array.from(students);
-            });
-        }
-        // Function to map student name using the config
         const mapStudentName = (name) => {
             return studentNameMapping[name] || name;
         };
-        // Get all CIS students
         const allCISStudents = yield getAllCISStudents();
-        // Group questions by student name
         const questionsByStudent = {};
-        personalizedQuestionsData.forEach((question) => {
+        questionsWithAbsolutePaths.forEach((question) => {
             const studentName = extractStudentName(question.filePath);
             if (!questionsByStudent[studentName]) {
                 questionsByStudent[studentName] = [];
             }
             questionsByStudent[studentName].push(question);
         });
-        // Calculate question counts per student and determine max questions
         const studentQuestionCounts = new Map();
         let maxQuestions = 0;
         for (const studentName in questionsByStudent) {
@@ -1803,31 +1335,26 @@ function activate(context) {
                 maxQuestions = count;
             }
         }
-        // Assign labels to questions (1a, 1b, 2a, etc.)
         const questionLabels = {};
         const studentNumbers = {};
         let studentCounter = 1;
         let questionIndex = 0;
-        // Process students in alphabetical order for consistent numbering
         const sortedStudentNames = Object.keys(questionsByStudent).sort();
         for (const studentName of sortedStudentNames) {
             studentNumbers[studentName] = studentCounter;
             const questions = questionsByStudent[studentName];
             questions.forEach((question, qIndex) => {
-                const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+                const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`;
                 questionLabels[questionIndex] = questionLabel;
                 questionIndex++;
             });
             studentCounter++;
         }
-        // Rebuild the questions array in the new order (grouped by student)
         const reorderedQuestions = [];
         for (const studentName of sortedStudentNames) {
             reorderedQuestions.push(...questionsByStudent[studentName]);
         }
-        // Build the summary table HTML
         const buildSummaryTable = () => {
-            // Get all unique student names (from both questions and folders)
             const allStudents = Array.from(new Set([
                 ...Object.keys(questionsByStudent),
                 ...allCISStudents
@@ -1835,7 +1362,7 @@ function activate(context) {
             const summaryRows = allStudents.map(student => {
                 const count = studentQuestionCounts.get(student) || 0;
                 const hasQuestions = count > 0;
-                let color = 'red'; // default color for zero questions
+                let color = 'red';
                 if (count === maxQuestions && maxQuestions > 0) {
                     color = 'green';
                 }
@@ -1844,32 +1371,31 @@ function activate(context) {
                 }
                 const displayName = mapStudentName(student);
                 return `
-      <tr style="background-color: ${color}">
-        <td>${displayName}</td>
-        <td>${count}</td>
-        <td>${hasQuestions ? '✓' : '✗'}</td>
-      </tr>
-    `;
+                <tr style="background-color: ${color}">
+                    <td>${displayName}</td>
+                    <td>${count}</td>
+                    <td>${hasQuestions ? '✓' : '✗'}</td>
+                </tr>
+            `;
             }).join('');
             return `
-    <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
-      <h2>Student Question Summary</h2>
-      <table style="width: 100%; border-collapse: collapse;">
-        <thead>
-          <tr>
-            <th>Student Name</th>
-            <th>Question Count</th>
-            <th>Has Questions</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${summaryRows}
-        </tbody>
-      </table>
-    </div>
-  `;
+            <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
+                <h2>Student Question Summary</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Question Count</th>
+                            <th>Has Questions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${summaryRows}
+                    </tbody>
+                </table>
+            </div>
+        `;
         };
-        // Determine color for question labels
         const getLabelColor = (studentName) => {
             const count = studentQuestionCounts.get(studentName) || 0;
             if (count === maxQuestions && maxQuestions > 0)
@@ -1881,528 +1407,520 @@ function activate(context) {
         const truncateCharacters = (text, charLimit) => {
             return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
         };
-        // Build a table with editable fields, revert button, and a checkbox inside the Actions column
         const questionsTable = reorderedQuestions.map((question, index) => {
             const studentName = extractStudentName(question.filePath);
             const labelColor = getLabelColor(studentName);
-            const filePathParts = question.filePath.split('/');
+            const filePathParts = question.relativePath.split('/');
             let shortenedFilePath = filePathParts.length > 2
                 ? `.../${filePathParts.slice(-3).join('/')}`
-                : question.filePath;
+                : question.relativePath;
             shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
             return `
-    <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
-        <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-        <td title="${question.filePath}">${shortenedFilePath}</td>
-        <td>
-            <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
-        </td>
-        <td>
-            <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
-        </td>
-        <td>
-            <button onclick="saveChanges(${index})">Save</button>
-            <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
-            <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
-            <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
-            <br>
-            <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
-            <label for="exclude-${index}">Exclude from Quiz</label>
-        </td>
-    </tr>
-    `;
+            <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
+                <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
+                <td title="${question.relativePath}">${shortenedFilePath}</td>
+                <td>
+                    <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
+                </td>
+                <td>
+                    <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+                </td>
+                <td>
+                    <button onclick="saveChanges(${index})">Save</button>
+                    <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+                    <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+                    <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+                    <br>
+                    <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
+                    <label for="exclude-${index}">Exclude from Quiz</label>
+                </td>
+            </tr>
+        `;
         }).join('');
-        // HTML content for the Webview
+        // Create a Webview Panel for viewing personalized questions
+        const panel = vscode.window.createWebviewPanel('viewPersonalizedQuestions', 'View Quiz Questions', vscode.ViewColumn.One, { enableScripts: true });
         panel.webview.html = `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>View Quiz Questions</title>
-      <style>
-          body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
-              background-color:rgb(255, 255, 255);
-              color: black;
-          }
-          .header-container {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 20px;
-              flex-wrap: wrap;
-          }
-          .controls-container {
-              display: flex;
-              gap: 10px;
-              margin-bottom: 20px;
-              align-items: center;
-              flex-wrap: wrap;
-          }
-          .search-container {
-              display: flex;
-              align-items: center;
-              gap: 10px;
-          }
-          table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-              background-color: white;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          th, td {
-              border: 1px solid #ddd;
-              padding: 12px;
-              text-align: left;
-          }
-          th {
-              background-color: #007acc;
-              color: white;
-              position: sticky;
-              top: 0;
-          }
-          textarea {
-              width: 100%;
-              height: 100px;
-              font-size: 14px;
-              border: 1px solid #ccc;
-              padding: 8px;
-              resize: vertical;
-          }
-          .code-area {
-              background-color: #1e1e1e;
-              color: #d4d4d4;
-              font-family: monospace;
-          }
-          .question-area {
-              background-color: #f9f9f9;
-              color: #333;
-              font-family: sans-serif;
-          }
-          button {
-              padding: 8px 12px;
-              margin: 2px;
-              cursor: pointer;
-              border: none;
-              border-radius: 4px;
-              font-weight: bold;
-          }
-          button:hover {
-              opacity: 0.9;
-          }
-          #refreshBtn {
-              background-color: #4CAF50;
-              color: white;
-          }
-          #toggleSummaryBtn {
-              background-color: #673AB7;
-              color: white;
-          }
-          input[type="text"] {
-              padding: 8px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              width: 250px;
-          }
-          input[type="checkbox"] {
-              transform: scale(1.2);
-              margin-top: 5px;
-          }
-          #summaryTableContainer table th {
-              background-color: #007acc;
-              color: white;
-          }
-          #summaryTableContainer table td {
-              border: 1px solid #ddd;
-              padding: 8px;
-          }
-          .total-count {
-              font-size: 18px;
-              font-weight: bold;
-              color: #333;
-          }
-          .pagination-container {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              margin-top: 20px;
-              gap: 10px;
-              flex-wrap: wrap;
-          }
-          .pagination-controls {
-              display: flex;
-              gap: 5px;
-              align-items: center;
-          }
-          .page-btn {
-              padding: 5px 10px;
-              border: 1px solid #ddd;
-              background-color: white;
-              cursor: pointer;
-              border-radius: 4px;
-              min-width: 30px;
-              text-align: center;
-          }
-          .page-btn:hover:not(.active):not(:disabled) {
-              background-color: #f1f1f1;
-          }
-          .page-btn.active {
-              background-color: #007acc;
-              color: white;
-              border-color: #007acc;
-          }
-          .page-btn:disabled {
-              opacity: 0.5;
-              cursor: not-allowed;
-          }
-          .page-jump {
-              display: flex;
-              align-items: center;
-              gap: 5px;
-          }
-          .page-jump input {
-              width: 50px;
-              padding: 5px;
-              text-align: center;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-          }
-          .rows-per-page {
-              display: flex;
-              align-items: center;
-              gap: 5px;
-          }
-          .rows-per-page select {
-              padding: 5px;
-              border-radius: 4px;
-              border: 1px solid #ddd;
-          }
-      </style>
-  </head>
-  <body>
-      <div class="header-container">
-          <h1>All Quiz Questions</h1>
-          <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
-      </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Quiz Questions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color:rgb(255, 255, 255);
+            color: black;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .controls-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #007acc;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            padding: 8px;
+            resize: vertical;
+        }
+        .code-area {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: monospace;
+        }
+        .question-area {
+            background-color: #f9f9f9;
+            color: #333;
+            font-family: sans-serif;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 2px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        #refreshBtn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #toggleSummaryBtn {
+            background-color: #673AB7;
+            color: white;
+        }
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+        }
+        input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-top: 5px;
+        }
+        #summaryTableContainer table th {
+            background-color: #007acc;
+            color: white;
+        }
+        #summaryTableContainer table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .total-count {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .page-btn {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            min-width: 30px;
+            text-align: center;
+        }
+        .page-btn:hover:not(.active):not(:disabled) {
+            background-color: #f1f1f1;
+        }
+        .page-btn.active {
+            background-color: #007acc;
+            color: white;
+            border-color: #007acc;
+        }
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .page-jump {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .page-jump input {
+            width: 50px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .rows-per-page {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .rows-per-page select {
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h1>All Quiz Questions</h1>
+        <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+    </div>
 
-      <div class="controls-container">
-          <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
-          <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
-          <div class="search-container">
-              <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
-              <span id="filterCount"></span>
-          </div>
-      </div>
+    <div class="controls-container">
+        <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
+        <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
+            <span id="filterCount"></span>
+        </div>
+    </div>
 
-      ${buildSummaryTable()}
+    ${buildSummaryTable()}
 
-      <table id="questionsTable">
-          <thead>
-              <tr>
-                  <th>#</th>
-                  <th>File</th>
-                  <th>Highlighted Code</th>
-                  <th>Question</th>
-                  <th>Actions</th>
-              </tr>
-          </thead>
-          <tbody id="questionsTableBody">
-              ${questionsTable}
-          </tbody>
-      </table>
+    <table id="questionsTable">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>File</th>
+                <th>Highlighted Code</th>
+                <th>Question</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="questionsTableBody">
+            ${questionsTable}
+        </tbody>
+    </table>
 
-      <div class="pagination-container">
-          <div class="pagination-controls">
-              <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
-              <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
+    <div class="pagination-container">
+        <div class="pagination-controls">
+            <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
+            <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
+            <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+            <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
+            <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
+        </div>
 
-              <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+        <div class="page-jump">
+            <span>Go to:</span>
+            <input type="number" id="pageJumpInput" min="1" value="1">
+            <button onclick="jumpToPage()">Go</button>
+            <span>of <span id="totalPagesDisplay">1</span></span>
+        </div>
 
-              <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
-              <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
-          </div>
+        <div class="rows-per-page">
+            <label for="rowsPerPage">Rows per page:</label>
+            <select id="rowsPerPage" onchange="changeRowsPerPage()">
+                <option value="10">10</option>
+                <option value="15" selected>15</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
 
-          <div class="page-jump">
-              <span>Go to:</span>
-              <input type="number" id="pageJumpInput" min="1" value="1">
-              <button onclick="jumpToPage()">Go</button>
-              <span>of <span id="totalPagesDisplay">1</span></span>
-          </div>
+    <script>
+        const vscode = acquireVsCodeApi();
+        const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
+        const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
 
-          <div class="rows-per-page">
-              <label for="rowsPerPage">Rows per page:</label>
-              <select id="rowsPerPage" onchange="changeRowsPerPage()">
-                  <option value="10">10</option>
-                  <option value="15" selected>15</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="100">100</option>
-              </select>
-          </div>
-      </div>
+        // Pagination variables
+        let currentPage = 1;
+        let rowsPerPage = 15;
+        let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+        let filteredRows = [];
+        let isFiltered = false;
 
-      <script>
-          const vscode = acquireVsCodeApi();
-          const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
-          const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
+        // Initialize the table
+        function initializeTable() {
+            updatePaginationControls();
+            renderPageNumbers();
+            updateVisibleRows();
+        }
 
-          // Pagination variables
-          let currentPage = 1;
-          let rowsPerPage = 15;
-          let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
-          let filteredRows = [];
-          let isFiltered = false;
+        // Update which rows are visible based on current page
+        function updateVisibleRows() {
+            const rows = document.querySelectorAll('#questionsTableBody tr');
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
 
-          // Initialize the table
-          function initializeTable() {
-              updatePaginationControls();
-              renderPageNumbers();
-              updateVisibleRows();
-          }
+            rows.forEach((row, index) => {
+                if (isFiltered && !filteredRows.includes(index)) {
+                    row.style.display = 'none';
+                    return;
+                }
 
-          // Update which rows are visible based on current page
-          function updateVisibleRows() {
-              const rows = document.querySelectorAll('#questionsTableBody tr');
-              const startIdx = (currentPage - 1) * rowsPerPage;
-              const endIdx = startIdx + rowsPerPage;
+                if (index >= startIdx && index < endIdx) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
 
-              rows.forEach((row, index) => {
-                  if (isFiltered && !filteredRows.includes(index)) {
-                      row.style.display = 'none';
-                      return;
-                  }
+        // Update pagination controls state
+        function updatePaginationControls() {
+            document.getElementById('firstPageBtn').disabled = currentPage === 1;
+            document.getElementById('prevPageBtn').disabled = currentPage === 1;
+            document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+            document.getElementById('pageJumpInput').value = currentPage;
+            document.getElementById('totalPagesDisplay').textContent = totalPages;
+        }
 
-                  if (index >= startIdx && index < endIdx) {
-                      row.style.display = '';
-                  } else {
-                      row.style.display = 'none';
-                  }
-              });
-          }
+        // Render page number buttons
+        function renderPageNumbers() {
+            const container = document.getElementById('pageNumbers');
+            container.innerHTML = '';
 
-          // Update pagination controls state
-          function updatePaginationControls() {
-              document.getElementById('firstPageBtn').disabled = currentPage === 1;
-              document.getElementById('prevPageBtn').disabled = currentPage === 1;
-              document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
-              document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
-              document.getElementById('pageJumpInput').value = currentPage;
-              document.getElementById('totalPagesDisplay').textContent = totalPages;
-          }
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-          // Render page number buttons
-          function renderPageNumbers() {
-              const container = document.getElementById('pageNumbers');
-              container.innerHTML = '';
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
 
-              const maxVisiblePages = 5;
-              let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-              let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            if (startPage > 1) {
+                const btn = document.createElement('button');
+                btn.className = 'page-btn';
+                btn.textContent = '1';
+                btn.onclick = () => goToPage(1);
+                container.appendChild(btn);
 
-              if (endPage - startPage + 1 < maxVisiblePages) {
-                  startPage = Math.max(1, endPage - maxVisiblePages + 1);
-              }
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    container.appendChild(ellipsis);
+                }
+            }
 
-              if (startPage > 1) {
-                  const btn = document.createElement('button');
-                  btn.className = 'page-btn';
-                  btn.textContent = '1';
-                  btn.onclick = () => goToPage(1);
-                  container.appendChild(btn);
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+                btn.textContent = i;
+                btn.onclick = () => goToPage(i);
+                container.appendChild(btn);
+            }
 
-                  if (startPage > 2) {
-                      const ellipsis = document.createElement('span');
-                      ellipsis.textContent = '...';
-                      container.appendChild(ellipsis);
-                  }
-              }
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    container.appendChild(ellipsis);
+                }
 
-              for (let i = startPage; i <= endPage; i++) {
-                  const btn = document.createElement('button');
-                  btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-                  btn.textContent = i;
-                  btn.onclick = () => goToPage(i);
-                  container.appendChild(btn);
-              }
+                const btn = document.createElement('button');
+                btn.className = 'page-btn';
+                btn.textContent = totalPages;
+                btn.onclick = () => goToPage(totalPages);
+                container.appendChild(btn);
+            }
+        }
 
-              if (endPage < totalPages) {
-                  if (endPage < totalPages - 1) {
-                      const ellipsis = document.createElement('span');
-                      ellipsis.textContent = '...';
-                      container.appendChild(ellipsis);
-                  }
+        // Navigation functions
+        function goToPage(page) {
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            updateVisibleRows();
+            updatePaginationControls();
+            renderPageNumbers();
+        }
 
-                  const btn = document.createElement('button');
-                  btn.className = 'page-btn';
-                  btn.textContent = totalPages;
-                  btn.onclick = () => goToPage(totalPages);
-                  container.appendChild(btn);
-              }
-          }
+        function goToFirstPage() {
+            goToPage(1);
+        }
 
-          // Navigation functions
-          function goToPage(page) {
-              if (page < 1 || page > totalPages) return;
-              currentPage = page;
-              updateVisibleRows();
-              updatePaginationControls();
-              renderPageNumbers();
-          }
+        function goToPreviousPage() {
+            goToPage(currentPage - 1);
+        }
 
-          function goToFirstPage() {
-              goToPage(1);
-          }
+        function goToNextPage() {
+            goToPage(currentPage + 1);
+        }
 
-          function goToPreviousPage() {
-              goToPage(currentPage - 1);
-          }
+        function goToLastPage() {
+            goToPage(totalPages);
+        }
 
-          function goToNextPage() {
-              goToPage(currentPage + 1);
-          }
+        function jumpToPage() {
+            const input = document.getElementById('pageJumpInput');
+            const page = parseInt(input.value);
+            if (!isNaN(page) && page >= 1 && page <= totalPages) {
+                goToPage(page);
+            }
+        }
 
-          function goToLastPage() {
-              goToPage(totalPages);
-          }
+        // Change rows per page
+        function changeRowsPerPage() {
+            rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
+            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            initializeTable();
+        }
 
-          function jumpToPage() {
-              const input = document.getElementById('pageJumpInput');
-              const page = parseInt(input.value);
-              if (!isNaN(page) && page >= 1 && page <= totalPages) {
-                  goToPage(page);
-              }
-          }
+        // Filter questions based on search term
+        function filterQuestions() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#questionsTableBody tr');
+            filteredRows = [];
 
-          // Change rows per page
-          function changeRowsPerPage() {
-              rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-              totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-              if (currentPage > totalPages) {
-                  currentPage = totalPages;
-              }
-              initializeTable();
-          }
+            if (searchTerm === '') {
+                isFiltered = false;
+                document.getElementById('filterCount').textContent = '';
+            } else {
+                isFiltered = true;
+                rows.forEach((row, index) => {
+                    const label = row.dataset.label.toLowerCase();
+                    const file = row.dataset.file.toLowerCase();
+                    const code = row.dataset.code.toLowerCase();
+                    const question = row.dataset.question.toLowerCase();
 
-          // Filter questions based on search term
-          function filterQuestions() {
-              const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-              const rows = document.querySelectorAll('#questionsTableBody tr');
-              filteredRows = [];
+                    if (label.includes(searchTerm) || file.includes(searchTerm) ||
+                        code.includes(searchTerm) || question.includes(searchTerm)) {
+                        filteredRows.push(index);
+                    }
+                });
 
-              if (searchTerm === '') {
-                  isFiltered = false;
-                  document.getElementById('filterCount').textContent = '';
-              } else {
-                  isFiltered = true;
-                  rows.forEach((row, index) => {
-                      const label = row.dataset.label.toLowerCase();
-                      const file = row.dataset.file.toLowerCase();
-                      const code = row.dataset.code.toLowerCase();
-                      const question = row.dataset.question.toLowerCase();
+                document.getElementById('filterCount').textContent = filteredRows.length > 0
+                    ? \`\${filteredRows.length} matches\`
+                    : 'No matches';
+            }
 
-                      if (label.includes(searchTerm) || file.includes(searchTerm) ||
-                          code.includes(searchTerm) || question.includes(searchTerm)) {
-                          filteredRows.push(index);
-                      }
-                  });
+            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+            currentPage = 1;
+            initializeTable();
+        }
 
-                  document.getElementById('filterCount').textContent = filteredRows.length > 0
-                      ? \`\${filteredRows.length} matches\`
-                      : 'No matches';
-              }
+        function copyQuestionText(index) {
+            const questionTextArea = document.getElementById('question-' + index);
+            const selectedText = questionTextArea.value.substring(
+                questionTextArea.selectionStart,
+                questionTextArea.selectionEnd
+            );
+            const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
 
-              totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-              currentPage = 1;
-              initializeTable();
-          }
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                vscode.postMessage({
+                    type: 'showInformationMessage',
+                    message: 'Copied to clipboard: ' +
+                        (selectedText.length > 0 ? 'Selected text' : 'Full question')
+                });
+            }).catch(err => {
+                vscode.postMessage({
+                    type: 'showErrorMessage',
+                    message: 'Failed to copy text: ' + err
+                });
+            });
+        }
 
-          function copyQuestionText(index) {
-              const questionTextArea = document.getElementById('question-' + index);
-              const selectedText = questionTextArea.value.substring(
-                  questionTextArea.selectionStart,
-                  questionTextArea.selectionEnd
-              );
-              const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
+        function toggleSummaryTable() {
+            const container = document.getElementById('summaryTableContainer');
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
 
-              navigator.clipboard.writeText(textToCopy).then(() => {
-                  vscode.postMessage({
-                      type: 'showInformationMessage',
-                      message: 'Copied to clipboard: ' +
-                          (selectedText.length > 0 ? 'Selected text' : 'Full question')
-                  });
-              }).catch(err => {
-                  vscode.postMessage({
-                      type: 'showErrorMessage',
-                      message: 'Failed to copy text: ' + err
-                  });
-              });
-          }
+        function refreshView() {
+            vscode.postMessage({ type: 'refreshView' });
+        }
 
-          function toggleSummaryTable() {
-              const container = document.getElementById('summaryTableContainer');
-              container.style.display = container.style.display === 'none' ? 'block' : 'none';
-          }
+        function saveChanges(index) {
+            const updatedCode = document.getElementById('code-' + index).value;
+            const updatedQuestion = document.getElementById('question-' + index).value;
+            vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
+        }
 
-          function refreshView() {
-              vscode.postMessage({ type: 'refreshView' });
-          }
+        function revertChanges(index) {
+            document.getElementById('code-' + index).value = originalData[index].highlightedCode;
+            document.getElementById('question-' + index).value = originalData[index].text;
+            document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
+        }
 
-          function saveChanges(index) {
-              const updatedCode = document.getElementById('code-' + index).value;
-              const updatedQuestion = document.getElementById('question-' + index).value;
-              vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
-          }
+        function toggleExclude(index) {
+            const excludeStatus = document.getElementById('exclude-' + index).checked;
+            vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
+        }
 
-          function revertChanges(index) {
-              document.getElementById('code-' + index).value = originalData[index].highlightedCode;
-              document.getElementById('question-' + index).value = originalData[index].text;
-              document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
-          }
+        function editQuestion(index) {
+            vscode.postMessage({ type: 'editQuestion', index });
+        }
 
-          function toggleExclude(index) {
-              const excludeStatus = document.getElementById('exclude-' + index).checked;
-              vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
-          }
-
-          function editQuestion(index) {
-              vscode.postMessage({ type: 'editQuestion', index });
-          }
-
-          // Initialize the table when the page loads
-          window.addEventListener('load', initializeTable);
-      </script>
-  </body>
-  </html>
-      `;
+        // Initialize the table when the page loads
+        window.addEventListener('load', initializeTable);
+    </script>
+</body>
+</html>
+    `;
         // Handle messages from the Webview
         panel.webview.onDidReceiveMessage((message) => {
             if (message.type === 'saveChanges') {
-                // Update the data in memory
                 reorderedQuestions[message.index].highlightedCode = message.updatedCode;
                 reorderedQuestions[message.index].text = message.updatedQuestion;
-                // Update the original data array as well
                 personalizedQuestionsData = reorderedQuestions;
                 saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
                 vscode.window.showInformationMessage('Changes saved successfully!');
             }
             if (message.type === 'toggleExclude') {
-                // Save exclude checkbox status automatically
                 reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
-                // Update the original data array as well
                 personalizedQuestionsData = reorderedQuestions;
                 saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
             }
             if (message.type === 'editQuestion') {
-                // Open a new webview panel for editing the question
                 openEditQuestionPanel(message.index);
             }
             if (message.type === 'refreshView') {
-                // Close and reopen the panel to refresh the view
-                panel.dispose(); // Close the current panel
-                vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
+                panel.dispose();
+                vscode.commands.executeCommand('extension.viewPersonalizedQuestions');
             }
             if (message.type === 'showInformationMessage') {
                 vscode.window.showInformationMessage(message.message);
@@ -2412,160 +1930,196 @@ function activate(context) {
             }
         });
     }));
-    // let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
-    //   if (personalizedQuestionsData.length === 0) {
-    //     vscode.window.showInformationMessage('No personalized questions added yet!');
-    //     return;
-    //   }
-    //   // Check if we have config data, if not prompt user to select config file
-    //   if (!configData) {
-    //     try {
-    //       const configFileUri = await vscode.window.showOpenDialog({
-    //         canSelectMany: false,
-    //         openLabel: 'Select Config File',
-    //         filters: {
-    //           'JSON Files': ['json']
-    //         }
-    //       });
-    //       if (configFileUri && configFileUri[0]) {
-    //         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
-    //         configData = JSON.parse(fileData.toString());
-    //         studentNameMapping = configData.studentNameMapping || {};
-    //       } else {
-    //         vscode.window.showInformationMessage('No config file selected. Using default student names.');
-    //       }
-    //     } catch (error) {
-    //       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+    //   let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
+    //     if (personalizedQuestionsData.length === 0) {
+    //       vscode.window.showInformationMessage('No personalized questions added yet!');
+    //       return;
     //     }
-    //   }
-    //   // Create a Webview Panel for viewing personalized questions
-    //   const panel = vscode.window.createWebviewPanel(
-    //     'viewPersonalizedQuestions',
-    //     'View Quiz Questions',
-    //     vscode.ViewColumn.One,
-    //     { enableScripts: true }
-    //   );
-    //   // const getAllCISStudents = async () => {
-    //   //   try {
-    //   //     const workspaceFolders = vscode.workspace.workspaceFolders;
-    //   //     if (!workspaceFolders) return [];
-    //   //     const cisStudents = new Set();
-    //   //     // First, add all students who have questions
-    //   //     Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
-    //   //     // Then add students from workspace folders
-    //   //     for (const folder of workspaceFolders) {
-    //   //       const folderUri = folder.uri;
-    //   //       if (folderUri.fsPath.includes("CIS")) {
-    //   //         const files = await vscode.workspace.fs.readDirectory(folderUri);
-    //   //         for (const [name, type] of files) {
-    //   //           if (type === vscode.FileType.Directory) {
-    //   //             cisStudents.add(name);
-    //   //           }
-    //   //         }
-    //   //       }
-    //   //     }
-    //   //     return Array.from(cisStudents).sort(); // Return sorted array
-    //   //   } catch (error) {
-    //   //     console.error("Error fetching CIS students:", error);
-    //   //     return [];
-    //   //   }
-    //   // };
-    //   const getAllCISStudents = async () => {
-    //     try {
-    //       const workspaceFolders = vscode.workspace.workspaceFolders;
-    //       if (!workspaceFolders) return [];
-    //       const cisStudents = new Set();
-    //       // Only add folder names under CIS directories
-    //       for (const folder of workspaceFolders) {
-    //         const folderUri = folder.uri;
-    //         if (folderUri.fsPath.includes("CIS")) {
-    //           const files = await vscode.workspace.fs.readDirectory(folderUri);
-    //           for (const [name, type] of files) {
-    //             if (type === vscode.FileType.Directory) {
-    //               cisStudents.add(name);
+    //     // // Check if we have config data, if not prompt user to select config file
+    //     // if (!configData) {
+    //     //   try {
+    //     //     const configFileUri = await vscode.window.showOpenDialog({
+    //     //       canSelectMany: false,
+    //     //       openLabel: 'Select Config File',
+    //     //       filters: {
+    //     //         'JSON Files': ['json']
+    //     //       }
+    //     //     });
+    //     //     if (configFileUri && configFileUri[0]) {
+    //     //       const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
+    //     //       configData = JSON.parse(fileData.toString());
+    //     //       studentNameMapping = configData.studentNameMapping || {};
+    //     //     } else {
+    //     //       vscode.window.showInformationMessage('No config file selected. Using default student names.');
+    //     //     }
+    //     //   } catch (error) {
+    //     //     vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+    //     //   }
+    //     // }
+    //     if (!configData) {
+    //       try {
+    //         const workspaceFolders = vscode.workspace.workspaceFolders;
+    //         if (!workspaceFolders || workspaceFolders.length === 0) {
+    //           vscode.window.showErrorMessage('No workspace folder is open.');
+    //           return;
+    //         }
+    //         const rootUri = workspaceFolders[0].uri;
+    //         const configFilenames = ['cqlc.config.json', 'gvqlc.config.json'];
+    //         let configFileUri = null;
+    //         for (const filename of configFilenames) {
+    //           try {
+    //             const fileUri = vscode.Uri.joinPath(rootUri, filename);
+    //             await vscode.workspace.fs.stat(fileUri); // Check if file exists
+    //             configFileUri = fileUri;
+    //             break;
+    //           } catch (err) {
+    //             // File not found, continue checking next
+    //           }
+    //         }
+    //         if (configFileUri) {
+    //           const fileData = await vscode.workspace.fs.readFile(configFileUri);
+    //           configData = JSON.parse(fileData.toString());
+    //           studentNameMapping = configData.studentNameMapping || {};
+    //         } else {
+    //           vscode.window.showErrorMessage(
+    //             'No config file (cqlc.config.json or gvqlc.config.json) found in the root folder. Press Command + Shift + P and select "Create Sample Config File".',
+    //             { modal: true }
+    //           );
+    //           return;
+    //         }
+    //       } catch (error) {
+    //         vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+    //         return;
+    //       }
+    //     }
+    //     // Create a Webview Panel for viewing personalized questions
+    //     const panel = vscode.window.createWebviewPanel(
+    //       'viewPersonalizedQuestions',
+    //       'View Quiz Questions',
+    //       vscode.ViewColumn.One,
+    //       { enableScripts: true }
+    //     );
+    //     // const getAllCISStudents = async () => {
+    //     //   try {
+    //     //     const workspaceFolders = vscode.workspace.workspaceFolders;
+    //     //     if (!workspaceFolders) return [];
+    //     //     const cisStudents = new Set();
+    //     //     // First, add all students who have questions
+    //     //     Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
+    //     //     // Then add students from workspace folders
+    //     //     for (const folder of workspaceFolders) {
+    //     //       const folderUri = folder.uri;
+    //     //       if (folderUri.fsPath.includes("CIS")) {
+    //     //         const files = await vscode.workspace.fs.readDirectory(folderUri);
+    //     //         for (const [name, type] of files) {
+    //     //           if (type === vscode.FileType.Directory) {
+    //     //             cisStudents.add(name);
+    //     //           }
+    //     //         }
+    //     //       }
+    //     //     }
+    //     //     return Array.from(cisStudents).sort(); // Return sorted array
+    //     //   } catch (error) {
+    //     //     console.error("Error fetching CIS students:", error);
+    //     //     return [];
+    //     //   }
+    //     // };
+    //     const getAllCISStudents = async () => {
+    //       try {
+    //         const workspaceFolders = vscode.workspace.workspaceFolders;
+    //         if (!workspaceFolders) return [];
+    //         const cisStudents = new Set();
+    //         // Only add folder names under CIS directories
+    //         for (const folder of workspaceFolders) {
+    //           const folderUri = folder.uri;
+    //           if (folderUri.fsPath.includes("CIS")) {
+    //             const files = await vscode.workspace.fs.readDirectory(folderUri);
+    //             for (const [name, type] of files) {
+    //               if (type === vscode.FileType.Directory) {
+    //                 cisStudents.add(name);
+    //               }
     //             }
     //           }
     //         }
+    //         return Array.from(cisStudents).sort();
+    //       } catch (error) {
+    //         console.error("Error fetching CIS students:", error);
+    //         return [];
     //       }
-    //       return Array.from(cisStudents).sort();
-    //     } catch (error) {
-    //       console.error("Error fetching CIS students:", error);
-    //       return [];
-    //     }
-    //   };
-    //   // Function to map student name using the config
-    //   const mapStudentName = (name) => {
-    //     return studentNameMapping[name] || name;
-    //   };
-    //   // Get all CIS students
-    //   const allCISStudents = await getAllCISStudents();
-    //   // Group questions by student name
-    //   const questionsByStudent = {};
-    //   personalizedQuestionsData.forEach((question) => {
-    //     const studentName = extractStudentName(question.filePath);
-    //     if (!questionsByStudent[studentName]) {
-    //       questionsByStudent[studentName] = [];
-    //     }
-    //     questionsByStudent[studentName].push(question);
-    //   });
-    //   // Calculate question counts per student and determine max questions
-    //   const studentQuestionCounts = new Map();
-    //   let maxQuestions = 0;
-    //   for (const studentName in questionsByStudent) {
-    //     const count = questionsByStudent[studentName].length;
-    //     studentQuestionCounts.set(studentName, count);
-    //     if (count > maxQuestions) {
-    //       maxQuestions = count;
-    //     }
-    //   }
-    //   // Assign labels to questions (1a, 1b, 2a, etc.)
-    //   const questionLabels = {};
-    //   const studentNumbers = {};
-    //   let studentCounter = 1;
-    //   let questionIndex = 0;
-    //   // Process students in alphabetical order for consistent numbering
-    //   const sortedStudentNames = Object.keys(questionsByStudent).sort();
-    //   for (const studentName of sortedStudentNames) {
-    //     studentNumbers[studentName] = studentCounter;
-    //     const questions = questionsByStudent[studentName];
-    //     questions.forEach((question, qIndex) => {
-    //       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
-    //       questionLabels[questionIndex] = questionLabel;
-    //       questionIndex++;
+    //     };
+    //     // Function to map student name using the config
+    //     const mapStudentName = (name) => {
+    //       return studentNameMapping[name] || name;
+    //     };
+    //     // Get all CIS students
+    //     const allCISStudents = await getAllCISStudents();
+    //     // Group questions by student name
+    //     const questionsByStudent = {};
+    //     personalizedQuestionsData.forEach((question) => {
+    //       const studentName = extractStudentName(question.filePath);
+    //       if (!questionsByStudent[studentName]) {
+    //         questionsByStudent[studentName] = [];
+    //       }
+    //       questionsByStudent[studentName].push(question);
     //     });
-    //     studentCounter++;
-    //   }
-    //   // Rebuild the questions array in the new order (grouped by student)
-    //   const reorderedQuestions = [];
-    //   for (const studentName of sortedStudentNames) {
-    //     reorderedQuestions.push(...questionsByStudent[studentName]);
-    //   }
-    //   // Build the summary table HTML
-    //   const buildSummaryTable = () => {
-    //     // Get all unique student names (from both questions and folders)
-    //     const allStudents = Array.from(new Set([
-    //       ...Object.keys(questionsByStudent),
-    //       ...allCISStudents
-    //     ])).sort();
-    //     const summaryRows = allStudents.map(student => {
-    //       const count = studentQuestionCounts.get(student) || 0;
-    //       const hasQuestions = count > 0;
-    //       let color = 'red'; // default color for zero questions
-    //       if (count === maxQuestions && maxQuestions > 0) {
-    //         color = 'green';
-    //       } else if (count > 0 && count < maxQuestions) {
-    //         color = 'yellow';
+    //     // Calculate question counts per student and determine max questions
+    //     const studentQuestionCounts = new Map();
+    //     let maxQuestions = 0;
+    //     for (const studentName in questionsByStudent) {
+    //       const count = questionsByStudent[studentName].length;
+    //       studentQuestionCounts.set(studentName, count);
+    //       if (count > maxQuestions) {
+    //         maxQuestions = count;
     //       }
-    //       const displayName = mapStudentName(student);
-    //       return `
+    //     }
+    //     // Assign labels to questions (1a, 1b, 2a, etc.)
+    //     const questionLabels = {};
+    //     const studentNumbers = {};
+    //     let studentCounter = 1;
+    //     let questionIndex = 0;
+    //     // Process students in alphabetical order for consistent numbering
+    //     const sortedStudentNames = Object.keys(questionsByStudent).sort();
+    //     for (const studentName of sortedStudentNames) {
+    //       studentNumbers[studentName] = studentCounter;
+    //       const questions = questionsByStudent[studentName];
+    //       questions.forEach((question, qIndex) => {
+    //         const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+    //         questionLabels[questionIndex] = questionLabel;
+    //         questionIndex++;
+    //       });
+    //       studentCounter++;
+    //     }
+    //     // Rebuild the questions array in the new order (grouped by student)
+    //     const reorderedQuestions = [];
+    //     for (const studentName of sortedStudentNames) {
+    //       reorderedQuestions.push(...questionsByStudent[studentName]);
+    //     }
+    //     // Build the summary table HTML
+    //     const buildSummaryTable = () => {
+    //       // Get all unique student names (from both questions and folders)
+    //       const allStudents = Array.from(new Set([
+    //         ...Object.keys(questionsByStudent),
+    //         ...allCISStudents
+    //       ])).sort();
+    //       const summaryRows = allStudents.map(student => {
+    //         const count = studentQuestionCounts.get(student) || 0;
+    //         const hasQuestions = count > 0;
+    //         let color = 'red'; // default color for zero questions
+    //         if (count === maxQuestions && maxQuestions > 0) {
+    //           color = 'green';
+    //         } else if (count > 0 && count < maxQuestions) {
+    //           color = 'yellow';
+    //         }
+    //         const displayName = mapStudentName(student);
+    //         return `
     //     <tr style="background-color: ${color}">
     //       <td>${displayName}</td>
     //       <td>${count}</td>
     //       <td>${hasQuestions ? '✓' : '✗'}</td>
     //     </tr>
     //   `;
-    //     }).join('');
-    //     return `
+    //       }).join('');
+    //       return `
     //   <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
     //     <h2>Student Question Summary</h2>
     //     <table style="width: 100%; border-collapse: collapse;">
@@ -2582,27 +2136,27 @@ function activate(context) {
     //     </table>
     //   </div>
     // `;
-    //   };
-    //   // Determine color for question labels
-    //   const getLabelColor = (studentName) => {
-    //     const count = studentQuestionCounts.get(studentName) || 0;
-    //     if (count === maxQuestions && maxQuestions > 0) return 'green';
-    //     if (count > 0 && count < maxQuestions) return 'yellow';
-    //     return 'red';
-    //   };
-    //   const truncateCharacters = (text, charLimit) => {
-    //     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
-    //   };
-    //   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
-    //   const questionsTable = reorderedQuestions.map((question, index) => {
-    //     const studentName = extractStudentName(question.filePath);
-    //     const labelColor = getLabelColor(studentName);
-    //     const filePathParts = question.filePath.split('/');
-    //     let shortenedFilePath = filePathParts.length > 2
-    //       ? `.../${filePathParts.slice(-3).join('/')}`
-    //       : question.filePath;
-    //     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
-    //     return `
+    //     };
+    //     // Determine color for question labels
+    //     const getLabelColor = (studentName) => {
+    //       const count = studentQuestionCounts.get(studentName) || 0;
+    //       if (count === maxQuestions && maxQuestions > 0) return 'green';
+    //       if (count > 0 && count < maxQuestions) return 'yellow';
+    //       return 'red';
+    //     };
+    //     const truncateCharacters = (text, charLimit) => {
+    //       return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
+    //     };
+    //     // Build a table with editable fields, revert button, and a checkbox inside the Actions column
+    //     const questionsTable = reorderedQuestions.map((question, index) => {
+    //       const studentName = extractStudentName(question.filePath);
+    //       const labelColor = getLabelColor(studentName);
+    //       const filePathParts = question.filePath.split('/');
+    //       let shortenedFilePath = filePathParts.length > 2
+    //         ? `.../${filePathParts.slice(-3).join('/')}`
+    //         : question.filePath;
+    //       shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
+    //       return `
     //   <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
     //       <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
     //       <td title="${question.filePath}">${shortenedFilePath}</td>
@@ -2623,9 +2177,9 @@ function activate(context) {
     //       </td>
     //   </tr>
     //   `;
-    //   }).join('');
-    //   // HTML content for the Webview
-    //   panel.webview.html = `
+    //     }).join('');
+    //     // HTML content for the Webview
+    //     panel.webview.html = `
     // <!DOCTYPE html>
     // <html lang="en">
     // <head>
@@ -3045,60 +2599,81 @@ function activate(context) {
     // </body>
     // </html>
     //     `;
-    //   // Handle messages from the Webview
-    //   panel.webview.onDidReceiveMessage((message) => {
-    //     if (message.type === 'saveChanges') {
-    //       // Update the data in memory
-    //       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
-    //       reorderedQuestions[message.index].text = message.updatedQuestion;
-    //       // Update the original data array as well
-    //       personalizedQuestionsData = reorderedQuestions;
-    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-    //       vscode.window.showInformationMessage('Changes saved successfully!');
-    //     }
-    //     if (message.type === 'toggleExclude') {
-    //       // Save exclude checkbox status automatically
-    //       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
-    //       // Update the original data array as well
-    //       personalizedQuestionsData = reorderedQuestions;
-    //       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-    //     }
-    //     if (message.type === 'editQuestion') {
-    //       // Open a new webview panel for editing the question
-    //       openEditQuestionPanel(message.index);
-    //     }
-    //     if (message.type === 'refreshView') {
-    //       // Close and reopen the panel to refresh the view
-    //       panel.dispose(); // Close the current panel
-    //       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
-    //     }
-    //     if (message.type === 'showInformationMessage') {
-    //       vscode.window.showInformationMessage(message.message);
-    //     }
-    //     if (message.type === 'showErrorMessage') {
-    //       vscode.window.showErrorMessage(message.message);
-    //     }
+    //     // Handle messages from the Webview
+    //     panel.webview.onDidReceiveMessage((message) => {
+    //       if (message.type === 'saveChanges') {
+    //         // Update the data in memory
+    //         reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+    //         reorderedQuestions[message.index].text = message.updatedQuestion;
+    //         // Update the original data array as well
+    //         personalizedQuestionsData = reorderedQuestions;
+    //         saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+    //         vscode.window.showInformationMessage('Changes saved successfully!');
+    //       }
+    //       if (message.type === 'toggleExclude') {
+    //         // Save exclude checkbox status automatically
+    //         reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+    //         // Update the original data array as well
+    //         personalizedQuestionsData = reorderedQuestions;
+    //         saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+    //       }
+    //       if (message.type === 'editQuestion') {
+    //         // Open a new webview panel for editing the question
+    //         openEditQuestionPanel(message.index);
+    //       }
+    //       if (message.type === 'refreshView') {
+    //         // Close and reopen the panel to refresh the view
+    //         panel.dispose(); // Close the current panel
+    //         vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
+    //       }
+    //       if (message.type === 'showInformationMessage') {
+    //         vscode.window.showInformationMessage(message.message);
+    //       }
+    //       if (message.type === 'showErrorMessage') {
+    //         vscode.window.showErrorMessage(message.message);
+    //       }
+    //     });
     //   });
-    // });
     let generatePersonalizedQuizCommand = vscode.commands.registerCommand('extension.generatePersonalizedQuiz', () => __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
         if (personalizedQuestionsData.length === 0) {
             vscode.window.showErrorMessage('No personalized questions available to generate the quiz!');
             return;
         }
-        // Prompt user to select the config file
-        const configFileUri = yield vscode.window.showOpenDialog({
-            canSelectFolders: false,
-            canSelectFiles: true,
-            canSelectMany: false,
-            openLabel: 'Select Config File',
-            filters: { 'JSON Files': ['json'] },
-            defaultUri: vscode.Uri.file(path.join(vscode.workspace.rootPath, 'cqlc.config.json'))
-        });
-        if (!configFileUri || configFileUri.length === 0) {
-            vscode.window.showErrorMessage('No config file selected.');
+        // // Prompt user to select the config file
+        // const configFileUri = await vscode.window.showOpenDialog({
+        //   canSelectFolders: false,
+        //   canSelectFiles: true,
+        //   canSelectMany: false,
+        //   openLabel: 'Select Config File',
+        //   filters: { 'JSON Files': ['json'] },
+        //   defaultUri: vscode.Uri.file(path.join(vscode.workspace.rootPath, 'cqlc.config.json'))
+        // });
+        // if (!configFileUri || configFileUri.length === 0) {
+        //   vscode.window.showErrorMessage('No config file selected.');
+        //   return;
+        // }
+        // const configFilePath = configFileUri[0].fsPath;
+        // Automatically search for config files in the root folder
+        const rootPath = (_b = (_a = vscode.workspace.workspaceFolders) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.uri.fsPath;
+        if (!rootPath) {
+            vscode.window.showErrorMessage('No folder is open in the workspace.');
             return;
         }
-        const configFilePath = configFileUri[0].fsPath;
+        const possibleConfigs = ['cqlc.config.json', 'gvqlc.config.json'];
+        let configFilePath = null;
+        for (const fileName of possibleConfigs) {
+            const fullPath = path.join(rootPath, fileName);
+            if (fs.existsSync(fullPath)) {
+                configFilePath = fullPath;
+                break;
+            }
+        }
+        if (!configFilePath) {
+            vscode.window.showErrorMessage('No config file (cqlc.config.json or gvqlc.config.json) found in the root folder.\n\n' +
+                'Press Command + Shift + P (or Ctrl + Shift + P on Windows/Linux), then select "Create Sample Config File" to generate one.', { modal: true });
+            return;
+        }
         // Load config file
         let config;
         try {
@@ -3111,7 +2686,7 @@ function activate(context) {
         }
         // Validate required fields in config
         const requiredFields = [
-            'title', 'topic', 'quiz_directory_name', 'pl_root', 'pl_question_root', 'pl_assessment_root',
+            'title', 'topic', 'folder', 'pl_root', 'pl_question_root', 'pl_assessment_root',
             'set', 'number', 'points_per_question', 'startDate', 'endDate', 'timeLimitMin',
             'daysForGrading', 'reviewEndDate', 'language'
         ];
@@ -3122,8 +2697,8 @@ function activate(context) {
             }
         }
         // Construct paths
-        const questionsFolderPath = path.join(config.pl_root, 'questions', config.pl_question_root, config.quiz_directory_name);
-        const assessmentFolderPath = path.join(config.pl_root, config.pl_assessment_root, config.quiz_directory_name);
+        const questionsFolderPath = path.join(config.pl_root, 'questions', config.pl_question_root, config.folder);
+        const assessmentFolderPath = path.join(config.pl_root, config.pl_assessment_root, config.folder);
         const instructorFolderPath = path.join(questionsFolderPath, 'instructor');
         const instructorAssessmentPath = path.join(assessmentFolderPath, 'instructor');
         // Ensure directories exist
@@ -3197,7 +2772,7 @@ ${question.text || 'No question text provided'}
                 zones: [
                     {
                         questions: questions.map((q, index) => ({
-                            id: `${config.pl_question_root}/${config.quiz_directory_name}/${studentName}/question${index + 1}`,
+                            id: `${config.pl_question_root}/${config.folder}/${studentName}/question${index + 1}`,
                             points: config.points_per_question
                         }))
                     }
@@ -3274,7 +2849,7 @@ ${questionText}
                 {
                     title: "Combined Questions",
                     questions: [{
-                        id: `${config.pl_question_root}/${config.quiz_directory_name}/instructor/combined_questions`,
+                        id: `${config.pl_question_root}/${config.folder}/instructor/combined_questions`,
                         points: 0,
                         description: "All student questions combined"
                     }]
@@ -3347,940 +2922,233 @@ module.exports = {
 
 
 
-
-
-// let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
-//   if (personalizedQuestionsData.length === 0) {
-//     vscode.window.showInformationMessage('No personalized questions added yet!');
-//     return;
-//   }
-
-//   // Check if we have config data, if not prompt user to select config file
-//   if (!configData) {
-//     try {
-//       const configFileUri = await vscode.window.showOpenDialog({
-//         canSelectMany: false,
-//         openLabel: 'Select Config File',
-//         filters: {
-//           'JSON Files': ['json']
-//         }
-//       });
-
-//       if (configFileUri && configFileUri[0]) {
-//         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
-//         configData = JSON.parse(fileData.toString());
-//         studentNameMapping = configData.studentNameMapping || {};
-//       } else {
-//         vscode.window.showInformationMessage('No config file selected. Using default student names.');
-//       }
-//     } catch (error) {
-//       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+//   let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
+//     if (personalizedQuestionsData.length === 0) {
+//       vscode.window.showInformationMessage('No personalized questions added yet!');
+//       return;
 //     }
-//   }
 
-//   // Create a Webview Panel for viewing personalized questions
-//   const panel = vscode.window.createWebviewPanel(
-//     'viewPersonalizedQuestions',
-//     'View Quiz Questions',
-//     vscode.ViewColumn.One,
-//     { enableScripts: true }
-//   );
+//     // // Check if we have config data, if not prompt user to select config file
+//     // if (!configData) {
+//     //   try {
+//     //     const configFileUri = await vscode.window.showOpenDialog({
+//     //       canSelectMany: false,
+//     //       openLabel: 'Select Config File',
+//     //       filters: {
+//     //         'JSON Files': ['json']
+//     //       }
+//     //     });
+
+//     //     if (configFileUri && configFileUri[0]) {
+//     //       const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
+//     //       configData = JSON.parse(fileData.toString());
+//     //       studentNameMapping = configData.studentNameMapping || {};
+//     //     } else {
+//     //       vscode.window.showInformationMessage('No config file selected. Using default student names.');
+//     //     }
+//     //   } catch (error) {
+//     //     vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+//     //   }
+//     // }
+
+//     if (!configData) {
+//       try {
+//         const workspaceFolders = vscode.workspace.workspaceFolders;
+//         if (!workspaceFolders || workspaceFolders.length === 0) {
+//           vscode.window.showErrorMessage('No workspace folder is open.');
+//           return;
+//         }
+
+//         const rootUri = workspaceFolders[0].uri;
+
+//         const configFilenames = ['cqlc.config.json', 'gvqlc.config.json'];
+//         let configFileUri = null;
+
+//         for (const filename of configFilenames) {
+//           try {
+//             const fileUri = vscode.Uri.joinPath(rootUri, filename);
+//             await vscode.workspace.fs.stat(fileUri); // Check if file exists
+//             configFileUri = fileUri;
+//             break;
+//           } catch (err) {
+//             // File not found, continue checking next
+//           }
+//         }
+
+//         if (configFileUri) {
+//           const fileData = await vscode.workspace.fs.readFile(configFileUri);
+//           configData = JSON.parse(fileData.toString());
+//           studentNameMapping = configData.studentNameMapping || {};
+//         } else {
+//           vscode.window.showErrorMessage(
+//             'No config file (cqlc.config.json or gvqlc.config.json) found in the root folder. Press Command + Shift + P and select "Create Sample Config File".',
+//             { modal: true }
+//           );
+//           return;
+//         }
+//       } catch (error) {
+//         vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+//         return;
+//       }
+//     }
 
 
-//   const getAllCISStudents = async () => {
-//     try {
-//       const workspaceFolders = vscode.workspace.workspaceFolders;
-//       if (!workspaceFolders) return [];
+//     // Create a Webview Panel for viewing personalized questions
+//     const panel = vscode.window.createWebviewPanel(
+//       'viewPersonalizedQuestions',
+//       'View Quiz Questions',
+//       vscode.ViewColumn.One,
+//       { enableScripts: true }
+//     );
 
-//       const cisStudents = new Set();
+//     // const getAllCISStudents = async () => {
+//     //   try {
+//     //     const workspaceFolders = vscode.workspace.workspaceFolders;
+//     //     if (!workspaceFolders) return [];
 
-//       // First, add all students who have questions
-//       Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
+//     //     const cisStudents = new Set();
 
-//       // Then add students from workspace folders
-//       for (const folder of workspaceFolders) {
-//         const folderUri = folder.uri;
-//         if (folderUri.fsPath.includes("CIS")) {
-//           const files = await vscode.workspace.fs.readDirectory(folderUri);
-//           for (const [name, type] of files) {
-//             if (type === vscode.FileType.Directory) {
-//               cisStudents.add(name);
+//     //     // First, add all students who have questions
+//     //     Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
+
+//     //     // Then add students from workspace folders
+//     //     for (const folder of workspaceFolders) {
+//     //       const folderUri = folder.uri;
+//     //       if (folderUri.fsPath.includes("CIS")) {
+//     //         const files = await vscode.workspace.fs.readDirectory(folderUri);
+//     //         for (const [name, type] of files) {
+//     //           if (type === vscode.FileType.Directory) {
+//     //             cisStudents.add(name);
+//     //           }
+//     //         }
+//     //       }
+//     //     }
+//     //     return Array.from(cisStudents).sort(); // Return sorted array
+//     //   } catch (error) {
+//     //     console.error("Error fetching CIS students:", error);
+//     //     return [];
+//     //   }
+//     // };
+
+
+//     const getAllCISStudents = async () => {
+//       try {
+//         const workspaceFolders = vscode.workspace.workspaceFolders;
+//         if (!workspaceFolders) return [];
+
+//         const cisStudents = new Set();
+
+//         // Only add folder names under CIS directories
+//         for (const folder of workspaceFolders) {
+//           const folderUri = folder.uri;
+//           if (folderUri.fsPath.includes("CIS")) {
+//             const files = await vscode.workspace.fs.readDirectory(folderUri);
+//             for (const [name, type] of files) {
+//               if (type === vscode.FileType.Directory) {
+//                 cisStudents.add(name);
+//               }
 //             }
 //           }
 //         }
+//         return Array.from(cisStudents).sort();
+//       } catch (error) {
+//         console.error("Error fetching CIS students:", error);
+//         return [];
 //       }
-//       return Array.from(cisStudents).sort(); // Return sorted array
-//     } catch (error) {
-//       console.error("Error fetching CIS students:", error);
-//       return [];
-//     }
-//   };
+//     };
 
 
-//   // Function to map student name using the config
-//   const mapStudentName = (name) => {
-//     return studentNameMapping[name] || name;
-//   };
+//     // Function to map student name using the config
+//     const mapStudentName = (name) => {
+//       return studentNameMapping[name] || name;
+//     };
 
-//   // Get all CIS students
-//   const allCISStudents = await getAllCISStudents();
+//     // Get all CIS students
+//     const allCISStudents = await getAllCISStudents();
 
-//   // Group questions by student name
-//   const questionsByStudent = {};
-//   personalizedQuestionsData.forEach((question) => {
-//     const studentName = extractStudentName(question.filePath);
-//     if (!questionsByStudent[studentName]) {
-//       questionsByStudent[studentName] = [];
-//     }
-//     questionsByStudent[studentName].push(question);
-//   });
-
-
-//   // Calculate question counts per student and determine max questions
-//   const studentQuestionCounts = new Map();
-//   let maxQuestions = 0;
-
-//   for (const studentName in questionsByStudent) {
-//     const count = questionsByStudent[studentName].length;
-//     studentQuestionCounts.set(studentName, count);
-//     if (count > maxQuestions) {
-//       maxQuestions = count;
-//     }
-//   }
-
-
-
-
-//   // Assign labels to questions (1a, 1b, 2a, etc.)
-//   const questionLabels = {};
-//   const studentNumbers = {};
-//   let studentCounter = 1;
-//   let questionIndex = 0;
-
-//   // Process students in alphabetical order for consistent numbering
-//   const sortedStudentNames = Object.keys(questionsByStudent).sort();
-
-//   for (const studentName of sortedStudentNames) {
-//     studentNumbers[studentName] = studentCounter;
-//     const questions = questionsByStudent[studentName];
-
-//     questions.forEach((question, qIndex) => {
-//       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
-//       questionLabels[questionIndex] = questionLabel;
-//       questionIndex++;
+//     // Group questions by student name
+//     const questionsByStudent = {};
+//     personalizedQuestionsData.forEach((question) => {
+//       const studentName = extractStudentName(question.filePath);
+//       if (!questionsByStudent[studentName]) {
+//         questionsByStudent[studentName] = [];
+//       }
+//       questionsByStudent[studentName].push(question);
 //     });
 
-//     studentCounter++;
-//   }
+//     // Calculate question counts per student and determine max questions
+//     const studentQuestionCounts = new Map();
+//     let maxQuestions = 0;
 
-//   // Rebuild the questions array in the new order (grouped by student)
-//   const reorderedQuestions = [];
-//   for (const studentName of sortedStudentNames) {
-//     reorderedQuestions.push(...questionsByStudent[studentName]);
-//   }
-
-
-
-//   // Build the summary table HTML
-//   const buildSummaryTable = () => {
-//     // Get all unique student names (from both questions and folders)
-//     const allStudents = Array.from(new Set([
-//       ...Object.keys(questionsByStudent),
-//       ...allCISStudents
-//     ])).sort();
-
-//     const summaryRows = allStudents.map(student => {
-//       const count = studentQuestionCounts.get(student) || 0;
-//       const hasQuestions = count > 0;
-
-//       let color = 'red'; // default color for zero questions
-//       if (count === maxQuestions && maxQuestions > 0) {
-//         color = 'green';
-//       } else if (count > 0 && count < maxQuestions) {
-//         color = 'yellow';
+//     for (const studentName in questionsByStudent) {
+//       const count = questionsByStudent[studentName].length;
+//       studentQuestionCounts.set(studentName, count);
+//       if (count > maxQuestions) {
+//         maxQuestions = count;
 //       }
-
-//       const displayName = mapStudentName(student);
-
-//       return `
-//       <tr style="background-color: ${color}">
-//         <td>${displayName}</td>
-//         <td>${hasQuestions ? count : '0'}</td>
-//         <td>${hasQuestions ? '✓' : '✗'}</td>
-//       </tr>
-//     `;
-//     }).join('');
-
-//     return `
-//     <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
-//       <h2>Student Question Summary</h2>
-//       <table style="width: 100%; border-collapse: collapse;">
-//         <thead>
-//           <tr>
-//             <th>Student Name</th>
-//             <th>Question Count</th>
-//             <th>Has Questions</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           ${summaryRows}
-//         </tbody>
-//       </table>
-//     </div>
-//   `;
-//   };
-
-
-
-
-
-
-//   // Determine color for question labels
-//   const getLabelColor = (studentName) => {
-//     const count = studentQuestionCounts.get(studentName) || 0;
-//     if (count === maxQuestions && maxQuestions > 0) return 'green';
-//     if (count > 0 && count < maxQuestions) return 'yellow';
-//     return 'red';
-//   };
-
-//   const truncateCharacters = (text, charLimit) => {
-//     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
-//   };
-
-//   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
-//   const questionsTable = reorderedQuestions.map((question, index) => {
-//     const studentName = extractStudentName(question.filePath);
-//     const labelColor = getLabelColor(studentName);
-
-//     const filePathParts = question.filePath.split('/');
-//     let shortenedFilePath = filePathParts.length > 2
-//       ? `.../${filePathParts.slice(-3).join('/')}`
-//       : question.filePath;
-
-//     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
-
-//     return `
-//     <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
-//         <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-//         <td title="${question.filePath}">${shortenedFilePath}</td>
-//         <td>
-//             <textarea class="code-area" id="code-${index}">${question.highlightedCode || 'No highlighted code'}</textarea>
-//         </td>
-//         <td>
-//             <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
-//         </td>
-//         <td>
-//             <button onclick="saveChanges(${index})">Save</button>
-//             <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
-//             <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
-//             <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
-//             <br>
-//             <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
-//             <label for="exclude-${index}">Exclude from Quiz</label>
-//         </td>
-//     </tr>
-//     `;
-//   }).join('');
-
-//   // HTML content for the Webview
-//   panel.webview.html = `
-// <!DOCTYPE html>
-// <html lang="en">
-// <head>
-//     <meta charset="UTF-8">
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <title>View Quiz Questions</title>
-//     <style>
-//         body {
-//             font-family: Arial, sans-serif;
-//             margin: 20px;
-//             background-color:rgb(255, 255, 255);
-//             color: black;
-//         }
-//         .header-container {
-//             display: flex;
-//             justify-content: space-between;
-//             align-items: center;
-//             margin-bottom: 20px;
-//             flex-wrap: wrap;
-//         }
-//         .controls-container {
-//             display: flex;
-//             gap: 10px;
-//             margin-bottom: 20px;
-//             align-items: center;
-//             flex-wrap: wrap;
-//         }
-//         .search-container {
-//             display: flex;
-//             align-items: center;
-//             gap: 10px;
-//         }
-//         table {
-//             width: 100%;
-//             border-collapse: collapse;
-//             margin-top: 20px;
-//             background-color: white;
-//             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-//         }
-//         th, td {
-//             border: 1px solid #ddd;
-//             padding: 12px;
-//             text-align: left;
-//         }
-//         th {
-//             background-color: #007acc;
-//             color: white;
-//             position: sticky;
-//             top: 0;
-//         }
-//         textarea {
-//             width: 100%;
-//             height: 100px;
-//             font-size: 14px;
-//             border: 1px solid #ccc;
-//             padding: 8px;
-//             resize: vertical;
-//         }
-//         .code-area {
-//             background-color: #1e1e1e;
-//             color: #d4d4d4;
-//             font-family: monospace;
-//         }
-//         .question-area {
-//             background-color: #f9f9f9;
-//             color: #333;
-//             font-family: sans-serif;
-//         }
-//         button {
-//             padding: 8px 12px;
-//             margin: 2px;
-//             cursor: pointer;
-//             border: none;
-//             border-radius: 4px;
-//             font-weight: bold;
-//         }
-//         button:hover {
-//             opacity: 0.9;
-//         }
-//         #refreshBtn {
-//             background-color: #4CAF50;
-//             color: white;
-//         }
-//         #toggleSummaryBtn {
-//             background-color: #673AB7;
-//             color: white;
-//         }
-//         input[type="text"] {
-//             padding: 8px;
-//             border: 1px solid #ddd;
-//             border-radius: 4px;
-//             width: 250px;
-//         }
-//         input[type="checkbox"] {
-//             transform: scale(1.2);
-//             margin-top: 5px;
-//         }
-//         #summaryTableContainer table th {
-//             background-color: #007acc;
-//             color: white;
-//         }
-//         #summaryTableContainer table td {
-//             border: 1px solid #ddd;
-//             padding: 8px;
-//         }
-//         .total-count {
-//             font-size: 18px;
-//             font-weight: bold;
-//             color: #333;
-//         }
-//         .pagination-container {
-//             display: flex;
-//             justify-content: center;
-//             align-items: center;
-//             margin-top: 20px;
-//             gap: 10px;
-//             flex-wrap: wrap;
-//         }
-//         .pagination-controls {
-//             display: flex;
-//             gap: 5px;
-//             align-items: center;
-//         }
-//         .page-btn {
-//             padding: 5px 10px;
-//             border: 1px solid #ddd;
-//             background-color: white;
-//             cursor: pointer;
-//             border-radius: 4px;
-//             min-width: 30px;
-//             text-align: center;
-//         }
-//         .page-btn:hover:not(.active):not(:disabled) {
-//             background-color: #f1f1f1;
-//         }
-//         .page-btn.active {
-//             background-color: #007acc;
-//             color: white;
-//             border-color: #007acc;
-//         }
-//         .page-btn:disabled {
-//             opacity: 0.5;
-//             cursor: not-allowed;
-//         }
-//         .page-jump {
-//             display: flex;
-//             align-items: center;
-//             gap: 5px;
-//         }
-//         .page-jump input {
-//             width: 50px;
-//             padding: 5px;
-//             text-align: center;
-//             border: 1px solid #ddd;
-//             border-radius: 4px;
-//         }
-//         .rows-per-page {
-//             display: flex;
-//             align-items: center;
-//             gap: 5px;
-//         }
-//         .rows-per-page select {
-//             padding: 5px;
-//             border-radius: 4px;
-//             border: 1px solid #ddd;
-//         }
-//     </style>
-// </head>
-// <body>
-//     <div class="header-container">
-//         <h1>All Quiz Questions</h1>
-//         <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
-//     </div>
-
-//     <div class="controls-container">
-//         <button id="refreshBtn" onclick="refreshView()">Refresh View</button>
-//         <button id="toggleSummaryBtn" onclick="toggleSummaryTable()">Toggle Student Summary</button>
-//         <div class="search-container">
-//             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
-//             <span id="filterCount"></span>
-//         </div>
-//     </div>
-
-//     ${buildSummaryTable()}
-
-//     <table id="questionsTable">
-//         <thead>
-//             <tr>
-//                 <th>#</th>
-//                 <th>File</th>
-//                 <th>Highlighted Code</th>
-//                 <th>Question</th>
-//                 <th>Actions</th>
-//             </tr>
-//         </thead>
-//         <tbody id="questionsTableBody">
-//             ${questionsTable}
-//         </tbody>
-//     </table>
-
-//     <div class="pagination-container">
-//         <div class="pagination-controls">
-//             <button class="page-btn" onclick="goToFirstPage()" title="First Page" id="firstPageBtn">&laquo;</button>
-//             <button class="page-btn" onclick="goToPreviousPage()" title="Previous Page" id="prevPageBtn">&lt;</button>
-
-//             <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
-
-//             <button class="page-btn" onclick="goToNextPage()" title="Next Page" id="nextPageBtn">&gt;</button>
-//             <button class="page-btn" onclick="goToLastPage()" title="Last Page" id="lastPageBtn">&raquo;</button>
-//         </div>
-
-//         <div class="page-jump">
-//             <span>Go to:</span>
-//             <input type="number" id="pageJumpInput" min="1" value="1">
-//             <button onclick="jumpToPage()">Go</button>
-//             <span>of <span id="totalPagesDisplay">1</span></span>
-//         </div>
-
-//         <div class="rows-per-page">
-//             <label for="rowsPerPage">Rows per page:</label>
-//             <select id="rowsPerPage" onchange="changeRowsPerPage()">
-//                 <option value="10">10</option>
-//                 <option value="15" selected>15</option>
-//                 <option value="25">25</option>
-//                 <option value="50">50</option>
-//                 <option value="100">100</option>
-//             </select>
-//         </div>
-//     </div>
-
-//     <script>
-//         const vscode = acquireVsCodeApi();
-//         const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
-//         const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
-
-//         // Pagination variables
-//         let currentPage = 1;
-//         let rowsPerPage = 15;
-//         let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
-//         let filteredRows = [];
-//         let isFiltered = false;
-
-//         // Initialize the table
-//         function initializeTable() {
-//             updatePaginationControls();
-//             renderPageNumbers();
-//             updateVisibleRows();
-//         }
-
-//         // Update which rows are visible based on current page
-//         function updateVisibleRows() {
-//             const rows = document.querySelectorAll('#questionsTableBody tr');
-//             const startIdx = (currentPage - 1) * rowsPerPage;
-//             const endIdx = startIdx + rowsPerPage;
-
-//             rows.forEach((row, index) => {
-//                 if (isFiltered && !filteredRows.includes(index)) {
-//                     row.style.display = 'none';
-//                     return;
-//                 }
-
-//                 if (index >= startIdx && index < endIdx) {
-//                     row.style.display = '';
-//                 } else {
-//                     row.style.display = 'none';
-//                 }
-//             });
-//         }
-
-//         // Update pagination controls state
-//         function updatePaginationControls() {
-//             document.getElementById('firstPageBtn').disabled = currentPage === 1;
-//             document.getElementById('prevPageBtn').disabled = currentPage === 1;
-//             document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
-//             document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
-//             document.getElementById('pageJumpInput').value = currentPage;
-//             document.getElementById('totalPagesDisplay').textContent = totalPages;
-//         }
-
-//         // Render page number buttons
-//         function renderPageNumbers() {
-//             const container = document.getElementById('pageNumbers');
-//             container.innerHTML = '';
-
-//             const maxVisiblePages = 5;
-//             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-//             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-//             if (endPage - startPage + 1 < maxVisiblePages) {
-//                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
-//             }
-
-//             if (startPage > 1) {
-//                 const btn = document.createElement('button');
-//                 btn.className = 'page-btn';
-//                 btn.textContent = '1';
-//                 btn.onclick = () => goToPage(1);
-//                 container.appendChild(btn);
-
-//                 if (startPage > 2) {
-//                     const ellipsis = document.createElement('span');
-//                     ellipsis.textContent = '...';
-//                     container.appendChild(ellipsis);
-//                 }
-//             }
-
-//             for (let i = startPage; i <= endPage; i++) {
-//                 const btn = document.createElement('button');
-//                 btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
-//                 btn.textContent = i;
-//                 btn.onclick = () => goToPage(i);
-//                 container.appendChild(btn);
-//             }
-
-//             if (endPage < totalPages) {
-//                 if (endPage < totalPages - 1) {
-//                     const ellipsis = document.createElement('span');
-//                     ellipsis.textContent = '...';
-//                     container.appendChild(ellipsis);
-//                 }
-
-//                 const btn = document.createElement('button');
-//                 btn.className = 'page-btn';
-//                 btn.textContent = totalPages;
-//                 btn.onclick = () => goToPage(totalPages);
-//                 container.appendChild(btn);
-//             }
-//         }
-
-//         // Navigation functions
-//         function goToPage(page) {
-//             if (page < 1 || page > totalPages) return;
-//             currentPage = page;
-//             updateVisibleRows();
-//             updatePaginationControls();
-//             renderPageNumbers();
-//         }
-
-//         function goToFirstPage() {
-//             goToPage(1);
-//         }
-
-//         function goToPreviousPage() {
-//             goToPage(currentPage - 1);
-//         }
-
-//         function goToNextPage() {
-//             goToPage(currentPage + 1);
-//         }
-
-//         function goToLastPage() {
-//             goToPage(totalPages);
-//         }
-
-//         function jumpToPage() {
-//             const input = document.getElementById('pageJumpInput');
-//             const page = parseInt(input.value);
-//             if (!isNaN(page) && page >= 1 && page <= totalPages) {
-//                 goToPage(page);
-//             }
-//         }
-
-//         // Change rows per page
-//         function changeRowsPerPage() {
-//             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-//             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-//             if (currentPage > totalPages) {
-//                 currentPage = totalPages;
-//             }
-//             initializeTable();
-//         }
-
-//         // Filter questions based on search term
-//         function filterQuestions() {
-//             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-//             const rows = document.querySelectorAll('#questionsTableBody tr');
-//             filteredRows = [];
-
-//             if (searchTerm === '') {
-//                 isFiltered = false;
-//                 document.getElementById('filterCount').textContent = '';
-//             } else {
-//                 isFiltered = true;
-//                 rows.forEach((row, index) => {
-//                     const label = row.dataset.label.toLowerCase();
-//                     const file = row.dataset.file.toLowerCase();
-//                     const code = row.dataset.code.toLowerCase();
-//                     const question = row.dataset.question.toLowerCase();
-
-//                     if (label.includes(searchTerm) || file.includes(searchTerm) ||
-//                         code.includes(searchTerm) || question.includes(searchTerm)) {
-//                         filteredRows.push(index);
-//                     }
-//                 });
-
-//                 document.getElementById('filterCount').textContent = filteredRows.length > 0
-//                     ? \`\${filteredRows.length} matches\`
-//                     : 'No matches';
-//             }
-
-//             totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
-//             currentPage = 1;
-//             initializeTable();
-//         }
-
-//         function copyQuestionText(index) {
-//             const questionTextArea = document.getElementById('question-' + index);
-//             const selectedText = questionTextArea.value.substring(
-//                 questionTextArea.selectionStart,
-//                 questionTextArea.selectionEnd
-//             );
-//             const textToCopy = selectedText.length > 0 ? selectedText : questionTextArea.value;
-
-//             navigator.clipboard.writeText(textToCopy).then(() => {
-//                 vscode.postMessage({
-//                     type: 'showInformationMessage',
-//                     message: 'Copied to clipboard: ' +
-//                         (selectedText.length > 0 ? 'Selected text' : 'Full question')
-//                 });
-//             }).catch(err => {
-//                 vscode.postMessage({
-//                     type: 'showErrorMessage',
-//                     message: 'Failed to copy text: ' + err
-//                 });
-//             });
-//         }
-
-//         function toggleSummaryTable() {
-//             const container = document.getElementById('summaryTableContainer');
-//             container.style.display = container.style.display === 'none' ? 'block' : 'none';
-//         }
-
-//         function refreshView() {
-//             vscode.postMessage({ type: 'refreshView' });
-//         }
-
-//         function saveChanges(index) {
-//             const updatedCode = document.getElementById('code-' + index).value;
-//             const updatedQuestion = document.getElementById('question-' + index).value;
-//             vscode.postMessage({ type: 'saveChanges', index, updatedCode, updatedQuestion });
-//         }
-
-//         function revertChanges(index) {
-//             document.getElementById('code-' + index).value = originalData[index].highlightedCode;
-//             document.getElementById('question-' + index).value = originalData[index].text;
-//             document.getElementById('exclude-' + index).checked = originalData[index].excludeFromQuiz;
-//         }
-
-//         function toggleExclude(index) {
-//             const excludeStatus = document.getElementById('exclude-' + index).checked;
-//             vscode.postMessage({ type: 'toggleExclude', index, excludeStatus });
-//         }
-
-//         function editQuestion(index) {
-//             vscode.postMessage({ type: 'editQuestion', index });
-//         }
-
-//         // Initialize the table when the page loads
-//         window.addEventListener('load', initializeTable);
-//     </script>
-// </body>
-// </html>
-//     `;
-
-//   // Handle messages from the Webview
-//   panel.webview.onDidReceiveMessage((message) => {
-//     if (message.type === 'saveChanges') {
-//       // Update the data in memory
-//       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
-//       reorderedQuestions[message.index].text = message.updatedQuestion;
-
-//       // Update the original data array as well
-//       personalizedQuestionsData = reorderedQuestions;
-//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-//       vscode.window.showInformationMessage('Changes saved successfully!');
 //     }
 
-//     if (message.type === 'toggleExclude') {
-//       // Save exclude checkbox status automatically
-//       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
-//       // Update the original data array as well
-//       personalizedQuestionsData = reorderedQuestions;
-//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-//     }
+//     // Assign labels to questions (1a, 1b, 2a, etc.)
+//     const questionLabels = {};
+//     const studentNumbers = {};
+//     let studentCounter = 1;
+//     let questionIndex = 0;
 
-//     if (message.type === 'editQuestion') {
-//       // Open a new webview panel for editing the question
-//       openEditQuestionPanel(message.index);
-//     }
+//     // Process students in alphabetical order for consistent numbering
+//     const sortedStudentNames = Object.keys(questionsByStudent).sort();
 
-//     if (message.type === 'refreshView') {
-//       // Close and reopen the panel to refresh the view
-//       panel.dispose(); // Close the current panel
-//       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
-//     }
+//     for (const studentName of sortedStudentNames) {
+//       studentNumbers[studentName] = studentCounter;
+//       const questions = questionsByStudent[studentName];
 
-//     if (message.type === 'showInformationMessage') {
-//       vscode.window.showInformationMessage(message.message);
-//     }
-
-//     if (message.type === 'showErrorMessage') {
-//       vscode.window.showErrorMessage(message.message);
-//     }
-//   });
-// });
-
-
-
-
-
-
-
-// let viewPersonalizedQuestionsCommand = vscode.commands.registerCommand('extension.viewPersonalizedQuestions', async () => {
-//   if (personalizedQuestionsData.length === 0) {
-//     vscode.window.showInformationMessage('No personalized questions added yet!');
-//     return;
-//   }
-
-//   // Check if we have config data, if not prompt user to select config file
-//   if (!configData) {
-//     try {
-//       const configFileUri = await vscode.window.showOpenDialog({
-//         canSelectMany: false,
-//         openLabel: 'Select Config File',
-//         filters: {
-//           'JSON Files': ['json']
-//         }
+//       questions.forEach((question, qIndex) => {
+//         const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
+//         questionLabels[questionIndex] = questionLabel;
+//         questionIndex++;
 //       });
 
-//       if (configFileUri && configFileUri[0]) {
-//         const fileData = await vscode.workspace.fs.readFile(configFileUri[0]);
-//         configData = JSON.parse(fileData.toString());
-//         studentNameMapping = configData.studentNameMapping || {};
-//       } else {
-//         vscode.window.showInformationMessage('No config file selected. Using default student names.');
-//       }
-//     } catch (error) {
-//       vscode.window.showErrorMessage(`Error loading config file: ${error.message}`);
+//       studentCounter++;
 //     }
-//   }
 
-//   // Create a Webview Panel for viewing personalized questions
-//   const panel = vscode.window.createWebviewPanel(
-//     'viewPersonalizedQuestions',
-//     'View Quiz Questions',
-//     vscode.ViewColumn.One,
-//     { enableScripts: true }
-//   );
-
-//   // const getAllCISStudents = async () => {
-//   //   try {
-//   //     const workspaceFolders = vscode.workspace.workspaceFolders;
-//   //     if (!workspaceFolders) return [];
-
-//   //     const cisStudents = new Set();
-
-//   //     // First, add all students who have questions
-//   //     Object.keys(questionsByStudent).forEach(student => cisStudents.add(student));
-
-//   //     // Then add students from workspace folders
-//   //     for (const folder of workspaceFolders) {
-//   //       const folderUri = folder.uri;
-//   //       if (folderUri.fsPath.includes("CIS")) {
-//   //         const files = await vscode.workspace.fs.readDirectory(folderUri);
-//   //         for (const [name, type] of files) {
-//   //           if (type === vscode.FileType.Directory) {
-//   //             cisStudents.add(name);
-//   //           }
-//   //         }
-//   //       }
-//   //     }
-//   //     return Array.from(cisStudents).sort(); // Return sorted array
-//   //   } catch (error) {
-//   //     console.error("Error fetching CIS students:", error);
-//   //     return [];
-//   //   }
-//   // };
+//     // Rebuild the questions array in the new order (grouped by student)
+//     const reorderedQuestions = [];
+//     for (const studentName of sortedStudentNames) {
+//       reorderedQuestions.push(...questionsByStudent[studentName]);
+//     }
 
 
-//   const getAllCISStudents = async () => {
-//     try {
-//       const workspaceFolders = vscode.workspace.workspaceFolders;
-//       if (!workspaceFolders) return [];
 
-//       const cisStudents = new Set();
+//     // Build the summary table HTML
+//     const buildSummaryTable = () => {
+//       // Get all unique student names (from both questions and folders)
+//       const allStudents = Array.from(new Set([
+//         ...Object.keys(questionsByStudent),
+//         ...allCISStudents
+//       ])).sort();
 
-//       // Only add folder names under CIS directories
-//       for (const folder of workspaceFolders) {
-//         const folderUri = folder.uri;
-//         if (folderUri.fsPath.includes("CIS")) {
-//           const files = await vscode.workspace.fs.readDirectory(folderUri);
-//           for (const [name, type] of files) {
-//             if (type === vscode.FileType.Directory) {
-//               cisStudents.add(name);
-//             }
-//           }
+//       const summaryRows = allStudents.map(student => {
+//         const count = studentQuestionCounts.get(student) || 0;
+//         const hasQuestions = count > 0;
+
+//         let color = 'red'; // default color for zero questions
+//         if (count === maxQuestions && maxQuestions > 0) {
+//           color = 'green';
+//         } else if (count > 0 && count < maxQuestions) {
+//           color = 'yellow';
 //         }
-//       }
-//       return Array.from(cisStudents).sort();
-//     } catch (error) {
-//       console.error("Error fetching CIS students:", error);
-//       return [];
-//     }
-//   };
 
+//         const displayName = mapStudentName(student);
 
-//   // Function to map student name using the config
-//   const mapStudentName = (name) => {
-//     return studentNameMapping[name] || name;
-//   };
-
-//   // Get all CIS students
-//   const allCISStudents = await getAllCISStudents();
-
-//   // Group questions by student name
-//   const questionsByStudent = {};
-//   personalizedQuestionsData.forEach((question) => {
-//     const studentName = extractStudentName(question.filePath);
-//     if (!questionsByStudent[studentName]) {
-//       questionsByStudent[studentName] = [];
-//     }
-//     questionsByStudent[studentName].push(question);
-//   });
-
-//   // Calculate question counts per student and determine max questions
-//   const studentQuestionCounts = new Map();
-//   let maxQuestions = 0;
-
-//   for (const studentName in questionsByStudent) {
-//     const count = questionsByStudent[studentName].length;
-//     studentQuestionCounts.set(studentName, count);
-//     if (count > maxQuestions) {
-//       maxQuestions = count;
-//     }
-//   }
-
-//   // Assign labels to questions (1a, 1b, 2a, etc.)
-//   const questionLabels = {};
-//   const studentNumbers = {};
-//   let studentCounter = 1;
-//   let questionIndex = 0;
-
-//   // Process students in alphabetical order for consistent numbering
-//   const sortedStudentNames = Object.keys(questionsByStudent).sort();
-
-//   for (const studentName of sortedStudentNames) {
-//     studentNumbers[studentName] = studentCounter;
-//     const questions = questionsByStudent[studentName];
-
-//     questions.forEach((question, qIndex) => {
-//       const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`; // 97 is 'a' in ASCII
-//       questionLabels[questionIndex] = questionLabel;
-//       questionIndex++;
-//     });
-
-//     studentCounter++;
-//   }
-
-//   // Rebuild the questions array in the new order (grouped by student)
-//   const reorderedQuestions = [];
-//   for (const studentName of sortedStudentNames) {
-//     reorderedQuestions.push(...questionsByStudent[studentName]);
-//   }
-
-
-
-//   // Build the summary table HTML
-//   const buildSummaryTable = () => {
-//     // Get all unique student names (from both questions and folders)
-//     const allStudents = Array.from(new Set([
-//       ...Object.keys(questionsByStudent),
-//       ...allCISStudents
-//     ])).sort();
-
-//     const summaryRows = allStudents.map(student => {
-//       const count = studentQuestionCounts.get(student) || 0;
-//       const hasQuestions = count > 0;
-
-//       let color = 'red'; // default color for zero questions
-//       if (count === maxQuestions && maxQuestions > 0) {
-//         color = 'green';
-//       } else if (count > 0 && count < maxQuestions) {
-//         color = 'yellow';
-//       }
-
-//       const displayName = mapStudentName(student);
-
-//       return `
+//         return `
 //     <tr style="background-color: ${color}">
 //       <td>${displayName}</td>
 //       <td>${count}</td>
 //       <td>${hasQuestions ? '✓' : '✗'}</td>
 //     </tr>
 //   `;
-//     }).join('');
+//       }).join('');
 
-//     return `
+//       return `
 //   <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
 //     <h2>Student Question Summary</h2>
 //     <table style="width: 100%; border-collapse: collapse;">
@@ -4297,33 +3165,33 @@ module.exports = {
 //     </table>
 //   </div>
 // `;
-//   };
+//     };
 
-//   // Determine color for question labels
-//   const getLabelColor = (studentName) => {
-//     const count = studentQuestionCounts.get(studentName) || 0;
-//     if (count === maxQuestions && maxQuestions > 0) return 'green';
-//     if (count > 0 && count < maxQuestions) return 'yellow';
-//     return 'red';
-//   };
+//     // Determine color for question labels
+//     const getLabelColor = (studentName) => {
+//       const count = studentQuestionCounts.get(studentName) || 0;
+//       if (count === maxQuestions && maxQuestions > 0) return 'green';
+//       if (count > 0 && count < maxQuestions) return 'yellow';
+//       return 'red';
+//     };
 
-//   const truncateCharacters = (text, charLimit) => {
-//     return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
-//   };
+//     const truncateCharacters = (text, charLimit) => {
+//       return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
+//     };
 
-//   // Build a table with editable fields, revert button, and a checkbox inside the Actions column
-//   const questionsTable = reorderedQuestions.map((question, index) => {
-//     const studentName = extractStudentName(question.filePath);
-//     const labelColor = getLabelColor(studentName);
+//     // Build a table with editable fields, revert button, and a checkbox inside the Actions column
+//     const questionsTable = reorderedQuestions.map((question, index) => {
+//       const studentName = extractStudentName(question.filePath);
+//       const labelColor = getLabelColor(studentName);
 
-//     const filePathParts = question.filePath.split('/');
-//     let shortenedFilePath = filePathParts.length > 2
-//       ? `.../${filePathParts.slice(-3).join('/')}`
-//       : question.filePath;
+//       const filePathParts = question.filePath.split('/');
+//       let shortenedFilePath = filePathParts.length > 2
+//         ? `.../${filePathParts.slice(-3).join('/')}`
+//         : question.filePath;
 
-//     shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
+//       shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
 
-//     return `
+//       return `
 //   <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${question.highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
 //       <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
 //       <td title="${question.filePath}">${shortenedFilePath}</td>
@@ -4344,10 +3212,10 @@ module.exports = {
 //       </td>
 //   </tr>
 //   `;
-//   }).join('');
+//     }).join('');
 
-//   // HTML content for the Webview
-//   panel.webview.html = `
+//     // HTML content for the Webview
+//     panel.webview.html = `
 // <!DOCTYPE html>
 // <html lang="en">
 // <head>
@@ -4812,44 +3680,352 @@ module.exports = {
 // </html>
 //     `;
 
+//     // Handle messages from the Webview
+//     panel.webview.onDidReceiveMessage((message) => {
+//       if (message.type === 'saveChanges') {
+//         // Update the data in memory
+//         reorderedQuestions[message.index].highlightedCode = message.updatedCode;
+//         reorderedQuestions[message.index].text = message.updatedQuestion;
+
+//         // Update the original data array as well
+//         personalizedQuestionsData = reorderedQuestions;
+//         saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+//         vscode.window.showInformationMessage('Changes saved successfully!');
+//       }
+
+//       if (message.type === 'toggleExclude') {
+//         // Save exclude checkbox status automatically
+//         reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+//         // Update the original data array as well
+//         personalizedQuestionsData = reorderedQuestions;
+//         saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
+//       }
+
+//       if (message.type === 'editQuestion') {
+//         // Open a new webview panel for editing the question
+//         openEditQuestionPanel(message.index);
+//       }
+
+//       if (message.type === 'refreshView') {
+//         // Close and reopen the panel to refresh the view
+//         panel.dispose(); // Close the current panel
+//         vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
+//       }
+
+//       if (message.type === 'showInformationMessage') {
+//         vscode.window.showInformationMessage(message.message);
+//       }
+
+//       if (message.type === 'showErrorMessage') {
+//         vscode.window.showErrorMessage(message.message);
+//       }
+//     });
+//   });
+
+
+
+
+
+
+
+// let addPersonalizedQuestionCommand = vscode.commands.registerCommand('extension.addPersonalizedQuestion', async () => {
+//   console.log('Command executed!');
+//   const editor = vscode.window.activeTextEditor;
+//   if (!editor) {
+//     vscode.window.showErrorMessage('No active editor found.');
+//     return;
+//   }
+
+//   const selection = editor.selection;
+//   if (selection.isEmpty) {
+//     vscode.window.showErrorMessage('Please select a code snippet to add a personalized question.');
+//     return;
+//   }
+
+//   const range = new vscode.Range(selection.start, selection.end);
+//   let selectedText = editor.document.getText(range);
+
+//   // Get existing questions for suggestions
+//   let existingQuestions = [];
+//   try {
+//     const workspaceFolders = vscode.workspace.workspaceFolders;
+//     if (workspaceFolders) {
+//       const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/personalizedQuestions.json`);
+//       const fileContent = await vscode.workspace.fs.readFile(uri);
+//       const data = JSON.parse(fileContent.toString());
+//       existingQuestions = data.map(item => item.text).filter(Boolean);
+//     }
+//   } catch (error) {
+//     console.log('Could not load existing questions:', error);
+//   }
+
+//   // Function to load existing answers
+//   const loadExistingAnswers = async () => {
+//     try {
+//       const workspaceFolders = vscode.workspace.workspaceFolders;
+//       if (workspaceFolders) {
+//         const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
+//         const fileContent = await vscode.workspace.fs.readFile(uri);
+//         return JSON.parse(fileContent.toString());
+//       }
+//     } catch (error) {
+//       // File doesn't exist yet, return empty array
+//       return [];
+//     }
+//     return [];
+//   };
+
+//   // Create a Webview Panel for adding a personalized question
+//   const panel = vscode.window.createWebviewPanel(
+//     'addPersonalizedQuestion',
+//     'Add Quiz Question',
+//     vscode.ViewColumn.One,
+//     { enableScripts: true }
+//   );
+
+//   // HTML content for the Webview
+//   panel.webview.html = `
+//       <!DOCTYPE html>
+//       <html lang="en">
+//       <head>
+//           <meta charset="UTF-8">
+//           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//           <title>Add Quiz Question</title>
+//           <style>
+//               body { font-family: Arial, sans-serif; margin: 20px; }
+//               textarea { width: 100%; font-size: 14px; margin-bottom: 10px; display: block; }
+//               button { padding: 10px 20px; background: #007acc; color: white; border: none; cursor: pointer; margin-right: 10px; }
+//               button:hover { background: #005a9e; }
+//               .code-area { width: 100%; height: 120px; font-family: monospace; background: #f4f4f4; padding: 10px; border-radius: 5px; }
+//               .optional { color: #666; font-style: italic; }
+//               #suggestions {
+//                   position: absolute;
+//                   background: white;
+//                   color: red;
+//                   border: 1px solid #ddd;
+//                   max-height: 200px;
+//                   overflow-y: auto;
+//                   z-index: 1000;
+//                   display: none;
+//                   width: 100%;
+//                   box-sizing: border-box;
+//               }
+//               .suggestion-item {
+//                   padding: 8px;
+//                   cursor: pointer;
+//                   border-bottom: 1px solid #eee;
+//               }
+//               .suggestion-item:hover {
+//                   background-color: #f0f0f0;
+//               }
+//               #question-container {
+//                   position: relative;
+//               }
+//           </style>
+//       </head>
+//       <body>
+//           <h1>Add a Quiz Question</h1>
+
+//           <p><strong>Edit Highlighted Code:</strong></p>
+//           <textarea id="codeBlock" class="code-area">${selectedText}</textarea>
+//           <button onclick="copyAndPasteCode()">Copy & Paste Code</button>
+
+//           <div id="question-container">
+//               <p><strong>Add Your Question:</strong></p>
+//               <textarea id="question" placeholder="Type your personalized question here..." rows="4"></textarea>
+//               <div id="suggestions"></div>
+//           </div>
+
+//           <p><strong>Add Answer (Optional):</strong></p>
+//           <textarea id="answer" placeholder="Type the answer to your question (optional)..." rows="4"></textarea>
+
+//           <button onclick="submitPersonalizedQuestion()">Submit</button>
+
+//           <script>
+//               const vscode = acquireVsCodeApi();
+//               const existingQuestions = ${JSON.stringify(existingQuestions)};
+//               let currentInput = '';
+//               let activeSuggestionIndex = -1;
+
+//               // Setup question textarea event listeners
+//               const questionInput = document.getElementById('question');
+//               const suggestionsContainer = document.getElementById('suggestions');
+
+//               questionInput.addEventListener('input', function(e) {
+//                   currentInput = e.target.value.toLowerCase();
+//                   showSuggestions();
+//               });
+
+//               questionInput.addEventListener('keydown', function(e) {
+//                   const suggestions = document.querySelectorAll('.suggestion-item');
+
+//                   if (e.key === 'ArrowDown') {
+//                       e.preventDefault();
+//                       activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, suggestions.length - 1);
+//                       highlightSuggestion();
+//                   } else if (e.key === 'ArrowUp') {
+//                       e.preventDefault();
+//                       activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, -1);
+//                       highlightSuggestion();
+//                   } else if (e.key === 'Enter' && activeSuggestionIndex >= 0) {
+//                       e.preventDefault();
+//                       selectSuggestion(suggestions[activeSuggestionIndex]);
+//                   } else if (e.key === 'Escape') {
+//                       hideSuggestions();
+//                   }
+//               });
+
+//               function showSuggestions() {
+//                   if (!currentInput) {
+//                       hideSuggestions();
+//                       return;
+//                   }
+
+//                   const filtered = existingQuestions.filter(q =>
+//                       q && q.toLowerCase().includes(currentInput))
+//                       .slice(0, 5);
+
+//                   if (filtered.length === 0) {
+//                       hideSuggestions();
+//                       return;
+//                   }
+
+//                   suggestionsContainer.innerHTML = filtered.map(q => {
+//                       const escapedText = q.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+//                       return \`<div class="suggestion-item">\${escapedText}</div>\`;
+//                   }).join('');
+
+//                   document.querySelectorAll('.suggestion-item').forEach((item, index) => {
+//                       item.addEventListener('click', () => selectSuggestion(item));
+//                   });
+
+//                   suggestionsContainer.style.display = 'block';
+//                   activeSuggestionIndex = -1;
+//               }
+
+//               function hideSuggestions() {
+//                   suggestionsContainer.style.display = 'none';
+//                   activeSuggestionIndex = -1;
+//               }
+
+//               function highlightSuggestion() {
+//                   const suggestions = document.querySelectorAll('.suggestion-item');
+//                   suggestions.forEach((item, index) => {
+//                       if (index === activeSuggestionIndex) {
+//                           item.style.backgroundColor = '#007acc';
+//                           item.style.color = 'white';
+//                       } else {
+//                           item.style.backgroundColor = '';
+//                           item.style.color = '';
+//                       }
+//                   });
+//               }
+
+//               function selectSuggestion(suggestionElement) {
+//                   questionInput.value = suggestionElement.textContent;
+//                   hideSuggestions();
+//                   questionInput.focus();
+//               }
+
+//               function copyAndPasteCode() {
+//                   const codeTextArea = document.getElementById('codeBlock');
+//                   const questionArea = document.getElementById('question');
+//                   const existingContent = questionArea.value.trim();
+
+//                   const selectedCode = codeTextArea.value.substring(
+//                       codeTextArea.selectionStart,
+//                       codeTextArea.selectionEnd
+//                   );
+
+//                   const codeToInsert = selectedCode || codeTextArea.value;
+//                   const formattedCode = \`~~~\\n\${codeToInsert}\\n~~~\`;
+
+//                   if (existingContent) {
+//                       questionArea.value = existingContent + "\\n\\n" + formattedCode;
+//                   } else {
+//                       questionArea.value = formattedCode;
+//                   }
+//               }
+
+//               function saveCode() {
+//                   const updatedCode = document.getElementById('codeBlock').value;
+//                   vscode.postMessage({ type: 'updateCode', updatedCode });
+//               }
+
+//               function submitPersonalizedQuestion() {
+//                   const question = document.getElementById('question').value;
+//                   const answer = document.getElementById('answer').value;
+//                   const editedCode = document.getElementById('codeBlock').value;
+
+//                   if (question.trim() === '') {
+//                       alert('Question cannot be empty!');
+//                       return;
+//                   }
+
+//                   vscode.postMessage({
+//                       type: 'submitQuestion',
+//                       question,
+//                       answer,
+//                       editedCode
+//                   });
+//               }
+//           </script>
+//       </body>
+//       </html>
+//   `;
+
 //   // Handle messages from the Webview
-//   panel.webview.onDidReceiveMessage((message) => {
-//     if (message.type === 'saveChanges') {
-//       // Update the data in memory
-//       reorderedQuestions[message.index].highlightedCode = message.updatedCode;
-//       reorderedQuestions[message.index].text = message.updatedQuestion;
-
-//       // Update the original data array as well
-//       personalizedQuestionsData = reorderedQuestions;
-//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-//       vscode.window.showInformationMessage('Changes saved successfully!');
+//   panel.webview.onDidReceiveMessage(async (message) => {
+//     if (message.type === 'updateCode') {
+//       vscode.window.showInformationMessage('Code updated successfully!');
+//       selectedText = message.updatedCode;
 //     }
 
-//     if (message.type === 'toggleExclude') {
-//       // Save exclude checkbox status automatically
-//       reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
-//       // Update the original data array as well
-//       personalizedQuestionsData = reorderedQuestions;
-//       saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
-//     }
+//     if (message.type === 'submitQuestion') {
+//       const studentName = extractStudentName(editor.document.uri.fsPath);
+//       const questionData = {
+//         filePath: editor.document.uri.fsPath,
+//         range: {
+//           start: { line: selection.start.line, character: selection.start.character },
+//           end: { line: selection.end.line, character: selection.end.character },
+//         },
+//         text: message.question,
+//         highlightedCode: message.editedCode,
+//         excludeFromQuiz: false
+//       };
 
-//     if (message.type === 'editQuestion') {
-//       // Open a new webview panel for editing the question
-//       openEditQuestionPanel(message.index);
-//     }
+//       // Save to personalizedQuestions.json
+//       personalizedQuestionsData.push(questionData);
+//       await saveDataToFile('personalizedQuestions.json', personalizedQuestionsData);
 
-//     if (message.type === 'refreshView') {
-//       // Close and reopen the panel to refresh the view
-//       panel.dispose(); // Close the current panel
-//       vscode.commands.executeCommand('extension.viewPersonalizedQuestions'); // Reopen it
-//     }
+//       // Save answer to quiz_questions_answers.json if provided
+//       if (message.answer && message.answer.trim() !== '') {
+//         try {
+//           // Load existing answers
+//           let answersData = await loadExistingAnswers();
 
-//     if (message.type === 'showInformationMessage') {
-//       vscode.window.showInformationMessage(message.message);
-//     }
+//           // Add new answer
+//           answersData.push({
+//             questionId: personalizedQuestionsData.length - 1,
+//             questionText: message.question,
+//             answer: message.answer.trim(),
+//             studentName: studentName,
+//             filePath: editor.document.uri.fsPath,
+//             timestamp: new Date().toISOString(),
+//             highlightedCode: message.editedCode
+//           });
 
-//     if (message.type === 'showErrorMessage') {
-//       vscode.window.showErrorMessage(message.message);
+//           // Save back to file
+//           await saveDataToFile('quiz_questions_answers.json', answersData);
+//           vscode.window.showInformationMessage('Answer saved successfully!');
+//         } catch (error) {
+//           vscode.window.showErrorMessage(`Failed to save answer: ${error.message}`);
+//         }
+//       }
+
+
+//       vscode.window.showInformationMessage('Personalized question added successfully!');
+//       panel.dispose();
 //     }
 //   });
 // });
@@ -4860,12 +4036,4 @@ module.exports = {
 
 
 
-
-
-
-
-
-
-
-
-
+//Helper function to save data to a file
