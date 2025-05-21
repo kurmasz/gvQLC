@@ -2,7 +2,7 @@
   "name": "gvqlc",
   "displayName": "gvQLC",
   "description": "A VS Code extension for Prairielearn that enabels instructors to review code, set quizzes and assignment based on the quiz and many more ",
-  "version": "0.0.3",
+  "version": "0.0.8",
   "publisher": "ZacharyKurmas",
   "readme": "README.md",
   "icon": "gv.png",
@@ -61,6 +61,10 @@
       {
         "command": "extension.viewQuestionsAndAnswers",
         "title": "gvQLC: View viewQuestions And Answers "
+      },
+      {
+        "command": "extension.createConfig",
+        "title": "gvQLC: Create Sample Config File"
       }
     ],
     "menus": {
