@@ -2,10 +2,10 @@
   "name": "gvqlc",
   "displayName": "gvQLC",
   "description": "A tool for generating custom quiz questions over submitted code",
-  "icon": "icons/logo.png",
+  "icon": "icons/gv.png",
   "preview": true,
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "./out/src/extension.js",
   "author": {
     "name": "Zachary Kurmas"
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/redhat-developer/vscode-extension-tester-example.git"
+    "url": "https://github.com/kurmasz/gvQLC.git"
   },
   "categories": [
     "Other",
@@ -40,7 +40,7 @@
     "compile": "tsc -p ./ && npm run lint",
     "lint": "eslint src",
     "watch": "tsc -watch -p ./",
-    "ui-test": "VSCODE_TEST_ZK=true extest setup-and-run './out/test/system/*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions"
+    "test:system": "VSCODE_TEST_ZK=true extest setup-and-run './out/test/system/*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.2.1",

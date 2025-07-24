@@ -28,9 +28,12 @@ export function verifyWorkspaceHasSingleFolder() {
       vscode.window.showErrorMessage(message);
     } else {
       console.log("===========> Displaying modal error");
+      // Modal error messages don't play nice with the automated tester, 
+      // so we switch them to headless.
       const isTestEnv = process.env.VSCODE_TEST_ZK === 'true';
-      vscode.window.showErrorMessage(message, {modal: !isTestEnv}, "OK");
-       state.modalErrorDisplayed = true;
+      const modalMessage = isTestEnv ? message + ' (modal)' : message;
+      vscode.window.showErrorMessage(modalMessage, {modal: !isTestEnv}, "OK");
+      state.modalErrorDisplayed = true;
     }
     return false;
   }
