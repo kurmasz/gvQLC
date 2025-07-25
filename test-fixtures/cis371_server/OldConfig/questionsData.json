@@ -1,0 +1,53 @@
+[
+  {
+    "filePath": "/Users/kurmasz/Documents/LocalResearch/QLC/qlc_workspace/cis371_server/awesome/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 14,
+        "character": 0
+      },
+      "end": {
+        "line": 14,
+        "character": 66
+      }
+    },
+    "text": "Why `8534`?",
+    "highlightedCode": "PORT = 8534  # Port to listen on (non-privileged ports are > 1023)",
+    "answer": "",
+    "timestamp": "2025-05-07T18:33:43.000Z"
+  },
+  {
+    "filePath": "/Users/kurmasz/Documents/LocalResearch/QLC/qlc_workspace/cis371_server/antonio/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 132,
+        "character": 0
+      },
+      "end": {
+        "line": 132,
+        "character": 65
+      }
+    },
+    "text": "What does `[1:]` mean? ",
+    "highlightedCode": "    path = parts[1][1:]  # remove the first character of the path",
+    "answer": "",
+    "timestamp": "2025-05-07T18:36:42.846Z"
+  },
+  {
+    "filePath": "/Users/kurmasz/Documents/LocalResearch/QLC/qlc_workspace/cis371_server/jim/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 145,
+        "character": 0
+      },
+      "end": {
+        "line": 145,
+        "character": 18
+      }
+    },
+    "text": "What happens if you don't close the socket? ",
+    "highlightedCode": "    socket.close()",
+    "answer": "",
+    "timestamp": "2025-05-07T18:39:14.441Z"
+  }
+]

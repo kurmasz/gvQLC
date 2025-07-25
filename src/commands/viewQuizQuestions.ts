@@ -7,10 +7,6 @@
  * (C) 2025 Benedict Osei Sefa and Zachary Kurmas
  * *********************************************************************************/
 
-
-//const gvQLC = require('../gvQLC');
-//const personalizedQuestionsData = gvQLC.personalizedQuestionsData // Deconstruction will _not_ work here
-
 import * as path from 'path';
 import * as vscode from 'vscode';
 
@@ -21,13 +17,10 @@ import * as Util from '../utilities';
 
 import {Question} from '../types';
 
-let currentPanel: vscode.WebviewPanel;
-
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
     //  TODO: Type me
     let studentNameMapping : any;
-
 
     console.log('Enter viewQuizQuestions');
     // Also displays error if persisted data cannot be loaded.
@@ -278,7 +271,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         vscode.ViewColumn.One,
         { enableScripts: true }
     );
-    currentPanel = panel;
 
     panel.webview.html = `
 <!DOCTYPE html>
@@ -466,7 +458,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     ${buildSummaryTable()}
 
-    <div>Before Build Summary Table</div>
     <table id="questionsTable">
         <thead>
             <tr>
@@ -481,7 +472,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             ${questionsTable}
         </tbody>
     </table>
-    <div>After Build Summary Table</div>
 
     <div class="pagination-container">
         <div class="pagination-controls">
@@ -768,7 +758,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
         if (message.type === 'refreshView') {
             panel.dispose();
-            vscode.commands.executeCommand('gvQLC.viewQuizQuestions');
+            vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
         }
 
         if (message.type === 'showInformationMessage') {
@@ -780,15 +770,3 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         }
     });
 });
-
-
-function _test_getCurrentPanel() {
-    return currentPanel;
-}
-
-/* 
-module.exports = {
-    viewQuizQuestionsCommand,
-    _test_getCurrentPanel
-}
-    */

@@ -1,0 +1,26 @@
+{
+  "title": " Brother",
+  "topic": "Variable",
+  "folder": "Brother",
+  "pl_root": "/Users/benedictoseisefa/Desktop/pl-gvsu-cis500dev-master",
+  "pl_question_root": "PersonalQuiz",
+  "pl_assessment_root": "courseInstances/TemplateCourseInstance/assessments",
+  "set": "Custom Quiz",
+  "number": "2",
+  "quiz_directory_name": "CIS371_SERVER",
+  "points_per_question": 10,
+  "startDate": "2025-03-22T10:30:00",
+  "endDate": "2025-03-22T16:30:40",
+  "timeLimitMin": 30,
+  "daysForGrading": 7,
+  "reviewEndDate": "2025-04-21T23:59:59",
+  "password": "letMeIn",
+  "language": "python",
+  "studentNameMapping": {
+    "benedictosefaosei": "oseisefb@mail.gvsu.edu",
+    "william_williams": "williamsw@mail.gvsu.edu",
+    "sam": "sam.test@mail.gvsu.edu",
+    "antonio": "anto.test@ug.edu.gh",
+    "caleb": "caleb.test@ug.edu.gh"
+  }
+}
