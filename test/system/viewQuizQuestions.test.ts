@@ -133,12 +133,18 @@ describe('viewQuizQuestions', function () {
     });
 
     it('displays the sudent summary when "Toggle Student Summary" clicked.', async () => {
+        console.log('Here 1');
         const button = await view.findWebElement(By.id('toggleSummaryBtn'));
+        console.log('Here 2');
         expect(await button.isDisplayed()).to.be.true;
+        console.log('Here 3');
         await button.click();
+        console.log('here 4');
 
         summaryContainer = await view.findWebElement(By.css('#summaryTableContainer'));
+        console.log('Here 5');
         expect(await summaryContainer.isDisplayed()).to.be.true;
+        console.log('Here 6');
 
         const header = await summaryContainer.findElement(By.css('h2'));
         expect(await header.getText()).to.equal('Student Question Summary');
