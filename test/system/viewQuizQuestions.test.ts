@@ -15,6 +15,7 @@ import { By, until, WebElement } from 'selenium-webdriver';
 import { waitForNotification } from '../helpers/systemHelpers';
 import { expect } from 'chai';
 import * as path from 'path';
+import * as fs from 'fs';
 
 describe('viewQuizQuestions', function () {
     let driver: WebDriver;
@@ -43,15 +44,25 @@ describe('viewQuizQuestions', function () {
         // Run the command
         await workbench.executeCommand('gvQLC: View Quiz Questions');
 
-        await waitForNotification(NotificationType.Info, (message) => message === 'No personalized questions added yet!');        
+        await waitForNotification(NotificationType.Info, (message) => message === 'No personalized questions added yet!');
     });
 
     it('opens the folder, runs the command and shows the title and total questions', async () => {
-       
+
 
         // Open the folder
         console.log("Here A");
-        await VSBrowser.instance.openResources(path.join('test-fixtures', 'cis371_server'), async () => {
+        const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
+        // Print the absolute path
+        console.log('Resolved folder path:', folder);
+
+        // Check if it exists
+        if (fs.existsSync(folder)) {
+            console.log('✅ Folder exists.');
+        } else {
+            console.error('❌ Folder does NOT exist!');
+        }
+        await VSBrowser.instance.openResources(folder, async () => {
             const selector = By.css('[aria-label="Explorer Section: cis371_server"]');
             console.log('Here B');
             const element = await driver.wait(until.elementLocated(selector), 10_000);
@@ -71,9 +82,9 @@ describe('viewQuizQuestions', function () {
         await workbench.executeCommand('gvQLC: View Quiz Questions');
         console.log('Here G');
         const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 7_000);
-         console.log('Here H');
+        console.log('Here H');
         await driver.wait(until.elementIsVisible(tab), 5_000);
-console.log('Here I');
+        console.log('Here I');
         /*
         const editorView = new EditorView();
         const titles = await editorView.getOpenEditorTitles();
