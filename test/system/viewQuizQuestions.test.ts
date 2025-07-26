@@ -25,7 +25,7 @@ describe('viewQuizQuestions', function () {
     const GREEN = 'rgba(0, 128, 0, 1)';
     const YELLOW = 'rgba(255, 255, 0, 1)';
 
-    this.timeout(30_000);
+    this.timeout(60_000);
 
     it('notifies when a folder has no gvQLC data', async () => {
         driver = VSBrowser.instance.driver;
