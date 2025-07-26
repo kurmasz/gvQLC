@@ -10,7 +10,7 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
-import { Workbench, WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
+import { EditorView, Workbench, WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
 import { waitForNotification } from '../helpers/systemHelpers';
 import { expect } from 'chai';
@@ -50,15 +50,20 @@ describe('viewQuizQuestions', function () {
        
 
         // Open the folder
+        console.log("Here A");
         await VSBrowser.instance.openResources(path.join('test-fixtures', 'cis371_server'), async () => {
             const selector = By.css('[aria-label="Explorer Section: cis371_server"]');
+            console.log('Here B');
             const element = await driver.wait(until.elementLocated(selector), 10_000);
+            console.log('Here C');
             await driver.wait(until.elementIsVisible(element), 5_000);
+            console.log('Here D');
         });
+        console.log('Here E');
 
         workbench = new Workbench();
         await workbench.wait();
-        //console.log(await new EditorView().getOpenEditorTitles());
+        console.log(await new EditorView().getOpenEditorTitles());
 
 
         // Run the command
