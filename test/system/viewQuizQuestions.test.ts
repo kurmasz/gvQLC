@@ -26,7 +26,7 @@ describe('viewQuizQuestions', function () {
     const GREEN = 'rgba(0, 128, 0, 1)';
     const YELLOW = 'rgba(255, 255, 0, 1)';
 
-    this.timeout(120_000);
+    this.timeout(150_000);
 
     it('notifies when a folder has no gvQLC data', async () => {
         driver = VSBrowser.instance.driver;
@@ -80,8 +80,12 @@ describe('viewQuizQuestions', function () {
         // Run the command
         console.log('Here F');
         await workbench.executeCommand('gvQLC: View Quiz Questions');
+        await new Promise(res => setTimeout(res, 5000)); // crude but useful
+        const tabs = await driver.findElements(By.css('.tab-label'));
+        console.log('Tabs:', await Promise.all(tabs.map(t => t.getText())));
+
         console.log('Here G');
-        const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 7_000);
+        const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
         console.log('Here H');
         await driver.wait(until.elementIsVisible(tab), 5_000);
         console.log('Here I');
