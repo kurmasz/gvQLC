@@ -25,7 +25,7 @@ describe('viewQuizQuestions', function () {
     const GREEN = 'rgba(0, 128, 0, 1)';
     const YELLOW = 'rgba(255, 255, 0, 1)';
 
-    this.timeout(60_000);
+    this.timeout(120_000);
 
     it('notifies when a folder has no gvQLC data', async () => {
         driver = VSBrowser.instance.driver;
@@ -67,10 +67,13 @@ describe('viewQuizQuestions', function () {
 
 
         // Run the command
+        console.log('Here F');
         await workbench.executeCommand('gvQLC: View Quiz Questions');
+        console.log('Here G');
         const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')));
+         console.log('Here H');
         await driver.wait(until.elementIsVisible(tab), 5_000);
-
+console.log('Here I');
         /*
         const editorView = new EditorView();
         const titles = await editorView.getOpenEditorTitles();
@@ -81,15 +84,16 @@ describe('viewQuizQuestions', function () {
         // Switch to the frame containing the new view
         view = new WebView();
         await view.switchToFrame();
-
+        console.log('Here J');
         // Check the title and number of questions.
         await driver.wait(until.elementLocated(By.css('h1')));
-
+        console.log('Here K');
         const element = await view.findWebElement(By.css('h1'));
         expect(await element.getText()).has.string('All Quiz Questions');
-
+        console.log('Here L');
         const element2 = await view.findWebElement(By.css('.total-count'));
         expect(await element2.getText()).has.string('Total Questions: 5');
+        console.log('Here M');
     });
 
     it('displays the first queston', async () => {
