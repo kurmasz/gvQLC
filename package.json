@@ -40,9 +40,9 @@
     "compile": "tsc -p ./ && npm run lint",
     "lint": "eslint src",
     "watch": "tsc -watch -p ./",
-    "test:system:setup": "VSCODE_TEST_ZK=true extest setup-and-run './out/test/system/*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions",
-    "test:system": "tsc -p ./ && VSCODE_TEST_ZK=true EXTENSION_DEV_PATH=$INIT_CWD extest run-tests './out/test/system/*.test.js' --code_version max --code_settings settings.json"
-
+    "test:system": "VSCODE_TEST_ZK=true extest setup-and-run './out/test/system/*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions",
+    "test:system:run_only": "tsc -p ./ && VSCODE_TEST_ZK=true EXTENSION_DEV_PATH=$INIT_CWD extest run-tests './out/test/system/*.test.js' --code_version max --code_settings settings.json",
+    "test": "npm run test:system"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.2.1",
