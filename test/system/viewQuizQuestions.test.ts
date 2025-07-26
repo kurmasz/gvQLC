@@ -70,7 +70,7 @@ describe('viewQuizQuestions', function () {
         console.log('Here F');
         await workbench.executeCommand('gvQLC: View Quiz Questions');
         console.log('Here G');
-        const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')));
+        const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 7_000);
          console.log('Here H');
         await driver.wait(until.elementIsVisible(tab), 5_000);
 console.log('Here I');
