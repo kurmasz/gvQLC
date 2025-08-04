@@ -48,7 +48,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('opens the folder, runs the command and shows the title and total questions', async () => {
-
+        driver = VSBrowser.instance.driver;
         // Open the folder
         console.log("Here A");
         const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
