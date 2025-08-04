@@ -62,6 +62,9 @@ jobs:
           name: screenshots-${{ matrix.os }}
           path: test-resources/screenshots/*.png
 
+      - name: List files
+        run: find .
+
   check:
     if: always()
     runs-on: ubuntu-latest

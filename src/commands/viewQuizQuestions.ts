@@ -19,6 +19,8 @@ import {Question} from '../types';
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
+     vscode.window.showInformationMessage('Entering View Quiz Questions');
+
     //  TODO: Type me
     let studentNameMapping : any;
 
