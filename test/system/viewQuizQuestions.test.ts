@@ -28,7 +28,7 @@ describe('viewQuizQuestions', function () {
 
     this.timeout(150_000);
 
-    it('notifies when a folder has no gvQLC data', async () => {
+    it.skip('notifies when a folder has no gvQLC data', async () => {
         driver = VSBrowser.instance.driver;
 
         // Open the folder

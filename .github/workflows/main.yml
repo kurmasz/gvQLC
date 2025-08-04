@@ -62,7 +62,16 @@ jobs:
           name: screenshots-${{ matrix.os }}
           path: test-resources/screenshots/*.png
 
+      - name: Store console logs
+        uses: actions/upload-artifact@v4
+        if: failure() || cancelled()
+        with:
+          name: console-log-${{ matrix.os }}
+          path: ~/.config/Code/logs
+
+
       - name: List files
+        if: always()
         run: find .
 
   check:
