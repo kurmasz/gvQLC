@@ -12,7 +12,7 @@
 
 import { EditorView, Workbench, WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
-import { waitForNotification } from '../helpers/systemHelpers';
+import { logAllNotifications, waitForNotification } from '../helpers/systemHelpers';
 import { expect } from 'chai';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -49,7 +49,6 @@ describe('viewQuizQuestions', function () {
 
     it('opens the folder, runs the command and shows the title and total questions', async () => {
 
-
         // Open the folder
         console.log("Here A");
         const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
@@ -80,9 +79,11 @@ describe('viewQuizQuestions', function () {
         // Run the command
         console.log('Here F');
         await workbench.executeCommand('gvQLC: View Quiz Questions');
-        await new Promise(res => setTimeout(res, 5000)); // crude but useful
+        await new Promise(res => setTimeout(res, 10000)); // crude but useful
+        await logAllNotifications();
+
         const tabs = await driver.findElements(By.css('.tab-label'));
-        console.log('Tabs:', await Promise.all(tabs.map(t => t.getText())));
+        console.log('Tabs 1:', await Promise.all(tabs.map(t => t.getText())));
 
         console.log('Here G');
         const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
