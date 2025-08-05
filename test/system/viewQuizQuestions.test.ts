@@ -28,7 +28,7 @@ describe('viewQuizQuestions', function () {
 
     this.timeout(150_000);
 
-    it.skip('notifies when a folder has no gvQLC data', async () => {
+    it('notifies when a folder has no gvQLC data', async () => {
         driver = VSBrowser.instance.driver;
 
         // Open the folder
@@ -48,28 +48,15 @@ describe('viewQuizQuestions', function () {
     });
 
     it('opens the folder, runs the command and shows the title and total questions', async () => {
-        driver = VSBrowser.instance.driver;
-        // Open the folder
-        console.log("Here A");
-        const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-        // Print the absolute path
-        console.log('Resolved folder path:', folder);
 
-        // Check if it exists
-        if (fs.existsSync(folder)) {
-            console.log('✅ Folder exists.');
-        } else {
-            console.error('❌ Folder does NOT exist!');
-        }
+        // Open the folder
+        const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
+
         await VSBrowser.instance.openResources(folder, async () => {
             const selector = By.css('[aria-label="Explorer Section: cis371_server"]');
-            console.log('Here B');
             const element = await driver.wait(until.elementLocated(selector), 10_000);
-            console.log('Here C');
             await driver.wait(until.elementIsVisible(element), 5_000);
-            console.log('Here D');
         });
-        console.log('Here E');
 
         workbench = new Workbench();
         await workbench.wait();
@@ -77,39 +64,25 @@ describe('viewQuizQuestions', function () {
 
 
         // Run the command
-        console.log('Here F');
         await workbench.executeCommand('gvQLC: View Quiz Questions');
         await new Promise(res => setTimeout(res, 10000)); // crude but useful
-        await logAllNotifications();
 
-        const tabs = await driver.findElements(By.css('.tab-label'));
-        console.log('Tabs 1:', await Promise.all(tabs.map(t => t.getText())));
+        // const tabs = await driver.findElements(By.css('.tab-label'));
+        // console.log('Tabs 1:', await Promise.all(tabs.map(t => t.getText())));
 
-        console.log('Here G');
         const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
-        console.log('Here H');
         await driver.wait(until.elementIsVisible(tab), 5_000);
-        console.log('Here I');
-        /*
-        const editorView = new EditorView();
-        const titles = await editorView.getOpenEditorTitles();
-        const tabIndex = titles.indexOf('View Quiz Questions')
-        console.log(tabIndex)
-        */
 
         // Switch to the frame containing the new view
         view = new WebView();
         await view.switchToFrame();
-        console.log('Here J');
+
         // Check the title and number of questions.
         await driver.wait(until.elementLocated(By.css('h1')));
-        console.log('Here K');
         const element = await view.findWebElement(By.css('h1'));
         expect(await element.getText()).has.string('All Quiz Questions');
-        console.log('Here L');
         const element2 = await view.findWebElement(By.css('.total-count'));
         expect(await element2.getText()).has.string('Total Questions: 5');
-        console.log('Here M');
     });
 
     it('displays the first queston', async () => {
@@ -158,18 +131,12 @@ describe('viewQuizQuestions', function () {
     });
 
     it('displays the sudent summary when "Toggle Student Summary" clicked.', async () => {
-        console.log('Here 1');
         const button = await view.findWebElement(By.id('toggleSummaryBtn'));
-        console.log('Here 2');
         expect(await button.isDisplayed()).to.be.true;
-        console.log('Here 3');
         await button.click();
-        console.log('here 4');
 
         summaryContainer = await view.findWebElement(By.css('#summaryTableContainer'));
-        console.log('Here 5');
         expect(await summaryContainer.isDisplayed()).to.be.true;
-        console.log('Here 6');
 
         const header = await summaryContainer.findElement(By.css('h2'));
         expect(await header.getText()).to.equal('Student Question Summary');
