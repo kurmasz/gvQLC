@@ -69,8 +69,14 @@ export function loadDataFromFile(fileName: string) {
 
 // Helper function to ensure personalizedQuestions.json is added to .gitignore
 export function ensureGitignoreForQuizQuestionsFile() {
+
+
+  // We need to divert this activity in the test environment, otherwise, 
+  // the .gitignore file will prevent the CI tests from running properly.
+  const isTestEnv = process.env.VSCODE_TEST_ZK === 'true' || !!process.env.VSCODE_DEBUG_MODE;
   const workspaceDir = getWorkspaceDirectory();
-  const gitignorePath = path.join(workspaceDir, ".gitignore");
+  const gitignoreFilename = isTestEnv ? '.test_gitignore_' : '.gitignore';
+  const gitignorePath = path.join(workspaceDir, gitignoreFilename);
 
   let gitignoreContent = "";
 
