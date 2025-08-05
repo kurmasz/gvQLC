@@ -19,12 +19,9 @@ import {Question} from '../types';
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
-     vscode.window.showInformationMessage('Entering View Quiz Questions');
-
     //  TODO: Type me
     let studentNameMapping : any;
 
-    console.log('Enter viewQuizQuestions');
     // Also displays error if persisted data cannot be loaded.
     if (!Util.loadPersistedData()) {
         console.log('Could not load data');

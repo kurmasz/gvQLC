@@ -15,7 +15,6 @@ import { By, until, WebElement } from 'selenium-webdriver';
 import { logAllNotifications, waitForNotification } from '../helpers/systemHelpers';
 import { expect } from 'chai';
 import * as path from 'path';
-import * as fs from 'fs';
 
 describe('viewQuizQuestions', function () {
     let driver: WebDriver;
