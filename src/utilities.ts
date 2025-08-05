@@ -75,7 +75,7 @@ export function ensureGitignoreForQuizQuestionsFile() {
   // the .gitignore file will prevent the CI tests from running properly.
   const isTestEnv = process.env.VSCODE_TEST_ZK === 'true' || !!process.env.VSCODE_DEBUG_MODE;
   const workspaceDir = getWorkspaceDirectory();
-  const gitignoreFilename = isTestEnv ? '.test_gitignore_' : '.gitignore';
+  const gitignoreFilename = isTestEnv ? '.test_gitignore' : '.gitignore';
   const gitignorePath = path.join(workspaceDir, gitignoreFilename);
 
   let gitignoreContent = "";
