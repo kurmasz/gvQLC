@@ -4,7 +4,7 @@
 import {Workbench, NotificationType, WebDriver, VSBrowser } from 'vscode-extension-tester';
 import { logAllNotifications, waitForNotification } from '../helpers/systemHelpers';
 
-describe('Behavior with no folder open', () => {
+describe('Behavior with no folder open', function() {
 	let driver: WebDriver;
 	let workbench: Workbench;
 
