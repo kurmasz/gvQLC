@@ -4,6 +4,5 @@ node_modules
 *.vsix
 test-resources/
 .test-extensions
-personalizedQuestions.json
 .DS_Store
 Thumbs.db

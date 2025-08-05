@@ -72,7 +72,7 @@ jobs:
 
       - name: List files
         if: always()
-        run: find .
+        run: find . -path './node_modules' -prune -o -print
 
   check:
     if: always()

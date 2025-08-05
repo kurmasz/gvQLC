@@ -1,0 +1,50 @@
+[
+  {
+    "filePath": "awesome/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 58,
+        "character": 0
+      },
+      "end": {
+        "line": 58,
+        "character": 65
+      }
+    },
+    "text": "Why is `file` listed twice?",
+    "highlightedCode": "        list_directory += f'<li><a href=\"{file}\">{file}</a></li>'",
+    "excludeFromQuiz": false
+  },
+  {
+    "filePath": "awesome/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 139,
+        "character": 0
+      },
+      "end": {
+        "line": 139,
+        "character": 75
+      }
+    },
+    "text": "What is `SO_REUSEADDR`?",
+    "highlightedCode": "        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)",
+    "excludeFromQuiz": false
+  },
+  {
+    "filePath": "caleb/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 69,
+        "character": 0
+      },
+      "end": {
+        "line": 78,
+        "character": 18
+      }
+    },
+    "text": "What is the blank line for?",
+    "highlightedCode": "        if not path.endswith('/'):\n            # Define the redirect path by adding a '/' at the end of the path\n            redirect_path = path + '/'\n            socket.send_text_line(\"HTTP/1.0 301 Moved Permanently\") # 301 is the correct call for a redirect\n            socket.send_text_line(f\"Location: {redirect_path}\") # Redirect path\n            socket.send_text_line(f\"Content-Length: 0\")\n            socket.send_text_line(f\"Connection: close\")\n            socket.send_text_line(\"\")\n            socket.close()\n            return",
+    "excludeFromQuiz": false
+  }
+]
