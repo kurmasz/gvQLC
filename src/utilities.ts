@@ -11,7 +11,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 
-import {GVQLC, quizQuestionsFileName, state } from './gvQLC';  
+import { GVQLC, quizQuestionsFileName, state } from './gvQLC';
+import {logToFile} from './fileLogger';
+
 
 function _primaryFolderPath() {
   return vscode.workspace.workspaceFolders![0].uri.fsPath;
@@ -24,16 +26,20 @@ export function verifyWorkspaceHasSingleFolder() {
     // After that, other attempts to run commands should simply 
     // display a notification. 
     const message = `${GVQLC} requires a workspace folder to be open.`;
+    logToFile("Dealing with modals");
     if (state.modalErrorDisplayed) {
       vscode.window.showErrorMessage(message);
     } else {
       console.log("===========> Displaying modal error");
+      logToFile("Displaying modal");
+      logToFile(`${process.env}`);
       // Modal error messages don't play nice with the automated tester, 
       // so we switch them to headless.
       const isTestEnv = process.env.VSCODE_TEST_ZK === 'true';
       const modalMessage = isTestEnv ? message + ' (modal)' : message;
-      vscode.window.showErrorMessage(modalMessage, {modal: !isTestEnv}, "OK");
+      vscode.window.showErrorMessage(modalMessage, { modal: !isTestEnv }, "OK");
       state.modalErrorDisplayed = true;
+      logToFile(modalMessage);
     }
     return false;
   }
@@ -53,7 +59,7 @@ export function getWorkspaceDirectory() {
   if (vscode.workspace.workspaceFolders) {
     return _primaryFolderPath();
   } else {
-     throw new Error("No workspace folder found.");
+    throw new Error("No workspace folder found.");
   }
 }
 
@@ -97,53 +103,53 @@ export function ensureGitignoreForQuizQuestionsFile() {
 
 // TODO: Remove any
 export function extractStudentName(filePath: string, config: any) {
-    const parts = filePath.split(path.sep);
-    let studentName = 'unknown_user';
-    let quizDirectoryName = 'cis'; // default fallback
+  const parts = filePath.split(path.sep);
+  let studentName = 'unknown_user';
+  let quizDirectoryName = 'cis'; // default fallback
 
-    // Try to get quiz_directory_name from config if not provided
-    if (!config) {
-      try {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (workspaceFolders && workspaceFolders.length > 0) {
-          const configFilenames = ['cqlc.config.json', 'gvqlc.config.json'];
-          for (const filename of configFilenames) {
-            try {
-              const configPath = path.join(workspaceFolders[0].uri.fsPath, filename);
-              const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-              if (configData.quiz_directory_name) {
-                quizDirectoryName = configData.quiz_directory_name.toLowerCase();
-                break;
-              }
-            } catch (err) {
-              // Config file not found or invalid - continue to next filename
+  // Try to get quiz_directory_name from config if not provided
+  if (!config) {
+    try {
+      const workspaceFolders = vscode.workspace.workspaceFolders;
+      if (workspaceFolders && workspaceFolders.length > 0) {
+        const configFilenames = ['cqlc.config.json', 'gvqlc.config.json'];
+        for (const filename of configFilenames) {
+          try {
+            const configPath = path.join(workspaceFolders[0].uri.fsPath, filename);
+            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            if (configData.quiz_directory_name) {
+              quizDirectoryName = configData.quiz_directory_name.toLowerCase();
+              break;
             }
+          } catch (err) {
+            // Config file not found or invalid - continue to next filename
           }
         }
-      } catch (error) {
-        console.error("Error reading config file:", error);
       }
-    } else if (config.quiz_directory_name) {
-      quizDirectoryName = config.quiz_directory_name.toLowerCase();
+    } catch (error) {
+      console.error("Error reading config file:", error);
     }
-
-    // Find the student name in the path
-    for (let i = 0; i < parts.length; i++) {
-      if (parts[i].toLowerCase() === quizDirectoryName.toLowerCase()) {
-        studentName = parts[i + 1];
-        break;
-      }
-    }
-
-    // Apply name mapping if available
-    if (config && config.studentNameMapping) {
-      if (config.studentNameMapping[studentName]) {
-        studentName = config.studentNameMapping[studentName];
-      }
-    }
-
-    return studentName;
+  } else if (config.quiz_directory_name) {
+    quizDirectoryName = config.quiz_directory_name.toLowerCase();
   }
+
+  // Find the student name in the path
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i].toLowerCase() === quizDirectoryName.toLowerCase()) {
+      studentName = parts[i + 1];
+      break;
+    }
+  }
+
+  // Apply name mapping if available
+  if (config && config.studentNameMapping) {
+    if (config.studentNameMapping[studentName]) {
+      studentName = config.studentNameMapping[studentName];
+    }
+  }
+
+  return studentName;
+}
 
 export function loadPersistedData() {
   console.log(`==========> Loading persistent data ${state.dataLoaded} -- ${state.modalErrorDisplayed}`);
@@ -165,15 +171,15 @@ export function loadPersistedData() {
 
 
 export async function saveDataToFile(filename: string, data: any) {
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders) {
-      vscode.window.showErrorMessage('No workspace folder is open.');
-      return;
-    }
-
-    const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
-    await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data, null, 2)));
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders) {
+    vscode.window.showErrorMessage('No workspace folder is open.');
+    return;
   }
+
+  const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
+  await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data, null, 2)));
+}
 
 
 /*
