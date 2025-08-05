@@ -17,3 +17,11 @@ updates:
         patterns: ["*eslint*"]
     open-pull-requests-limit: 20
     versioning-strategy: increase
+    ignore:
+      - dependency-name: "chai"
+        versions:
+          - ">=5"
+      - dependency-name: "@types/chai"
+        versions:
+          - ">=5"
+      - dependency-name: "@types/vscode"
