@@ -2,11 +2,13 @@
 // runs first. 
 
 import {Workbench, NotificationType, WebDriver, VSBrowser } from 'vscode-extension-tester';
-import { waitForNotification } from '../helpers/systemHelpers';
+import { logAllNotifications, waitForNotification } from '../helpers/systemHelpers';
 
 describe('Behavior with no folder open', () => {
 	let driver: WebDriver;
 	let workbench: Workbench;
+
+	this.timeout(120_000);
 
 	before(async () => {
 		// Get the VS Code browser driver
@@ -19,6 +21,7 @@ describe('Behavior with no folder open', () => {
 
 	it('should display modal error message when first command run', async function () {
 		await workbench.executeCommand('gvQLC: View Quiz Questions');
+		logAllNotifications();
 
 		await waitForNotification(NotificationType.Error, (message: string) => {
 			return message.indexOf('gvQLC requires a workspace folder to be open. (modal)') >= 0;
