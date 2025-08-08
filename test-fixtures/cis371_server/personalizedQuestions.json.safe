@@ -1,5 +1,4 @@
-[
-  {
+[  {
     "filePath": "antonio/my_http_server.py",
     "range": {
       "start": {
@@ -111,7 +110,7 @@
     "highlightedCode": "                socket.send_text_line(\"HTTP/1.0 200 OK\")\n                socket.send_text_line(\"Content-Type: \" + EXTENSION_MAP.get(extension))\n                socket.send_text_line(f\"Content-Length: {file_size}\")\n                socket.send_text_line(f\"Connection: close\")\n                socket.send_text_line(\"\")\n                socket.send_binary_data_from_file(file, file_size)",
     "excludeFromQuiz": false
   },
-  {
+    {
     "filePath": "uncle_bob/my_http_server.py",
     "range": {
       "start": {
@@ -125,70 +124,6 @@
     },
     "text": "What does the `[1:]` mean?",
     "highlightedCode": "        path = parts[1][1:]  # remove the first character of the path",
-    "excludeFromQuiz": false
-  },
-  {
-    "filePath": "jim/my_http_server.py",
-    "range": {
-      "start": {
-        "line": 174,
-        "character": 0
-      },
-      "end": {
-        "line": 175,
-        "character": 10
-      }
-    },
-    "text": "Explain what this code does.  What is `__name__` and `\"__main__\"`",
-    "highlightedCode": "if __name__ == \"__main__\":\n    main()",
-    "excludeFromQuiz": false
-  },
-  {
-    "filePath": "jim/my_http_server.py",
-    "range": {
-      "start": {
-        "line": 145,
-        "character": 0
-      },
-      "end": {
-        "line": 145,
-        "character": 18
-      }
-    },
-    "text": "What happens if you don't close the socket? ",
-    "highlightedCode": "    socket.close()",
-    "excludeFromQuiz": false
-  },
-  {
-    "filePath": "neptune_man/my_http_server.py",
-    "range": {
-      "start": {
-        "line": 119,
-        "character": 0
-      },
-      "end": {
-        "line": 135,
-        "character": 47
-      }
-    },
-    "text": "How would read mode ever be anything but `rb`?",
-    "highlightedCode": "        if path.endswith((\".jpeg\", \".jpg\", \".png\", \".gif\", \".ico\", \".pdf\")):\n            read_mode = \"rb\"\n\n        file_size = os.path.getsize(path)\n        with open(path, read_mode) as file:\n            socket.send_text_line(\"HTTP/1.0 200 OK\")\n            socket.send_text_line(f\"Content-Type: {content_type}\")\n            socket.send_text_line(f\"Content-Length: {file_size}\")\n            socket.send_text_line(f\"Connection: close\")\n            socket.send_text_line(\"\")\n\n            if read_mode == 'rb':\n                socket.send_binary_data_from_file(file, file_size)\n\n            else:\n                while line := file.readline():\n                    socket.send_text_line(line)",
-    "excludeFromQuiz": false
-  },
-  {
-    "filePath": "uncle_bob/my_http_server.py",
-    "range": {
-      "start": {
-        "line": 63,
-        "character": 7
-      },
-      "end": {
-        "line": 63,
-        "character": 79
-      }
-    },
-    "text": "What is the significance of `path[-1] == '/'? What exactly is being checked, and what does that mean at a high level? ",
-    "highlightedCode": " if os.path.isdir(path) or os.path.isdir(f'{path}/') or path[-1] == '/':",
     "excludeFromQuiz": false
   }
 ]

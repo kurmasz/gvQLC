@@ -12,7 +12,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 import { GVQLC, quizQuestionsFileName, state } from './gvQLC';
-import {logToFile} from './fileLogger';
+// import {logToFile} from './fileLogger';
 
 
 function _primaryFolderPath() {
@@ -26,20 +26,16 @@ export function verifyWorkspaceHasSingleFolder() {
     // After that, other attempts to run commands should simply 
     // display a notification. 
     const message = `${GVQLC} requires a workspace folder to be open.`;
-    logToFile("Dealing with modals");
     if (state.modalErrorDisplayed) {
       vscode.window.showErrorMessage(message);
     } else {
       console.log("===========> Displaying modal error");
-      logToFile("Displaying modal");
-      logToFile(`${process.env}`);
       // Modal error messages don't play nice with the automated tester, 
       // so we switch them to headless.
       const isTestEnv = process.env.VSCODE_TEST_ZK === 'true';
       const modalMessage = isTestEnv ? message + ' (modal)' : message;
       vscode.window.showErrorMessage(modalMessage, { modal: !isTestEnv }, "OK");
       state.modalErrorDisplayed = true;
-      logToFile(modalMessage);
     }
     return false;
   }
@@ -102,7 +98,7 @@ export function ensureGitignoreForQuizQuestionsFile() {
 }
 
 // TODO: Remove any
-export function extractStudentName(filePath: string, config: any) {
+export function extractStudentName(filePath: string, config?: any) {
   const parts = filePath.split(path.sep);
   let studentName = 'unknown_user';
   let quizDirectoryName = 'cis'; // default fallback

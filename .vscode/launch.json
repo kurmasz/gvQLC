@@ -5,6 +5,7 @@
             "type": "extensionHost",
             "request": "launch",
             "name": "Run Extension",
+            "sourceMaps": true,
             "preLaunchTask": "npm: compile",
             "skipFiles": [
                 "<node_internals>/**"

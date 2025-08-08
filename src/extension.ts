@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 
 import { viewQuizQuestionsCommand } from './commands/viewQuizQuestions';
+import { addQuizQuestionCommand } from './commands/addQuizQuestion';
 
 
 // This method is called when your extension is activated
@@ -28,7 +29,8 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	context.subscriptions.push(disposable,
-		viewQuizQuestionsCommand
+		viewQuizQuestionsCommand,
+		addQuizQuestionCommand
 	);
 }
 

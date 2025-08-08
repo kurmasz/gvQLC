@@ -32,6 +32,10 @@
       {
         "command": "gvqlc.viewQuizQuestions",
         "title": "gvQLC: View Quiz Questions"
+      },
+      {
+        "command": "gvqlc.addQuizQuestion",
+        "title": "gvQLC: Add Quiz Question"
       }
     ]
   },

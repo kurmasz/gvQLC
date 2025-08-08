@@ -19,5 +19,5 @@ export const state = {
     configData: null as any,
     dataLoaded: false as any,
     modalErrorDisplayed: false as any,
-    studentNameMapping: [] as any[]
+    studentNameMapping: {} as Record<string, string>,
 };

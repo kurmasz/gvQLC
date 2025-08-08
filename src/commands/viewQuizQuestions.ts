@@ -19,9 +19,6 @@ import {Question} from '../types';
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
-    //  TODO: Type me
-    let studentNameMapping : any;
-
     // Also displays error if persisted data cannot be loaded.
     if (!Util.loadPersistedData()) {
         console.log('Could not load data');
@@ -68,7 +65,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             if (configFileUri) {
                 const fileData = await vscode.workspace.fs.readFile(configFileUri);
                 state.configData = JSON.parse(fileData.toString());
-                studentNameMapping = state.configData.studentNameMapping || {};
+                state.studentNameMapping = state.configData.studentNameMapping || {};
             } else {
                 vscode.window.showErrorMessage(
                     'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
@@ -115,7 +112,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     };
 
     const mapStudentName = (name: string) => {
-        return studentNameMapping[name] || name;
+        return state.studentNameMapping[name] || name;
     };
 
     const allCISStudents = await getAllCISStudents();
