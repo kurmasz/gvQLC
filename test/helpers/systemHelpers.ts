@@ -18,8 +18,8 @@ export async function waitForNotification(type: NotificationType, matcher: (str:
     while (Date.now() - start < timeout) {
         notifications = await center.getNotifications(type);
         messages = await Promise.all(notifications.map(async (n) => n.getMessage()));
-        console.log(`Elapsed ${Date.now() - start}`);
-        console.log(messages);
+        // console.log(`Elapsed ${Date.now() - start}`);
+        // console.log(messages);
         const matches = messages.filter(matcher);
         expect(matches.length).to.be.at.most(1);
         if (matches.length === 1) {
