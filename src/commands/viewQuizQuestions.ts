@@ -15,7 +15,7 @@ import { GVQLC, state } from '../gvQLC';
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
 
-import {Question} from '../types';
+import { Question } from '../types';
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
@@ -117,8 +117,8 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     const allCISStudents = await getAllCISStudents();
 
-   
-  const questionsByStudent: Record<string, Question[]> = {};
+
+    const questionsByStudent: Record<string, Question[]> = {};
     for (const question of questionsWithAbsolutePaths) {
         const studentName = await extractStudentName(question.filePath, state.configData);
         if (!questionsByStudent[studentName]) {
@@ -261,7 +261,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     }).join('');
 
     // Create a Webview Panel for viewing personalized questions
-    const panel: vscode.WebviewPanel  = vscode.window.createWebviewPanel(
+    const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
         'viewPersonalizedQuestions',
         'View Quiz Questions',
         vscode.ViewColumn.One,
@@ -748,7 +748,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         }
 
         if (message.type === 'editQuestion') {
-             vscode.window.showErrorMessage("Prepare openQuestionPanel and uncomment line below", message, {modal: true}, "OK");
+            vscode.window.showErrorMessage("Prepare openQuestionPanel and uncomment line below", message, { modal: true }, "OK");
             // openEditQuestionPanel(message.index);
         }
 

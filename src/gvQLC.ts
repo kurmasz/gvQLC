@@ -15,9 +15,21 @@ export const quizQuestionsFileName = 'gvQLC_QuizQuestions.json';
 export const state = {
     commentsData: [] as any [],
     questionsData: [] as any[],
-    personalizedQuestionsData: [] as any[],
+    personalizedQuestionsData: [] as PersonalizedQuestionsData[],
     configData: null as any,
     dataLoaded: false as any,
     modalErrorDisplayed: false as any,
     studentNameMapping: {} as Record<string, string>,
+};
+
+
+export type PersonalizedQuestionsData = {
+    filePath: string,
+    text: string,
+    range: {
+        start: {line: number, character: number},
+        end: {line: number, character: number}
+    },
+    highlightedCode: string,
+    excludeFromQuiz: boolean
 };

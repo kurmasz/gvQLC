@@ -69,9 +69,8 @@ export function loadDataFromFile(fileName: string) {
   return [];
 }
 
-// Helper function to ensure personalizedQuestions.json is added to .gitignore
+// Helper function to ensure quizQuestionsFileName is added to .gitignore
 export function ensureGitignoreForQuizQuestionsFile() {
-
 
   // We need to divert this activity in the test environment, otherwise, 
   // the .gitignore file will prevent the CI tests from running properly.
@@ -86,13 +85,13 @@ export function ensureGitignoreForQuizQuestionsFile() {
   if (fs.existsSync(gitignorePath)) {
     gitignoreContent = fs.readFileSync(gitignorePath, "utf-8");
 
-    // If personalizedQuestions.json is not already in .gitignore, add it
+    // If quizQuestionsFileName is not already in .gitignore, add it
     if (!gitignoreContent.split("\n").includes(quizQuestionsFileName)) {
       gitignoreContent += `\n${quizQuestionsFileName}\n`;
       fs.writeFileSync(gitignorePath, gitignoreContent);
     }
   } else {
-    // Create a .gitignore file and add personalizedQuestions.json
+    // Create a .gitignore file and add quizQuestionsFileName
     fs.writeFileSync(gitignorePath, `${quizQuestionsFileName}\n`);
   }
 }
@@ -155,9 +154,9 @@ export function loadPersistedData() {
   if (verifyWorkspaceHasSingleFolder()) {
     state.commentsData.push(...loadDataFromFile('commentsData.json'));
     state.questionsData.push(...loadDataFromFile('questionsData.json'));
-    state.personalizedQuestionsData.push(...loadDataFromFile('personalizedQuestions.json'));
+    state.personalizedQuestionsData.push(...loadDataFromFile(quizQuestionsFileName));
 
-    // Ensure personalizedQuestions.json is in .gitignore
+    // Ensure quizQuestionsFileName is in .gitignore
     ensureGitignoreForQuizQuestionsFile();
     state.dataLoaded = true;
     return true;
