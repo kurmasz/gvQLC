@@ -16,22 +16,6 @@
     "excludeFromQuiz": false
   },
   {
-    "filePath": "antonio/my_http_server.py",
-    "range": {
-      "start": {
-        "line": 67,
-        "character": 0
-      },
-      "end": {
-        "line": 68,
-        "character": 47
-      }
-    },
-    "text": "Explain the difference between `=` and `:=`",
-    "highlightedCode": "                while line := file.readline():\n                    socket.send_text_line(line)",
-    "excludeFromQuiz": false
-  },
-  {
     "filePath": "awesome/my_http_server.py",
     "range": {
       "start": {
@@ -189,6 +173,22 @@
     },
     "text": "What is the significance of `path[-1] == '/'? What exactly is being checked, and what does that mean at a high level? ",
     "highlightedCode": " if os.path.isdir(path) or os.path.isdir(f'{path}/') or path[-1] == '/':",
+    "excludeFromQuiz": false
+  },
+  {
+    "filePath": "antonio/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 77,
+        "character": 0
+      },
+      "end": {
+        "line": 78,
+        "character": 19
+      }
+    },
+    "text": "Why do we need to add '/'?",
+    "highlightedCode": "    if path[-1] != '/':\n        path += '/'",
     "excludeFromQuiz": false
   }
 ]
