@@ -7,15 +7,14 @@
  * (C) 2025 Benedict Osei Sefa and Zachary Kurmas
  * *********************************************************************************/
 
-import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { GVQLC, state, configFileName } from '../gvQLC';
+import * as gvQLC from '../gvQLC';
+const state = gvQLC.state;
 
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
-
-import { Question } from '../types';
+import { PersonalizedQuestionsData } from '../types';
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
@@ -25,57 +24,23 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return false;
     }
 
-    // Get workspace root path
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (!workspaceFolders || workspaceFolders.length === 0) {
-        vscode.window.showErrorMessage('No workspace folder is open.');
-        return;
-    }
-    const workspaceRoot = workspaceFolders[0].uri.fsPath;
-
-
     if (state.personalizedQuestionsData.length === 0) {
         vscode.window.showInformationMessage('No personalized questions added yet!');
         return;
     }
 
     // Convert relative paths to absolute paths for display
+    // TODO: I don't think we need this
+    /*
     const questionsWithAbsolutePaths = state.personalizedQuestionsData.map(question => {
-        const newPath = path.isAbsolute(question.filePath) ? question.filePath : path.join(workspaceRoot, question.filePath);
+        const newPath = path.isAbsolute(question.filePath) ? question.filePath : path.join(gvQLC.workspaceRoot().name, question.filePath);
         return {
             ...question,
             filePath: newPath,
             relativePath: question.filePath
         };
     });
-
-    if (!state.configData) {
-        try {
-            let configFileUri = null;
-            try {
-                const fileUri = vscode.Uri.joinPath(workspaceFolders[0].uri, configFileName);
-                await vscode.workspace.fs.stat(fileUri);
-                configFileUri = fileUri;
-            } catch (err) { }
-
-            if (configFileUri) {
-                const fileData = await vscode.workspace.fs.readFile(configFileUri);
-                state.configData = JSON.parse(fileData.toString());
-                state.studentNameMapping = state.configData.studentNameMapping || {};
-            } else {
-                vscode.window.showErrorMessage(
-                    'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
-                    { modal: true }
-                );
-                return;
-            }
-        } catch (error) {
-            vscode.window.showErrorMessage(
-                `Error loading config file: ${error instanceof Error ? error.message : String(error)}`
-            );
-            return;
-        }
-    }
+    */
 
     const getAllCISStudents = async () => {
         try {
@@ -83,19 +48,18 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             let quizDirectoryName = "CIS"; // Default fallback
 
             // Get quiz directory name from config
-            if (state.configData && state.configData.quiz_directory_name) {
-                quizDirectoryName = state.configData.quiz_directory_name;
+            const config = await gvQLC.config();
+            if (config.submissionRoot) {
+                quizDirectoryName = config.submissionRoot;
             }
 
             // Look for students in the specified directory
-            for (const folder of workspaceFolders) {
-                const folderUri = folder.uri;
-                if (folderUri.fsPath.includes(quizDirectoryName)) {
-                    const files = await vscode.workspace.fs.readDirectory(folderUri);
-                    for (const [name, type] of files) {
-                        if (type === vscode.FileType.Directory) {
-                            cisStudents.add(name);
-                        }
+            const folderUri = gvQLC.workspaceRoot().uri;
+            if (folderUri.fsPath.includes(quizDirectoryName)) {
+                const files = await vscode.workspace.fs.readDirectory(folderUri);
+                for (const [name, type] of files) {
+                    if (type === vscode.FileType.Directory) {
+                        cisStudents.add(name);
                     }
                 }
             }
@@ -111,19 +75,22 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return state.studentNameMapping[name] || name;
     };
 
+    // Not sure why we need this.
     const allCISStudents = await getAllCISStudents();
 
-
-    const questionsByStudent: Record<string, Question[]> = {};
-    for (const question of questionsWithAbsolutePaths) {
-        const studentName = await extractStudentName(question.filePath, state.configData);
+    const questionsByStudent: Record<string, PersonalizedQuestionsData[]> = {};
+    const submissionRoot = (await gvQLC.config()).submissionRoot;
+    for (const question of state.personalizedQuestionsData) {
+        const studentName = extractStudentName(question.filePath, submissionRoot);
         if (!questionsByStudent[studentName]) {
             questionsByStudent[studentName] = [];
         }
         questionsByStudent[studentName].push(question);
     }
 
-    const studentQuestionCounts = new Map();
+    const frequencyMap = new Map<number, number>();
+
+    const studentQuestionCounts = new Map<string, number>();
     let maxQuestions = 0;
     for (const studentName in questionsByStudent) {
         const count = questionsByStudent[studentName].length;
@@ -131,11 +98,25 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         if (count > maxQuestions) {
             maxQuestions = count;
         }
+        frequencyMap.set(count, (frequencyMap.get(count) ?? 0) + 1);
     }
 
-    //TODO: Remove any
-    const questionLabels: Record<string, any> = {};
-    const studentNumbers: Record<string, any> = {};
+    // Compute the mode (most common question count)
+    let modeQuestions = -1;
+    let highestFrequency = 0;
+
+    for (const [count, freq] of frequencyMap.entries()) {
+        if (freq > highestFrequency || (freq === highestFrequency && count > modeQuestions)) {
+            highestFrequency = freq;
+            modeQuestions = count;
+        }
+    }
+
+    console.log(`Max questions assigned to any student: ${maxQuestions}`);
+    console.log(`Most common number of questions (mode): ${modeQuestions}`);
+
+    const questionLabels: Record<string, string> = {};
+    const studentNumbers: Record<string, number> = {};
 
     let studentCounter = 1;
     let questionIndex = 0;
@@ -144,16 +125,16 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     for (const studentName of sortedStudentNames) {
         studentNumbers[studentName] = studentCounter;
         const questions = questionsByStudent[studentName];
-        questions.forEach((question, qIndex) => {
-            const questionLabel = `${studentCounter}${String.fromCharCode(97 + qIndex)}`;
+        questions.forEach((_, qIndex) => {
+            const startingCode = 'a'.charCodeAt(0);
+            const questionLabel = `${studentCounter}${String.fromCharCode(startingCode + qIndex)}`;
             questionLabels[questionIndex] = questionLabel;
             questionIndex++;
         });
         studentCounter++;
     }
 
-    // TODO: Remove any
-    const reorderedQuestions: any[] = [];
+    const reorderedQuestions: PersonalizedQuestionsData[] = [];
     for (const studentName of sortedStudentNames) {
         reorderedQuestions.push(...questionsByStudent[studentName]);
     }
@@ -214,12 +195,12 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     };
 
     const questionsTable = reorderedQuestions.map((question, index) => {
-        const studentName = extractStudentName(question.filePath, state.configData);
+        const studentName = extractStudentName(question.filePath, submissionRoot);
         const labelColor = getLabelColor(studentName);
-        const filePathParts = question.relativePath.split('/');
+        const filePathParts = question.filePath.split('/');
         let shortenedFilePath = filePathParts.length > 2
             ? `.../${filePathParts.slice(-3).join('/')}`
-            : question.relativePath;
+            : question.filePath;
         shortenedFilePath = truncateCharacters(shortenedFilePath, 30);
 
         const escapeHtmlAttr = (str: string) => {
@@ -236,7 +217,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return `
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-              <td title="${question.relativePath}">${shortenedFilePath}</td>
+              <td title="${question.filePath}">${shortenedFilePath}</td>
               <td>
                   <textarea class="code-area" id="code-${index}">${highlightedCode || 'No highlighted code'}</textarea>
               </td>

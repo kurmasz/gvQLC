@@ -12,7 +12,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as Mustache from 'mustache';
 
-import { GVQLC, quizQuestionsFileName, state, context } from './gvQLC';
+import * as gvQLC from './gvQLC';
+
+import {ConfigData} from './types';
+
 // import {logToFile} from './fileLogger';
 
 
@@ -20,14 +23,14 @@ function _primaryFolderPath() {
   return vscode.workspace.workspaceFolders![0].uri.fsPath;
 }
 
-export function verifyWorkspaceHasSingleFolder() {
+function verifyAndSetWorkspaceRoot() {
   if (!vscode.workspace.workspaceFolders) {
 
     // We only want to see this error as a modal once.
     // After that, other attempts to run commands should simply 
     // display a notification. 
-    const message = `${GVQLC} requires a workspace folder to be open.`;
-    if (state.modalErrorDisplayed) {
+    const message = `${gvQLC.GVQLC} requires a workspace folder to be open.`;
+    if (gvQLC.state.modalErrorDisplayed) {
       vscode.window.showErrorMessage(message);
     } else {
       console.log("===========> Displaying modal error");
@@ -36,20 +39,18 @@ export function verifyWorkspaceHasSingleFolder() {
       const isTestEnv = process.env.VSCODE_TEST_ZK === 'true';
       const modalMessage = isTestEnv ? message + ' (modal)' : message;
       vscode.window.showErrorMessage(modalMessage, { modal: !isTestEnv }, "OK");
-      state.modalErrorDisplayed = true;
+      gvQLC.state.modalErrorDisplayed = true;
     }
     return false;
   }
   const folders = vscode.workspace.workspaceFolders;
   if (folders.length > 1) {
-    vscode.window.showWarningMessage(`${GVQLC} expects a workspace with a single folder. Loading/Saving data from ${_primaryFolderPath()}.`);
+    vscode.window.showWarningMessage(`${gvQLC.GVQLC} expects a workspace with a single folder. Loading/Saving data from ${_primaryFolderPath()}.`);
     return false;
   }
+  gvQLC.setWorkspaceRoot(folders[0]);
   return true;
 }
-
-// Start here
-
 
 // Helper function to get the workspace directory
 export function getWorkspaceDirectory() {
@@ -70,6 +71,38 @@ export function loadDataFromFile(fileName: string) {
   return [];
 }
 
+export async function loadConfigData() : Promise<ConfigData> {
+  let defaultConfig = {} as ConfigData;
+  try {
+    let configFileUri = null;
+    try {
+      const fileUri = vscode.Uri.joinPath(gvQLC.workspaceRoot().uri, gvQLC.configFileName);
+      await vscode.workspace.fs.stat(fileUri);
+      configFileUri = fileUri;
+    } catch (err) { }
+
+    if (configFileUri) {
+      const fileData = await vscode.workspace.fs.readFile(configFileUri);
+      const config = JSON.parse(fileData.toString()) as ConfigData;
+      gvQLC.state.studentNameMapping = config.studentNameMapping || {};
+      return config;
+    } else {
+      // TODO: Test me
+      vscode.window.showErrorMessage(
+        'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
+        { modal: true }
+      );
+      return defaultConfig;
+    }
+  } catch (error) {
+    // TODO: Is continuing with default config the correct response? 
+    vscode.window.showErrorMessage(
+      `Error loading config file: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return defaultConfig;
+  }
+}
+
 // Helper function to ensure quizQuestionsFileName is added to .gitignore
 export function ensureGitignoreForQuizQuestionsFile() {
 
@@ -87,46 +120,38 @@ export function ensureGitignoreForQuizQuestionsFile() {
     gitignoreContent = fs.readFileSync(gitignorePath, "utf-8");
 
     // If quizQuestionsFileName is not already in .gitignore, add it
-    if (!gitignoreContent.split("\n").includes(quizQuestionsFileName)) {
-      gitignoreContent += `\n${quizQuestionsFileName}\n`;
+    if (!gitignoreContent.split("\n").includes(gvQLC.quizQuestionsFileName)) {
+      gitignoreContent += `\n${gvQLC.quizQuestionsFileName}\n`;
       fs.writeFileSync(gitignorePath, gitignoreContent);
     }
   } else {
     // Create a .gitignore file and add quizQuestionsFileName
-    fs.writeFileSync(gitignorePath, `${quizQuestionsFileName}\n`);
+    fs.writeFileSync(gitignorePath, `${gvQLC.quizQuestionsFileName}\n`);
   }
 }
 
-// TODO: Remove any
-export function extractStudentName(filePath: string, config?: any) {
-  const parts = filePath.split(path.sep);
-  let studentName = 'unknown_user';
-  let quizDirectoryName = 'cis'; // default fallback
+// TODO Still need to handle error cases (empty filePath, 
+// file path does not contain submissionRoot, etc.)
+export function extractStudentName(filePath: string, submissionRoot: string | null) : string {
+  const normalizedPath = path.normalize(filePath);
+  const parts = normalizedPath.split(path.sep).filter(part => part.length > 0);
 
-  // Try to get quiz_directory_name from config if not provided
-  if (!config) {
-    try {
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (workspaceFolders && workspaceFolders.length > 0) {
-        const configFilenames = ['cqlc.config.json', 'gvqlc.config.json'];
-        for (const filename of configFilenames) {
-          try {
-            const configPath = path.join(workspaceFolders[0].uri.fsPath, filename);
-            const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-            if (configData.quiz_directory_name) {
-              quizDirectoryName = configData.quiz_directory_name.toLowerCase();
-              break;
-            }
-          } catch (err) {
-            // Config file not found or invalid - continue to next filename
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error reading config file:", error);
+  if (!submissionRoot) {
+      return parts[0];
+    } else {
+      const index = parts.findIndex(part => part === submissionRoot);
+      return parts[index + 1];
     }
-  } else if (config.quiz_directory_name) {
-    quizDirectoryName = config.quiz_directory_name.toLowerCase();
+}
+
+
+async function extractStudentNameOld(filePath: string, submissionRoot: string) {
+  const parts = filePath.split(path.sep);
+  let studentName = '<unknown_user>';
+  let quizDirectoryName = '.'; // default fallback
+
+  if (submissionRoot) {
+    quizDirectoryName = submissionRoot.toLowerCase();
   }
 
   // Find the student name in the path
@@ -138,23 +163,25 @@ export function extractStudentName(filePath: string, config?: any) {
   }
 
   // Apply name mapping if available
-  if (config && config.studentNameMapping) {
-    if (config.studentNameMapping[studentName]) {
-      studentName = config.studentNameMapping[studentName];
+  const studentNameMapping = (await gvQLC.config()).studentNameMapping;
+  if (studentNameMapping) {
+    if (studentNameMapping[studentName]) {
+      studentName = studentNameMapping[studentName];
     }
   }
-
+  console.log('Student name: ', studentName);
   return studentName;
 }
 
 export function loadPersistedData() {
-    if (state.dataLoaded) {
+  const state = gvQLC.state;
+  if (state.dataLoaded) {
     return true;
   }
-  if (verifyWorkspaceHasSingleFolder()) {
+  if (verifyAndSetWorkspaceRoot()) {
     state.commentsData.push(...loadDataFromFile('commentsData.json'));
     state.questionsData.push(...loadDataFromFile('questionsData.json'));
-    state.personalizedQuestionsData.push(...loadDataFromFile(quizQuestionsFileName));
+    state.personalizedQuestionsData.push(...loadDataFromFile(gvQLC.quizQuestionsFileName));
 
     // Ensure quizQuestionsFileName is in .gitignore
     ensureGitignoreForQuizQuestionsFile();
@@ -180,8 +207,8 @@ export async function saveDataToFile(filename: string, data: any, useJSON = true
 }
 
 export function renderMustache(filename: string, data: any): string {
-    const templatePath = path.join(context().extensionPath, 'views', filename);
-    const template = fs.readFileSync(templatePath, 'utf8');
-    const rendered = Mustache.render(template, data);
-    return rendered;
+  const templatePath = path.join(gvQLC.context().extensionPath, 'views', filename);
+  const template = fs.readFileSync(templatePath, 'utf8');
+  const rendered = Mustache.render(template, data);
+  return rendered;
 }

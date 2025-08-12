@@ -10,12 +10,10 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { GVQLC, state } from '../gvQLC';
+import { GVQLC, state, config } from '../gvQLC';
 
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
-
-import {Question} from '../types';
 
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
@@ -263,7 +261,8 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
       if (message.type === 'submitQuestion') {
-        const studentName = Util.extractStudentName(editor.document.uri.fsPath);
+        const submissionRoot = (await config()).submissionRoot;
+        const studentName = Util.extractStudentName(editor.document.uri.fsPath, submissionRoot);
         const questionData = {
           filePath: relativePath, // Using relative path here
           range: {
