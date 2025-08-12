@@ -273,7 +273,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     };
     panel.webview.html = Util.renderMustache('quizQuestions.mustache.html', data);
-    Util.writeToFile('mustacheOutput.html', panel.webview.html);
     const foo = `
 <!DOCTYPE html>
 <html lang="en">
@@ -736,7 +735,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 </body>
 </html>
     `;
-    Util.writeToFile('foo.html', foo);
 
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage((message) => {
