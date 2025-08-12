@@ -10,8 +10,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as Mustache from 'mustache';
 
-import { GVQLC, quizQuestionsFileName, state } from './gvQLC';
+import { GVQLC, quizQuestionsFileName, state, context } from './gvQLC';
 // import {logToFile} from './fileLogger';
 
 
@@ -147,8 +148,7 @@ export function extractStudentName(filePath: string, config?: any) {
 }
 
 export function loadPersistedData() {
-  console.log(`==========> Loading persistent data ${state.dataLoaded} -- ${state.modalErrorDisplayed}`);
-  if (state.dataLoaded) {
+    if (state.dataLoaded) {
     return true;
   }
   if (verifyWorkspaceHasSingleFolder()) {
@@ -164,25 +164,24 @@ export function loadPersistedData() {
   return false;
 }
 
-
-export async function saveDataToFile(filename: string, data: any) {
+export async function saveDataToFile(filename: string, data: any, useJSON = true) {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
     vscode.window.showErrorMessage('No workspace folder is open.');
     return;
   }
 
+  if (useJSON) {
+    data = JSON.stringify(data, null, 2);
+  }
+
   const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
-  await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data, null, 2)));
+  await vscode.workspace.fs.writeFile(uri, Buffer.from(data));
 }
 
-
-/*
-module.exports = {
-    verifyWorkspaceHasSingleFolder,
-    getWorkspaceDirectory,
-    loadDataFromFile,
-    ensureGitignoreForQuizQuestionsFile,
-    extractStudentName,
-    loadPersistedData 
-}*/
+export function renderMustache(filename: string, data: any): string {
+    const templatePath = path.join(context().extensionPath, 'views', filename);
+    const template = fs.readFileSync(templatePath, 'utf8');
+    const rendered = Mustache.render(template, data);
+    return rendered;
+}

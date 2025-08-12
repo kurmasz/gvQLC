@@ -10,7 +10,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { GVQLC, state } from '../gvQLC';
+import { GVQLC, state, configFileName } from '../gvQLC';
 
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
@@ -41,26 +41,22 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     // Convert relative paths to absolute paths for display
     const questionsWithAbsolutePaths = state.personalizedQuestionsData.map(question => {
+        const newPath = path.isAbsolute(question.filePath) ? question.filePath : path.join(workspaceRoot, question.filePath);
         return {
             ...question,
-            filePath: path.join(workspaceRoot, question.filePath),
+            filePath: newPath,
             relativePath: question.filePath
         };
     });
 
     if (!state.configData) {
         try {
-            const configFilenames = ['cqlc.config.json', 'gvqlc.config.json'];
             let configFileUri = null;
-
-            for (const filename of configFilenames) {
-                try {
-                    const fileUri = vscode.Uri.joinPath(workspaceFolders[0].uri, filename);
-                    await vscode.workspace.fs.stat(fileUri);
-                    configFileUri = fileUri;
-                    break;
-                } catch (err) { }
-            }
+            try {
+                const fileUri = vscode.Uri.joinPath(workspaceFolders[0].uri, configFileName);
+                await vscode.workspace.fs.stat(fileUri);
+                configFileUri = fileUri;
+            } catch (err) { }
 
             if (configFileUri) {
                 const fileData = await vscode.workspace.fs.readFile(configFileUri);
@@ -268,7 +264,17 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         { enableScripts: true }
     );
 
-    panel.webview.html = `
+    const data = {
+        totalQuestions: reorderedQuestions.length,
+        summaryTable: buildSummaryTable(),
+        questionsTable: questionsTable,
+        originalData: JSON.stringify(reorderedQuestions),
+        questionLabels: JSON.stringify(questionLabels)
+
+    };
+    panel.webview.html = Util.renderMustache('quizQuestions.mustache.html', data);
+    Util.writeToFile('mustacheOutput.html', panel.webview.html);
+    const foo = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -730,6 +736,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 </body>
 </html>
     `;
+    Util.writeToFile('foo.html', foo);
 
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage((message) => {
