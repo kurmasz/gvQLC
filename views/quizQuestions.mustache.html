@@ -169,7 +169,7 @@
 <body>
     <div class="header-container">
         <h1>All Quiz Questions</h1>
-        <div class="total-count">Total Questions: ${reorderedQuestions.length}</div>
+        <div class="total-count">Total Questions: {{totalQuestions}}</div>
     </div>
 
     <div class="controls-container">
@@ -181,7 +181,7 @@
         </div>
     </div>
 
-    ${buildSummaryTable()}
+    {{{summaryTable}}}
 
     <table id="questionsTable">
         <thead>
@@ -194,7 +194,7 @@
             </tr>
         </thead>
         <tbody id="questionsTableBody">
-            ${questionsTable}
+            {{{questionsTable}}}
         </tbody>
     </table>
 
@@ -228,15 +228,22 @@
 
     <script>
         const vscode = acquireVsCodeApi();
-        const originalData = JSON.parse(JSON.stringify(${JSON.stringify(reorderedQuestions)}));
-        const questionLabels = JSON.parse('${JSON.stringify(questionLabels)}');
+        const originalData = JSON.parse(JSON.stringify({{{originalData}}}));
+        const questionLabels = JSON.parse('{{{questionLabels}}}');
 
         // Pagination variables
         let currentPage = 1;
         let rowsPerPage = 15;
-        let totalPages = Math.ceil(${reorderedQuestions.length} / rowsPerPage);
+        let totalPages = Math.ceil({{totalQuestions}} / rowsPerPage);
         let filteredRows = [];
         let isFiltered = false;
+
+        console.log('***** Before toggle');
+        function toggleSummaryTable() {
+            const container = document.getElementById('summaryTableContainer');
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
+        console.log('***** After toggle');
 
         // Initialize the table
         function initializeTable() {
@@ -361,7 +368,7 @@
         // Change rows per page
         function changeRowsPerPage() {
             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+            totalPages = Math.ceil(isFiltered ? filteredRows.length : {{totalQuestions}} / rowsPerPage);
             if (currentPage > totalPages) {
                 currentPage = totalPages;
             }
@@ -392,11 +399,11 @@
                 });
 
                 document.getElementById('filterCount').textContent = filteredRows.length > 0
-                    ? \`\${filteredRows.length} matches\`
+                    ? `\${filteredRows.length} matches`
                     : 'No matches';
             }
 
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+            totalPages = Math.ceil(isFiltered ? filteredRows.length : {{totalQuestions}} / rowsPerPage);
             currentPage = 1;
             initializeTable();
         }
@@ -421,11 +428,6 @@
                     message: 'Failed to copy text: ' + err
                 });
             });
-        }
-
-        function toggleSummaryTable() {
-            const container = document.getElementById('summaryTableContainer');
-            container.style.display = container.style.display === 'none' ? 'block' : 'none';
         }
 
         function refreshView() {
