@@ -42,6 +42,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     });
     */
 
+    /*
     const getAllCISStudents = async () => {
         try {
             const cisStudents = new Set<string>();
@@ -70,16 +71,23 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             return new Set<string>();
         }
     };
+    */
+
 
     const mapStudentName = (name: string) => {
         return state.studentNameMapping[name] || name;
     };
 
-    // Not sure why we need this.
-    const allCISStudents = await getAllCISStudents();
+    // config is lazy-loaded (so that the modal dialog asking the user to 
+    // crate a config file is only shown if the user actually invokes a 
+    // command that needs a config file).
+    // Because the function is async, it is cleaner and more efficient to hold
+    // onto the config and pass it around once we obtain it.
+    const config = await gvQLC.config();
+    const allStudentsPromise = Util.getAllStudentNames(config);
 
     const questionsByStudent: Record<string, PersonalizedQuestionsData[]> = {};
-    const submissionRoot = (await gvQLC.config()).submissionRoot;
+    const submissionRoot = config.submissionRoot;
     for (const question of state.personalizedQuestionsData) {
         const studentName = extractStudentName(question.filePath, submissionRoot);
         if (!questionsByStudent[studentName]) {
@@ -139,10 +147,13 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         reorderedQuestions.push(...questionsByStudent[studentName]);
     }
 
-    const buildSummaryTable = () => {
+    const buildSummaryTable = (allStudentNames: string[]) => {
+
+        // Create a list of student names where those students with 
+        // no questions are at the end of the list.
         const allStudents: string[] = Array.from(new Set<string>([
             ...Object.keys(questionsByStudent),
-            ...allCISStudents
+            ...allStudentNames
         ])).sort();
 
         const summaryRows = allStudents.map(student => {
@@ -247,7 +258,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     const data = {
         totalQuestions: reorderedQuestions.length,
-        summaryTable: buildSummaryTable(),
+        summaryTable: buildSummaryTable(await allStudentsPromise),
         questionsTable: questionsTable,
         originalData: JSON.stringify(reorderedQuestions),
         questionLabels: JSON.stringify(questionLabels)
@@ -438,7 +449,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         </div>
     </div>
 
-    ${buildSummaryTable()}
+    ${buildSummaryTable(await allStudentsPromise)}
 
     <table id="questionsTable">
         <thead>

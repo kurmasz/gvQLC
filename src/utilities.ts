@@ -14,7 +14,7 @@ import * as Mustache from 'mustache';
 
 import * as gvQLC from './gvQLC';
 
-import {ConfigData} from './types';
+import { ConfigData } from './types';
 
 // import {logToFile} from './fileLogger';
 
@@ -71,7 +71,7 @@ export function loadDataFromFile(fileName: string) {
   return [];
 }
 
-export async function loadConfigData() : Promise<ConfigData> {
+export async function loadConfigData(): Promise<ConfigData> {
   let defaultConfig = {} as ConfigData;
   try {
     let configFileUri = null;
@@ -132,16 +132,16 @@ export function ensureGitignoreForQuizQuestionsFile() {
 
 // TODO Still need to handle error cases (empty filePath, 
 // file path does not contain submissionRoot, etc.)
-export function extractStudentName(filePath: string, submissionRoot: string | null) : string {
+export function extractStudentName(filePath: string, submissionRoot: string | null): string {
   const normalizedPath = path.normalize(filePath);
   const parts = normalizedPath.split(path.sep).filter(part => part.length > 0);
 
   if (!submissionRoot) {
-      return parts[0];
-    } else {
-      const index = parts.findIndex(part => part === submissionRoot);
-      return parts[index + 1];
-    }
+    return parts[0];
+  } else {
+    const index = parts.findIndex(part => part === submissionRoot);
+    return parts[index + 1];
+  }
 }
 
 
@@ -191,6 +191,29 @@ export function loadPersistedData() {
   return false;
 }
 
+export async function getAllStudentNames(config: ConfigData) {
+  const allStudents = new Set<string>();
+  let submissionDirectory = gvQLC.workspaceRoot().uri;
+  if (config.submissionRoot) {
+    submissionDirectory = vscode.Uri.joinPath(submissionDirectory, config.submissionRoot);
+  }
+  const files = await vscode.workspace.fs.readDirectory(submissionDirectory);
+  for (const [name, type] of files) {
+    if (type === vscode.FileType.Directory && !name.startsWith('.')) {
+      allStudents.add(name);
+    }
+  }
+  return Array.from(allStudents).sort();
+}
+
+
+export function renderMustache(filename: string, data: any): string {
+  const templatePath = path.join(gvQLC.context().extensionPath, 'views', filename);
+  const template = fs.readFileSync(templatePath, 'utf8');
+  const rendered = Mustache.render(template, data);
+  return rendered;
+}
+
 export async function saveDataToFile(filename: string, data: any, useJSON = true) {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
@@ -204,11 +227,4 @@ export async function saveDataToFile(filename: string, data: any, useJSON = true
 
   const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
   await vscode.workspace.fs.writeFile(uri, Buffer.from(data));
-}
-
-export function renderMustache(filename: string, data: any): string {
-  const templatePath = path.join(gvQLC.context().extensionPath, 'views', filename);
-  const template = fs.readFileSync(templatePath, 'utf8');
-  const rendered = Mustache.render(template, data);
-  return rendered;
 }

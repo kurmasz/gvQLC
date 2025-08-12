@@ -15,11 +15,4 @@
   "reviewEndDate": "2025-04-21T23:59:59",
   "password": "letMeIn",
   "language": "python",
-  "studentNameMapping": {
-    "benedictosefaosei": "oseisefb@mail.gvsu.edu",
-    "william_williams": "williamsw@mail.gvsu.edu",
-    "sam": "sam.test@mail.gvsu.edu",
-    "antonio": "anto.test@ug.edu.gh",
-    "caleb": "caleb.test@ug.edu.gh"
-  }
 }
