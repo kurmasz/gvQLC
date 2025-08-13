@@ -13,7 +13,9 @@
 import { Workbench, WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
 import { logAllNotifications, waitForNotification } from '../helpers/systemHelpers';
-import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView, GREEN, YELLOW} from '../helpers/questionViewHelpers';
+import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
+import {ViewColors} from '../../src/sharedConstants';
+
 
 import { expect } from 'chai';
 import * as path from 'path';
@@ -70,7 +72,7 @@ describe('viewQuizQuestions', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 0,
             rowLabel: '1a',
-            color: GREEN,
+            color: ViewColors.GREEN,
             file: 'antonio/my_http_server.py',
             code: expected,
             question: "Explain the difference between `=` and `:=`",
@@ -81,7 +83,7 @@ describe('viewQuizQuestions', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 2,
             rowLabel: '2a',
-            color: GREEN,
+            color: ViewColors.GREEN,
             file: 'awesome/my_http_server.py',
             code: "        list_directory += f'<li><a href=\"{file}\">{file}</a></li>'",
             question: "Why is `file` listed twice?",
@@ -92,7 +94,7 @@ describe('viewQuizQuestions', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 3,
             rowLabel: '2b',
-            color: GREEN,
+            color: ViewColors.GREEN,
             file: 'awesome/my_http_server.py',
             code: "        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)",
             question: "What is `SO_REUSEADDR`?",
@@ -110,7 +112,7 @@ describe('viewQuizQuestions', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 6,
             rowLabel: '5a',
-            color: YELLOW,
+            color: ViewColors.YELLOW,
             file: 'george/my_http_server.py',
             code: expected,
             question: "What is the +2 for?",
@@ -121,7 +123,7 @@ describe('viewQuizQuestions', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 11,
             rowLabel: '8b',
-            color: GREEN,
+            color: ViewColors.GREEN,
             file: 'uncle_bob/my_http_server.py',
             code: " if os.path.isdir(path) or os.path.isdir(f'{path}/') or path[-1] == '/':",
             question: "What is the significance of `path[-1] == '/'? What exactly is being checked, and what does that mean at a high level? ",
@@ -150,11 +152,15 @@ describe('viewQuizQuestions', function () {
         expect(await header.getText()).to.equal('Student Question Summary');
     });
 
+    it('displays all students in alphabetical order', async () => {
+
+    });
+
     it('generates a correct summary for first student', async () => {
         verifySummaryDisplayed(summaryContainer, {
             name: 'antonio',
             questionCount: 2,
-            color: GREEN,
+            color: ViewColors.GREEN,
             hasQuestions: true
         });
     });
@@ -163,25 +169,35 @@ describe('viewQuizQuestions', function () {
         verifySummaryDisplayed(summaryContainer, {
             name: 'awesome',
             questionCount: 2,
-            color: GREEN,
+            color: ViewColors.GREEN,
             hasQuestions: true
         });
     });
 
     it('generates a correct summary for caleb', async () => {
         verifySummaryDisplayed(summaryContainer, {
-            name: 'caleb.test@ug.edu.gh',
+            name: 'caleb',
             questionCount: 1,
-            color: YELLOW,
+            color: ViewColors.YELLOW,
             hasQuestions: true
         });
     });
+
+    it('generates a correct summary for larry', async () => {
+        verifySummaryDisplayed(summaryContainer, {
+            name: 'larry',
+            questionCount: 0,
+            color: ViewColors.RED,
+            hasQuestions: false
+        });
+    });
+
 
     it('generates a correct summary for george', async () => {
         verifySummaryDisplayed(summaryContainer, {
             name: 'george',
             questionCount: 1,
-            color: YELLOW,
+            color: ViewColors.YELLOW,
             hasQuestions: true
         });
     });
@@ -190,7 +206,7 @@ describe('viewQuizQuestions', function () {
         verifySummaryDisplayed(summaryContainer, {
             name: 'uncle_bob',
             questionCount: 1,
-            color: YELLOW,
+            color: ViewColors.YELLOW,
             hasQuestions: true
         });
     });

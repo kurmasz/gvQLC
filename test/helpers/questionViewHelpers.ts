@@ -13,10 +13,6 @@ import { By, until, WebElement } from 'selenium-webdriver';
 import { expect } from 'chai';
 import * as path from 'path';
 
-export const GREEN = 'rgba(0, 128, 0, 1)';
-export const YELLOW = 'rgba(255, 255, 0, 1)';
-
-
 export async function setUpQuizQuestionWebView(driver: WebDriver, folder: string, expectedQuestionTotal: string) : Promise<{
     view: WebView;
     summaryContainer: WebElement;
@@ -106,6 +102,6 @@ export async function verifySummaryDisplayed(container: WebElement, summaryData:
 
     const cells = await row.findElements(By.css('td'));
     expect(await cells[1].getText()).to.equal(summaryData.questionCount.toString());
-    const expected = summaryData.hasQuestions ? '✓' : '';
+    const expected = summaryData.hasQuestions ? '✓' : '✗';
     expect(await cells[2].getText()).to.equal(expected);
 }

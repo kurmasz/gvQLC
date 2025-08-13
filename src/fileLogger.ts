@@ -5,6 +5,9 @@
  * Log to a file (because seeing the output of console.log statements in the extension
  * during automated tests is difficult).
  * 
+ * This code is also used by the tests, so don't include any packages that require
+ * the vscode framework (e.g., vscode)
+ * 
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 

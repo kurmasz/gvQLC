@@ -12,7 +12,8 @@
 
 import { WebDriver, WebView, VSBrowser } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
-import { verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView, GREEN, YELLOW } from '../helpers/questionViewHelpers';
+import { verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
+import {ViewColors} from '../../src/sharedConstants';
 
 import { expect } from 'chai';
 import * as path from 'path';
@@ -118,7 +119,7 @@ describe('viewQuizQuestions pagination', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 0,
             rowLabel: '1a',
-            color: GREEN,
+            color: ViewColors.GREEN,
             file: 'antonio/my_http_server.py',
             code: expected,
             question: "Explain the difference between `=` and `:=`",
@@ -147,7 +148,7 @@ describe('viewQuizQuestions pagination', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 9,
             rowLabel: '7a',
-            color: YELLOW,
+            color: ViewColors.YELLOW,
             file: 'neptune_man/my_http_server.py',
             code: expected,
             question: "How would read mode ever be anything but `rb`?",
@@ -182,7 +183,7 @@ describe('viewQuizQuestions pagination', function () {
         await verifyQuestionDisplayed(view, {
             rowIndex: 11,
             rowLabel: '8b',
-            color: GREEN,
+            color: ViewColors.GREEN,
             file: 'uncle_bob/my_http_server.py',
             code: " if os.path.isdir(path) or os.path.isdir(f'{path}/') or path[-1] == '/':",
             question: "What is the significance of `path[-1] == '/'? What exactly is being checked, and what does that mean at a high level? ",
@@ -205,7 +206,7 @@ describe('viewQuizQuestions pagination', function () {
         verifySummaryDisplayed(summaryContainer, {
             name: 'antonio',
             questionCount: 2,
-            color: GREEN,
+            color: ViewColors.GREEN,
             hasQuestions: true
         });
 
@@ -213,7 +214,7 @@ describe('viewQuizQuestions pagination', function () {
         verifySummaryDisplayed(summaryContainer, {
             name: 'uncle_bob',
             questionCount: 1,
-            color: YELLOW,
+            color: ViewColors.YELLOW,
             hasQuestions: true
         });
     });

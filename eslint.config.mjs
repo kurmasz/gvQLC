@@ -27,7 +27,9 @@ export default defineConfig([
 			'@stylistic': stylisticEslint,
 		},
 		rules: {
-			'@typescript-eslint/naming-convention': 'warn',
+			'@typescript-eslint/naming-convention': ['warn',
+				{ selector: 'enumMember', format: ['UPPER_CASE', 'camelCase']}
+			],
 			'@typescript-eslint/no-unused-expressions': 'off',
 			'@stylistic/semi': 'warn',
 			'curly': 'warn',

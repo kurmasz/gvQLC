@@ -15,6 +15,7 @@ const state = gvQLC.state;
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
+import {ViewColors} from '../sharedConstants';
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
@@ -159,11 +160,11 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         const summaryRows = allStudents.map(student => {
             const count = studentQuestionCounts.get(student) || 0;
             const hasQuestions = count > 0;
-            let color = 'red';
+            let color = ViewColors.RED;
             if (count === maxQuestions && maxQuestions > 0) {
-                color = 'green';
+                color = ViewColors.GREEN;
             } else if (count > 0 && count < maxQuestions) {
-                color = 'yellow';
+                color = ViewColors.YELLOW;
             }
             const displayName = mapStudentName(student);
             return `
@@ -196,9 +197,9 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     const getLabelColor = (studentName: string) => {
         const count = studentQuestionCounts.get(studentName) || 0;
-        if (count === maxQuestions && maxQuestions > 0) { return 'green'; }
-        if (count > 0 && count < maxQuestions) { return 'yellow'; }
-        return 'red';
+        if (count === maxQuestions && maxQuestions > 0) { return ViewColors.GREEN; }
+        if (count > 0 && count < maxQuestions) { return ViewColors.YELLOW; }
+        return ViewColors.RED;
     };
 
     const truncateCharacters = (text: string, charLimit: number) => {

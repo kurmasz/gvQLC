@@ -12,7 +12,8 @@
 
 import { WebDriver, WebView, VSBrowser } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
-import { verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView, GREEN, YELLOW } from '../helpers/questionViewHelpers';
+import { verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
+import {ViewColors} from '../../src/sharedConstants';
 
 import { expect } from 'chai';
 import * as path from 'path';
