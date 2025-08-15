@@ -10,7 +10,8 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-import { GVQLC, state, config } from '../gvQLC';
+import { state, config } from '../gvQLC';
+import {quizQuestionsFileName} from '../sharedConstants';
 
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
@@ -45,7 +46,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     // Get existing questions for suggestions
     let existingQuestions = [];
     try {
-      const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/personalizedQuestions.json`);
+      const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
       const fileContent = await vscode.workspace.fs.readFile(uri);
       const data = JSON.parse(fileContent.toString());
       existingQuestions = data.map((item: { text: string; }) => item.text).filter(Boolean);
@@ -276,7 +277,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
         // Save to personalizedQuestions.json
         state.personalizedQuestionsData.push(questionData);
-        await Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+        await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
 
         // Save answer to quiz_questions_answers.json if provided
         if (message.answer && message.answer.trim() !== '') {

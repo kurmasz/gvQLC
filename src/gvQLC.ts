@@ -8,9 +8,6 @@
  * *********************************************************************************/
 
 import * as vscode from 'vscode';
-export const GVQLC = 'gvQLC';
-export const quizQuestionsFileName = 'gvQLC.quizQuestions.json';
-export const configFileName = 'gvQLC.config.json';
 
 import { PersonalizedQuestionsData, ConfigData } from './types';
 import { loadConfigData} from './utilities';

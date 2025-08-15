@@ -32,7 +32,7 @@ describe('viewQuizQuestions pagination', function () {
     it('opens the folder and runs the command', async () => {
         driver = VSBrowser.instance.driver;
         const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-        ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, folder, '12'));
+        ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, folder, '14'));
     });
 
     it('defaults to displaying 15 rows', async () => {
@@ -126,34 +126,16 @@ describe('viewQuizQuestions pagination', function () {
         });
     });
 
-    it('displays the ninth queston (when two pages)', async () => {
-        const expected = `        if path.endswith((".jpeg", ".jpg", ".png", ".gif", ".ico", ".pdf")):
-            read_mode = "rb"
-
-        file_size = os.path.getsize(path)
-        with open(path, read_mode) as file:
-            socket.send_text_line("HTTP/1.0 200 OK")
-            socket.send_text_line(f"Content-Type: {content_type}")
-            socket.send_text_line(f"Content-Length: {file_size}")
-            socket.send_text_line(f"Connection: close")
-            socket.send_text_line("")
-
-            if read_mode == 'rb':
-                socket.send_binary_data_from_file(file, file_size)
-
-            else:
-                while line := file.readline():
-                    socket.send_text_line(line)`;
-
+     it('displays the ninth queston (when two pages)', async () => {
         await verifyQuestionDisplayed(view, {
             rowIndex: 9,
-            rowLabel: '7a',
-            color: ViewColors.YELLOW,
-            file: 'neptune_man/my_http_server.py',
-            code: expected,
-            question: "How would read mode ever be anything but `rb`?",
+            rowLabel: '6b',
+            color: ViewColors.BLUE,
+            file: 'jim/my_http_server.py',
+            code: '    socket.close()',
+            question: "What happens if you don't close the socket?"
         });
-    });
+     });
 
     it('Does not display the 11th row', async () => {
         const row = await view.findWebElement(By.css(`#row-10`));
@@ -163,6 +145,11 @@ describe('viewQuizQuestions pagination', function () {
 
     it('Does not display the 12th row', async () => {
         const row = await view.findWebElement(By.css(`#row-11`));
+        expect(await row.isDisplayed()).to.be.false;
+    });
+
+    it('Does not display the 14th row', async () => {
+        const row = await view.findWebElement(By.css(`#row-13`));
         expect(await row.isDisplayed()).to.be.false;
     });
 
@@ -180,8 +167,20 @@ describe('viewQuizQuestions pagination', function () {
         const row10 = await view.findWebElement(By.css(`#row-10`));
         expect(await row10.isDisplayed()).to.be.true;
 
+        const expected = `        server_socket.bind((HOST, port))
+        server_socket.listen()`;
+
         await verifyQuestionDisplayed(view, {
-            rowIndex: 11,
+            rowIndex: 10,
+            rowLabel: '6c',
+            color: ViewColors.BLUE,
+            file: 'jim/my_http_server.py',
+            code: expected,
+            question: "What is the difference between `bind` and `listen`?",
+        });
+
+        await verifyQuestionDisplayed(view, {
+            rowIndex: 13,
             rowLabel: '8b',
             color: ViewColors.GREEN,
             file: 'uncle_bob/my_http_server.py',
@@ -220,8 +219,6 @@ describe('viewQuizQuestions pagination', function () {
     });
 
     
-
-
 
     async function verifyButtonEnabled(id: string, enabled: boolean = true) {
         const button = await view.findWebElement(By.css(id));

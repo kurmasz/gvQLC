@@ -49,7 +49,7 @@ export async function setUpQuizQuestionWebView(driver: WebDriver, folder: string
     const element = await view.findWebElement(By.css('h1'));
     expect(await element.getText()).has.string('All Quiz Questions');
     const element2 = await view.findWebElement(By.css('.total-count'));
-    expect(await element2.getText()).has.string(`Total Questions: ${expectedQuestionTotal}`);
+    expect(await element2.getText()).to.have.string(`Total Questions: ${expectedQuestionTotal}`);
 
     const summaryContainer = await view.findWebElement(By.css('#summaryTableContainer'));
 

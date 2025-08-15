@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as Mustache from 'mustache';
 
 import * as gvQLC from './gvQLC';
+import { GVQLC, ViewColors, configFileName, quizQuestionsFileName } from './sharedConstants';
 
 import { ConfigData } from './types';
 
@@ -29,7 +30,7 @@ function verifyAndSetWorkspaceRoot() {
     // We only want to see this error as a modal once.
     // After that, other attempts to run commands should simply 
     // display a notification. 
-    const message = `${gvQLC.GVQLC} requires a workspace folder to be open.`;
+    const message = `${GVQLC} requires a workspace folder to be open.`;
     if (gvQLC.state.modalErrorDisplayed) {
       vscode.window.showErrorMessage(message);
     } else {
@@ -45,7 +46,7 @@ function verifyAndSetWorkspaceRoot() {
   }
   const folders = vscode.workspace.workspaceFolders;
   if (folders.length > 1) {
-    vscode.window.showWarningMessage(`${gvQLC.GVQLC} expects a workspace with a single folder. Loading/Saving data from ${_primaryFolderPath()}.`);
+    vscode.window.showWarningMessage(`${GVQLC} expects a workspace with a single folder. Loading/Saving data from ${_primaryFolderPath()}.`);
     return false;
   }
   gvQLC.setWorkspaceRoot(folders[0]);
@@ -76,7 +77,7 @@ export async function loadConfigData(): Promise<ConfigData> {
   try {
     let configFileUri = null;
     try {
-      const fileUri = vscode.Uri.joinPath(gvQLC.workspaceRoot().uri, gvQLC.configFileName);
+      const fileUri = vscode.Uri.joinPath(gvQLC.workspaceRoot().uri, configFileName);
       await vscode.workspace.fs.stat(fileUri);
       configFileUri = fileUri;
     } catch (err) { }
@@ -120,13 +121,13 @@ export function ensureGitignoreForQuizQuestionsFile() {
     gitignoreContent = fs.readFileSync(gitignorePath, "utf-8");
 
     // If quizQuestionsFileName is not already in .gitignore, add it
-    if (!gitignoreContent.split("\n").includes(gvQLC.quizQuestionsFileName)) {
-      gitignoreContent += `\n${gvQLC.quizQuestionsFileName}\n`;
+    if (!gitignoreContent.split("\n").includes(quizQuestionsFileName)) {
+      gitignoreContent += `\n${quizQuestionsFileName}\n`;
       fs.writeFileSync(gitignorePath, gitignoreContent);
     }
   } else {
     // Create a .gitignore file and add quizQuestionsFileName
-    fs.writeFileSync(gitignorePath, `${gvQLC.quizQuestionsFileName}\n`);
+    fs.writeFileSync(gitignorePath, `${quizQuestionsFileName}\n`);
   }
 }
 
@@ -181,7 +182,7 @@ export function loadPersistedData() {
   if (verifyAndSetWorkspaceRoot()) {
     state.commentsData.push(...loadDataFromFile('commentsData.json'));
     state.questionsData.push(...loadDataFromFile('questionsData.json'));
-    state.personalizedQuestionsData.push(...loadDataFromFile(gvQLC.quizQuestionsFileName));
+    state.personalizedQuestionsData.push(...loadDataFromFile(quizQuestionsFileName));
 
     // Ensure quizQuestionsFileName is in .gitignore
     ensureGitignoreForQuizQuestionsFile();
@@ -227,4 +228,16 @@ export async function saveDataToFile(filename: string, data: any, useJSON = true
 
   const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
   await vscode.workspace.fs.writeFile(uri, Buffer.from(data));
+}
+
+export function chooseQuestionColor(numQuestionsForStudent: number, modeQuestionsForStudent: number) {
+  if (numQuestionsForStudent === 0) {
+    return ViewColors.RED;
+  } else if (numQuestionsForStudent > modeQuestionsForStudent) {
+    return ViewColors.BLUE;
+  } else if (numQuestionsForStudent === modeQuestionsForStudent) {
+    return ViewColors.GREEN;
+  } else { // if (numQuestionsForStudent < modeQuestionsForStudent)
+    return ViewColors.YELLOW;
+  }
 }

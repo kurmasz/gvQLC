@@ -62,7 +62,7 @@ describe('viewQuizQuestions', function () {
     ///////////////////////// 
     it('opens the folder, runs the command and shows the title and total questions', async () => {
         const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-        ({view, summaryContainer} = await setUpQuizQuestionWebView(driver, folder, '12'));
+        ({view, summaryContainer} = await setUpQuizQuestionWebView(driver, folder, '14'));
     });
 
     it('displays the first queston', async () => {
@@ -101,7 +101,7 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it('displays the seventh question', async () => {
+    it('displays the eigth question', async () => {
         const expected = `        socket.send_text_line("HTTP/1.0 404 NOT FOUND")
         socket.send_text_line("Content-Type: text/html")
         socket.send_text_line(f"Content-Length: {len(message) + 2}") # +2 for CR/LF
@@ -110,7 +110,7 @@ describe('viewQuizQuestions', function () {
         socket.send_text_line(message)`;
 
         await verifyQuestionDisplayed(view, {
-            rowIndex: 6,
+            rowIndex: 7,
             rowLabel: '5a',
             color: ViewColors.YELLOW,
             file: 'george/my_http_server.py',
@@ -119,9 +119,23 @@ describe('viewQuizQuestions', function () {
         });
     });
 
+    it('displays a blue question', async () => {
+        const expected = `        server_socket.bind((HOST, port))
+        server_socket.listen()`;
+
+        await verifyQuestionDisplayed(view, {
+            rowIndex: 10,
+            rowLabel: '6c',
+            color: ViewColors.BLUE,
+            file: 'jim/my_http_server.py',
+            code: expected,
+            question: "What is the difference between `bind` and `listen`?",
+        });
+    });
+
     it('displays the last question', async () => {
         await verifyQuestionDisplayed(view, {
-            rowIndex: 11,
+            rowIndex: 13,
             rowLabel: '8b',
             color: ViewColors.GREEN,
             file: 'uncle_bob/my_http_server.py',

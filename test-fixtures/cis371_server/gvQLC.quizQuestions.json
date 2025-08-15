@@ -139,7 +139,7 @@
         "character": 18
       }
     },
-    "text": "What happens if you don't close the socket? ",
+    "text": "What happens if you don't close the socket?",
     "highlightedCode": "    socket.close()",
     "excludeFromQuiz": false
   },
@@ -189,6 +189,38 @@
     },
     "text": "Why do we need to add '/'?",
     "highlightedCode": "    if path[-1] != '/':\n        path += '/'",
+    "excludeFromQuiz": false
+  },
+  {
+    "filePath": "jim/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 166,
+        "character": 0
+      },
+      "end": {
+        "line": 167,
+        "character": 30
+      }
+    },
+    "text": "What is the difference between `bind` and `listen`?",
+    "highlightedCode": "        server_socket.bind((HOST, port))\n        server_socket.listen()",
+    "excludeFromQuiz": false
+  },
+  {
+    "filePath": "cooper/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 64,
+        "character": 0
+      },
+      "end": {
+        "line": 64,
+        "character": 42
+      }
+    },
+    "text": "Explain how this works.",
+    "highlightedCode": "        extension = path[path.index(\".\"):]",
     "excludeFromQuiz": false
   }
 ]

@@ -15,7 +15,7 @@ const state = gvQLC.state;
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
-import {ViewColors} from '../sharedConstants';
+
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
@@ -160,12 +160,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         const summaryRows = allStudents.map(student => {
             const count = studentQuestionCounts.get(student) || 0;
             const hasQuestions = count > 0;
-            let color = ViewColors.RED;
-            if (count === maxQuestions && maxQuestions > 0) {
-                color = ViewColors.GREEN;
-            } else if (count > 0 && count < maxQuestions) {
-                color = ViewColors.YELLOW;
-            }
+            let color = Util.chooseQuestionColor(count, modeQuestions);
             const displayName = mapStudentName(student);
             return `
               <tr style="background-color: ${color}">
@@ -195,20 +190,14 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
       `;
     };
 
-    const getLabelColor = (studentName: string) => {
-        const count = studentQuestionCounts.get(studentName) || 0;
-        if (count === maxQuestions && maxQuestions > 0) { return ViewColors.GREEN; }
-        if (count > 0 && count < maxQuestions) { return ViewColors.YELLOW; }
-        return ViewColors.RED;
-    };
-
     const truncateCharacters = (text: string, charLimit: number) => {
         return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
     };
 
     const questionsTable = reorderedQuestions.map((question, index) => {
         const studentName = extractStudentName(question.filePath, submissionRoot);
-        const labelColor = getLabelColor(studentName);
+        const count = studentQuestionCounts.get(studentName) || 0;
+        const labelColor = Util.chooseQuestionColor(count, modeQuestions);
         const filePathParts = question.filePath.split('/');
         let shortenedFilePath = filePathParts.length > 2
             ? `.../${filePathParts.slice(-3).join('/')}`

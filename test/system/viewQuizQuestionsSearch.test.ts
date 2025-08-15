@@ -32,7 +32,7 @@ describe('viewQuizQuestions search', function () {
         it('opens the folder and runs the command', async () => {
             driver = VSBrowser.instance.driver;
             const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-            ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, folder, '12'));
+            ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, folder, '14'));
         });
 
         it('displays correct rows when searching for "if"', async () => {
