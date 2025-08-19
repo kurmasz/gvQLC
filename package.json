@@ -45,7 +45,7 @@
     "lint": "eslint src",
     "watch": "tsc -watch -p ./",
     "test:system:base": "extest setup-and-run './out/test/system/*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions",
-    "test:system": "VSCODE_TEST_ZK=true npm run test:system:base",
+    "test:system": "VSCODE_TEST_ZK=true NODE_OPTIONS='-r source-map-support/register' npm run test:system:base",
     "test:system:run_only": "tsc -p ./ && VSCODE_TEST_ZK=true EXTENSION_DEV_PATH=$INIT_CWD extest run-tests './out/test/system/*.test.js' --code_version max --code_settings settings.json",
     "test": "npm run test:system"
   },
@@ -62,6 +62,7 @@
     "eslint-define-config": "^2.1.0",
     "mocha": "^11.7.1",
     "mustache": "^4.2.0",
+    "source-map-support": "^0.5.21",
     "typescript": "^5.9.2",
     "vscode-extension-tester": "^8.17.0"
   }

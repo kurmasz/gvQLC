@@ -97,11 +97,20 @@ type SummaryData = {
 };
 
 export async function verifySummaryDisplayed(container: WebElement, summaryData: SummaryData) {
-    const row = container.findElement(By.xpath(`.//tr[td[1][contains(normalize-space(.), "${summaryData.name}")]]`));
+    const row = await container.findElement(By.xpath(`.//tr[td[1][contains(normalize-space(.), "${summaryData.name}")]]`));
     expect(await row.getCssValue('background-color')).to.equal(summaryData.color);
 
     const cells = await row.findElements(By.css('td'));
     expect(await cells[1].getText()).to.equal(summaryData.questionCount.toString());
     const expected = summaryData.hasQuestions ? '✓' : '✗';
     expect(await cells[2].getText()).to.equal(expected);
+}
+
+export async function verifyVisibility(container: WebElement, expectedVisibility: Record<string, boolean>) {
+    const tbody = await container.findElement(By.css('#questionsTableBody'));
+    const rows = await tbody.findElements(By.css('tr'));
+    for (const row of rows) {
+        const label = await row.getAttribute('data-label');
+            expect(await container.isDisplayed(), `Visiblity of ${label} should be ${expectedVisibility[label]}`).to.equal(expectedVisibility[label]);        
+    }
 }

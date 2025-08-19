@@ -503,6 +503,40 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             updateVisibleRows();
         }
 
+        function filterQuestionsXXX() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#questionsTableBody tr');
+            filteredRows = [];
+
+            if (searchTerm === '') {
+                isFiltered = false;
+                document.getElementById('filterCount').textContent = '';
+            } else {
+                isFiltered = true;
+                rows.forEach((row, index) => {
+                    const label = row.dataset.label.toLowerCase();
+                    const file = row.dataset.file.toLowerCase();
+                    const code = row.dataset.code.toLowerCase();
+                    const question = row.dataset.question.toLowerCase();
+
+                    if (label.includes(searchTerm) || file.includes(searchTerm) ||
+                        code.includes(searchTerm) || question.includes(searchTerm)) {
+                        filteredRows.push(index);
+                    }
+                });
+
+                document.getElementById('filterCount').textContent = filteredRows.length > 0
+                    ? \`\${filteredRows.length} matches\`
+                    : 'No matches';
+            }
+
+            totalPages = Math.ceil(isFiltered ? filteredRows.length : ${reorderedQuestions.length} / rowsPerPage);
+            currentPage = 1;
+            initializeTable();
+        }        
+
+
+
         // Update which rows are visible based on current page
         function updateVisibleRows() {
             const rows = document.querySelectorAll('#questionsTableBody tr');

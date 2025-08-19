@@ -48,7 +48,7 @@
     "excludeFromQuiz": false
   },
   {
-    "filePath": "caleb/my_http_server.py",
+    "filePath": "caleb2/my_http_server.py",
     "range": {
       "start": {
         "line": 69,
@@ -107,7 +107,7 @@
         "character": 69
       }
     },
-    "text": "What does the `[1:]` mean?",
+    "text": "What does the `[1:]` mean? Why not `[2:]`?",
     "highlightedCode": "        path = parts[1][1:]  # remove the first character of the path",
     "excludeFromQuiz": false
   },
