@@ -12,7 +12,7 @@
 
 import { WebDriver, WebView, VSBrowser } from 'vscode-extension-tester';
 import { By, until, WebElement, Key } from 'selenium-webdriver';
-import { verifyQuestionDisplayed, verifyVisibility, verifySummaryDisplayed, setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
+import { verifyQuestionDisplayed, verifyVisibility, searchFor, setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
 import { ViewColors } from '../../src/sharedConstants';
 
 import { expect } from 'chai';
@@ -36,7 +36,7 @@ describe('viewQuizQuestions search', function () {
     });
 
     it('searches multiple columns and displays rows correctly.', async () => {
-        await searchFor('2');
+        await searchFor(driver, '2');
         await verifyFilterCount(7);
 
         // example match by question label
@@ -109,12 +109,11 @@ describe('viewQuizQuestions search', function () {
             code: expected_8a,
             question: "What does the `[1:]` mean? Why not `[2:]`?",
         });
-
     });
 
-    // Question search
+    // Question search (I suppose the previous test makes this redundant.)
     it('searches the question', async () => {
-        await searchFor('need');
+        await searchFor(driver, 'need');
         await verifyFilterCount(1);
 
         const expected = `    if path[-1] != '/':
@@ -135,12 +134,25 @@ describe('viewQuizQuestions search', function () {
         verifyVisibility(view, visibility);
     });
 
-    async function searchFor(term: string) {
+    it('shows all questions after search bar is cleared', async () => {
+  
         const searchBox = await driver.findElement(By.id("searchInput"));
-        await searchBox.clear();
-        await searchBox.sendKeys(term);
-        await searchBox.sendKeys(Key.RETURN);
-    }
+        const selectAllKey = process.platform === "darwin" ? Key.META : Key.CONTROL;
+        await searchBox.sendKeys(Key.chord(selectAllKey, "a"), Key.BACK_SPACE);
+
+        // Verify filter count is not displayed
+        const element = await view.findWebElement(By.css('#filterCount'));
+        expect(await element.getText()).to.be.empty;
+
+        verifyVisibility(view, allVisible());
+    });
+
+
+    it('displays message if no matches', async() => {
+        await searchFor(driver, 'n0suchStr1ngF0und');
+        const element = await view.findWebElement(By.css('#filterCount'));
+        expect(await element.getText()).to.equal('No matches');
+    });
 
     async function verifyFilterCount(expectedCount: number) {
         const element = await view.findWebElement(By.css('#filterCount'));

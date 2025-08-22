@@ -12,7 +12,7 @@
 
 import { WebDriver, WebView, VSBrowser } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
-import { verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
+import { verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView, searchFor } from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
 
 import { expect } from 'chai';
@@ -42,8 +42,7 @@ describe('viewQuizQuestions pagination', function () {
     });
 
     it('shows that there is only one page', async () => {
-        const element = await view.findWebElement(By.css('#totalPagesDisplay'));
-        expect(await element.getText()).to.equal("1");
+       verifyTotalPages(1);
 
         const pageNumberContainer = await view.findWebElement(By.css('#pageNumbers'));
         const allPageNumbers = await pageNumberContainer.findElements(By.css('.page-btn'));
@@ -82,8 +81,7 @@ describe('viewQuizQuestions pagination', function () {
     });
 
     it('shows there are now two pages', async () => {
-        const element = await view.findWebElement(By.css('#totalPagesDisplay'));
-        expect(await element.getText()).to.equal("2");
+        verifyTotalPages(2);
 
         const pageNumberContainer = await view.findWebElement(By.css('#pageNumbers'));
         const allPageNumbers = await pageNumberContainer.findElements(By.css('.page-btn'));
@@ -189,6 +187,11 @@ describe('viewQuizQuestions pagination', function () {
         });
     });
 
+    ////////////////////////////////
+    //
+    // Summary not paganated
+    //
+    ////////////////////////////////
 
     it('Displays summary for all rows, even if not all rows are currently displayed', async () => {
         const button = await view.findWebElement(By.id('toggleSummaryBtn'));
@@ -219,6 +222,36 @@ describe('viewQuizQuestions pagination', function () {
     });
 
     
+    ////////////////////////////////
+    //
+    // Paganation and search
+    //
+    ////////////////////////////////
+
+    it('adjusts paganation when searching', async() => {
+        
+        // Set paganation to 10
+        const rowsSelect = await driver.findElement(By.id("rowsPerPage"));
+        await rowsSelect.click();
+        const option10 = await rowsSelect.findElement(By.css('option[value="10"]'));
+        await option10.click();
+
+        await verifyTotalPages(2);
+
+        // Run a search that will produce two results
+        await searchFor(driver, 'awesome');
+        await verifyTotalPages(1);
+
+        // Now run a search that will produce 13 results
+        await searchFor(driver, "Wh");
+        await verifyTotalPages(2);
+    });
+
+    async function verifyTotalPages(expectedTotalPages: number) {
+       const element = await view.findWebElement(By.css('#totalPagesDisplay'));
+        expect(await element.getText()).to.equal(`${expectedTotalPages}`);
+    }
+
 
     async function verifyButtonEnabled(id: string, enabled: boolean = true) {
         const button = await view.findWebElement(By.css(id));

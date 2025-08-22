@@ -230,11 +230,13 @@
         const vscode = acquireVsCodeApi();
         const originalData = JSON.parse(JSON.stringify({{{originalData}}}));
         const questionLabels = JSON.parse('{{{questionLabels}}}');
+        const totalQuestions = originalData.length;
+
 
         // Pagination variables
         let currentPage = 1;
         let rowsPerPage = 15;
-        let totalPages = Math.ceil({{totalQuestions}} / rowsPerPage);
+        let totalPages = Math.ceil(totalQuestions / rowsPerPage);
         let filteredRows = [];
         let isFiltered = false;
 
@@ -366,7 +368,7 @@
         // Change rows per page
         function changeRowsPerPage() {
             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : {{totalQuestions}} / rowsPerPage);
+            totalPages = Math.ceil((isFiltered ? filteredRows.length : totalQuestions) / rowsPerPage);
             if (currentPage > totalPages) {
                 currentPage = totalPages;
             }
@@ -401,7 +403,7 @@
                     : 'No matches';
             }
 
-            totalPages = Math.ceil(isFiltered ? filteredRows.length : {{totalQuestions}} / rowsPerPage);
+            totalPages = Math.ceil((isFiltered ? filteredRows.length : totalQuestions) / rowsPerPage);
             currentPage = 1;
             initializeTable();
         }

@@ -9,11 +9,11 @@
 
 
 import { WebDriver, VSBrowser, Workbench, WebView } from 'vscode-extension-tester';
-import { By, until, WebElement } from 'selenium-webdriver';
+import { By, until, WebElement, Key } from 'selenium-webdriver';
 import { expect } from 'chai';
 import * as path from 'path';
 
-export async function setUpQuizQuestionWebView(driver: WebDriver, folder: string, expectedQuestionTotal: string) : Promise<{
+export async function setUpQuizQuestionWebView(driver: WebDriver, folder: string, expectedQuestionTotal: string): Promise<{
     view: WebView;
     summaryContainer: WebElement;
 }> {
@@ -53,7 +53,7 @@ export async function setUpQuizQuestionWebView(driver: WebDriver, folder: string
 
     const summaryContainer = await view.findWebElement(By.css('#summaryTableContainer'));
 
-    return {view, summaryContainer};
+    return { view, summaryContainer };
 }
 
 type QuestionData = {
@@ -111,6 +111,15 @@ export async function verifyVisibility(container: WebElement, expectedVisibility
     const rows = await tbody.findElements(By.css('tr'));
     for (const row of rows) {
         const label = await row.getAttribute('data-label');
-            expect(await container.isDisplayed(), `Visiblity of ${label} should be ${expectedVisibility[label]}`).to.equal(expectedVisibility[label]);        
+        expect(await container.isDisplayed(), `Visiblity of ${label} should be ${expectedVisibility[label]}`).to.equal(expectedVisibility[label]);
     }
+}
+
+export async function searchFor(driver: WebDriver, term: string | null = null) {
+    const searchBox = await driver.findElement(By.id("searchInput"));
+    await searchBox.clear();
+    if (term !== null) {
+        await searchBox.sendKeys(term);
+    }
+    await searchBox.sendKeys(Key.RETURN);
 }
