@@ -7,8 +7,43 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
-import { Workbench, Notification, NotificationType } from 'vscode-extension-tester';
+
+import { Workbench, Notification, NotificationType, WebDriver, VSBrowser } from 'vscode-extension-tester';
+import { By, until, WebElement, Key } from 'selenium-webdriver';
 import { expect } from 'chai';
+import * as path from 'path';
+import * as fs from 'fs-extra';
+
+async function openWorkspaceFromPath(driver: WebDriver, folder: string) {
+  let basename = path.basename(folder);
+    await VSBrowser.instance.openResources(folder, async () => {
+        const selector = By.css(`[aria-label="Explorer Section: ${basename}"]`);
+        const element = await driver.wait(until.elementLocated(selector), 10_000);
+        await driver.wait(until.elementIsVisible(element), 5_000);
+    });
+
+    const workbench = new Workbench();
+    await workbench.wait();
+    return workbench;
+}
+
+export async function openWorkspace(driver: WebDriver, folder: string) {
+    return openWorkspaceFromPath(driver, path.join('test-fixtures', folder));
+}
+
+export async function openTempWorkspace(driver: WebDriver, folder: string) {
+    const sourceDir = path.resolve(path.join('test-fixtures', folder));
+    const tempWorkspaceDir = await fs.mkdtemp(path.resolve(path.join('test-fixtures-tmp', folder + '-')));
+    console.log("----------------------");
+    console.log(sourceDir);
+    console.log(tempWorkspaceDir);
+
+
+    await fs.copy(sourceDir, tempWorkspaceDir);
+    const workbench = await openWorkspaceFromPath(driver, tempWorkspaceDir);
+    return {workbench, tempWorkspaceDir};
+}
+
 
 export async function waitForNotification(type: NotificationType, matcher: (str: string) => boolean, timeout = 4000) {
     let center = await new Workbench().openNotificationsCenter();
@@ -57,3 +92,10 @@ export async function logAllNotifications() {
         console.log(messages);
     }
 }
+
+export async function openFile(filePath: string) {
+    const quickOpen = await (new Workbench).openCommandPrompt();
+    await quickOpen.setText(filePath);
+    await quickOpen.confirm();
+}
+

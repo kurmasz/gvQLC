@@ -8,27 +8,18 @@
  * *********************************************************************************/
 
 
-import { WebDriver, VSBrowser, Workbench, WebView } from 'vscode-extension-tester';
+import { WebDriver, WebView } from 'vscode-extension-tester';
 import { By, until, WebElement, Key } from 'selenium-webdriver';
+import { openWorkspace } from './systemHelpers';
 import { expect } from 'chai';
-import * as path from 'path';
+
 
 export async function setUpQuizQuestionWebView(driver: WebDriver, folder: string, expectedQuestionTotal: string): Promise<{
     view: WebView;
     summaryContainer: WebElement;
 }> {
 
-    let basename = path.basename(folder);
-    await VSBrowser.instance.openResources(folder, async () => {
-        const selector = By.css(`[aria-label="Explorer Section: ${basename}"]`);
-        const element = await driver.wait(until.elementLocated(selector), 10_000);
-        await driver.wait(until.elementIsVisible(element), 5_000);
-    });
-
-    const workbench = new Workbench();
-    await workbench.wait();
-    // console.log(await new EditorView().getOpenEditorTitles());
-
+    const workbench = await openWorkspace(driver, folder);
 
     // Run the command
     await workbench.executeCommand('gvQLC: View Quiz Questions');

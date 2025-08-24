@@ -11,23 +11,31 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 import { state, config } from '../gvQLC';
-import {quizQuestionsFileName} from '../sharedConstants';
+import { quizQuestionsFileName } from '../sharedConstants';
 
-import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
 
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
+
+    if (!Util.verifyAndSetWorkspaceRoot()) {
+        return;
+    }
+
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
-      vscode.window.showErrorMessage('No active editor found.');
-      return;
+        vscode.window.showErrorMessage('gvQLC: No active editor tab found. (You must have a code snippet selected to add a quiz question.)');
+        vscode.window.setStatusBarMessage(
+            "gvQLC: No active editor tab. (You must have a code snippet selected to add a quiz question.)",
+            7000
+        );
+        return;
     }
 
     const selection = editor.selection;
     if (selection.isEmpty) {
-      vscode.window.showErrorMessage('Please select a code snippet to add a personalized question.');
-      return;
+        vscode.window.showErrorMessage('gvQLC: No code selected. (You must have a code snippet selected to add a quiz question.)');
+        return;
     }
 
     const range = new vscode.Range(selection.start, selection.end);
@@ -36,8 +44,8 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     // Get workspace root and calculate relative path
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) {
-      vscode.window.showErrorMessage('No workspace folder is open.');
-      return;
+        vscode.window.showErrorMessage('No workspace folder is open.');
+        return;
     }
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
     const absolutePath = editor.document.uri.fsPath;
@@ -46,31 +54,31 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     // Get existing questions for suggestions
     let existingQuestions = [];
     try {
-      const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
-      const fileContent = await vscode.workspace.fs.readFile(uri);
-      const data = JSON.parse(fileContent.toString());
-      existingQuestions = data.map((item: { text: string; }) => item.text).filter(Boolean);
+        const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
+        const fileContent = await vscode.workspace.fs.readFile(uri);
+        const data = JSON.parse(fileContent.toString());
+        existingQuestions = data.map((item: { text: string; }) => item.text).filter(Boolean);
     } catch (error) {
-      console.log('Could not load existing questions:', error);
+        console.log('Could not load existing questions:', error);
     }
 
     // Function to load existing answers
     const loadExistingAnswers = async () => {
-      try {
-        const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
-        const fileContent = await vscode.workspace.fs.readFile(uri);
-        return JSON.parse(fileContent.toString());
-      } catch (error) {
-        return [];
-      }
+        try {
+            const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
+            const fileContent = await vscode.workspace.fs.readFile(uri);
+            return JSON.parse(fileContent.toString());
+        } catch (error) {
+            return [];
+        }
     };
 
     // Create a Webview Panel for adding a personalized question
     const panel = vscode.window.createWebviewPanel(
-      'addPersonalizedQuestion',
-      'Add Quiz Question',
-      vscode.ViewColumn.One,
-      { enableScripts: true }
+        'addPersonalizedQuestion',
+        'Add Quiz Question',
+        vscode.ViewColumn.One,
+        { enableScripts: true }
     );
 
     // HTML content for the Webview
@@ -261,46 +269,46 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
-      if (message.type === 'submitQuestion') {
-        const submissionRoot = (await config()).submissionRoot;
-        const studentName = Util.extractStudentName(editor.document.uri.fsPath, submissionRoot);
-        const questionData = {
-          filePath: relativePath, // Using relative path here
-          range: {
-            start: { line: selection.start.line, character: selection.start.character },
-            end: { line: selection.end.line, character: selection.end.character },
-          },
-          text: message.question,
-          highlightedCode: message.editedCode,
-          excludeFromQuiz: false
-        };
+        if (message.type === 'submitQuestion') {
+            const submissionRoot = (await config()).submissionRoot;
+            const studentName = Util.extractStudentName(editor.document.uri.fsPath, submissionRoot);
+            const questionData = {
+                filePath: relativePath, // Using relative path here
+                range: {
+                    start: { line: selection.start.line, character: selection.start.character },
+                    end: { line: selection.end.line, character: selection.end.character },
+                },
+                text: message.question,
+                highlightedCode: message.editedCode,
+                excludeFromQuiz: false
+            };
 
-        // Save to personalizedQuestions.json
-        state.personalizedQuestionsData.push(questionData);
-        await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
+            // Save to personalizedQuestions.json
+            state.personalizedQuestionsData.push(questionData);
+            await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
 
-        // Save answer to quiz_questions_answers.json if provided
-        if (message.answer && message.answer.trim() !== '') {
-          try {
-            let answersData = await loadExistingAnswers();
-            answersData.push({
-              questionId: state.personalizedQuestionsData.length - 1,
-              questionText: message.question,
-              answer: message.answer.trim(),
-              studentName: studentName,
-              filePath: relativePath, // Using relative path here too
-              timestamp: new Date().toISOString(),
-              highlightedCode: message.editedCode
-            });
-            await Util.saveDataToFile('quiz_questions_answers.json', answersData);
-            vscode.window.showInformationMessage('Answer saved successfully!');
-          } catch (error: any) {
-            vscode.window.showErrorMessage(`Failed to save answer: ${error.message}`);
-          }
+            // Save answer to quiz_questions_answers.json if provided
+            if (message.answer && message.answer.trim() !== '') {
+                try {
+                    let answersData = await loadExistingAnswers();
+                    answersData.push({
+                        questionId: state.personalizedQuestionsData.length - 1,
+                        questionText: message.question,
+                        answer: message.answer.trim(),
+                        studentName: studentName,
+                        filePath: relativePath, // Using relative path here too
+                        timestamp: new Date().toISOString(),
+                        highlightedCode: message.editedCode
+                    });
+                    await Util.saveDataToFile('quiz_questions_answers.json', answersData);
+                    vscode.window.showInformationMessage('Answer saved successfully!');
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(`Failed to save answer: ${error.message}`);
+                }
+            }
+
+            vscode.window.showInformationMessage('Personalized question added successfully!');
+            panel.dispose();
         }
-
-        vscode.window.showInformationMessage('Personalized question added successfully!');
-        panel.dispose();
-      }
     });
-  });
+});

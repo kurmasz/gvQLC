@@ -12,7 +12,7 @@
 
 import { Workbench, WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
-import { logAllNotifications, waitForNotification } from '../helpers/systemHelpers';
+import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
 
@@ -39,17 +39,7 @@ describe('viewQuizQuestions', function () {
     it('notifies when a folder has no gvQLC data', async () => {
         driver = VSBrowser.instance.driver;
 
-        // Open the folder
-        await VSBrowser.instance.openResources(path.join('test-fixtures', 'cis371_server_empty'), async () => {
-            const selector = By.css('[aria-label="Explorer Section: cis371_server_empty"]');
-            const element = await driver.wait(until.elementLocated(selector), 10_000);
-            await driver.wait(until.elementIsVisible(element), 5_000);
-        });
-
-        const workbench = new Workbench();
-        await workbench.wait();
-
-        // Run the command
+        const workbench = await openWorkspace(driver, 'cis371_server_empty');
         await workbench.executeCommand('gvQLC: View Quiz Questions');
 
         await waitForNotification(NotificationType.Info, (message) => message === 'No personalized questions added yet!');
@@ -60,9 +50,8 @@ describe('viewQuizQuestions', function () {
     // Folder with data
     //
     ///////////////////////// 
-    it('opens the folder, runs the command and shows the title and total questions', async () => {
-        const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-        ({view, summaryContainer} = await setUpQuizQuestionWebView(driver, folder, '14'));
+    it('opens the folder, runs the command and shows the title and total questions', async () => {      
+        ({view, summaryContainer} = await setUpQuizQuestionWebView(driver, 'cis371_server', '14'));
     });
 
     it('displays the first queston', async () => {
@@ -167,7 +156,8 @@ describe('viewQuizQuestions', function () {
     });
 
     it('displays all students in alphabetical order', async () => {
-
+        // IMPLEMENT ME!
+        expect(true).to.be.false;
     });
 
     it('generates a correct summary for first student', async () => {
@@ -205,7 +195,6 @@ describe('viewQuizQuestions', function () {
             hasQuestions: false
         });
     });
-
 
     it('generates a correct summary for george', async () => {
         verifySummaryDisplayed(summaryContainer, {

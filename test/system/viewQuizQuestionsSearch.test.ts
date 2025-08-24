@@ -16,12 +16,10 @@ import { verifyQuestionDisplayed, verifyVisibility, searchFor, setUpQuizQuestion
 import { ViewColors } from '../../src/sharedConstants';
 
 import { expect } from 'chai';
-import * as path from 'path';
 
 describe('viewQuizQuestions search', function () {
     let driver: WebDriver;
     let view: WebView;
-    let summaryContainer: WebElement;
 
     this.timeout(150_000);
 
@@ -31,8 +29,7 @@ describe('viewQuizQuestions search', function () {
 
     it('opens the folder and runs the command', async () => {
         driver = VSBrowser.instance.driver;
-        const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-        ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, folder, '14'));
+        ({ view } = await setUpQuizQuestionWebView(driver, 'cis371_server', '14'));
     });
 
     it('searches multiple columns and displays rows correctly.', async () => {

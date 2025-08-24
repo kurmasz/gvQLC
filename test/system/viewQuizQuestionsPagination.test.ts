@@ -31,8 +31,7 @@ describe('viewQuizQuestions pagination', function () {
 
     it('opens the folder and runs the command', async () => {
         driver = VSBrowser.instance.driver;
-        const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-        ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, folder, '14'));
+        ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, 'cis371_server', '14'));
     });
 
     it('defaults to displaying 15 rows', async () => {

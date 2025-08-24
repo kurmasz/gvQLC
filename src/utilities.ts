@@ -24,7 +24,7 @@ function _primaryFolderPath() {
   return vscode.workspace.workspaceFolders![0].uri.fsPath;
 }
 
-function verifyAndSetWorkspaceRoot() {
+export function verifyAndSetWorkspaceRoot() {
   if (!vscode.workspace.workspaceFolders) {
 
     // We only want to see this error as a modal once.

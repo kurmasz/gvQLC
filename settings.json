@@ -6,5 +6,10 @@
   "workbench.remoteIndicator.showExtensionRecommendations": false,
   "extensions.ignoreRecommendations": true,
   "workbench.startupEditor": "none",
+  
+  "extensions.disabled": ["github.copilot", "github.copilot-chat"],
+  "github.copilot.enable": false,
+  "github.copilot.inlineSuggest.enable": false,   
+  "github.copilot.chat.enabled": false,            
   "github.copilot.showWelcomeOnInstall": false
 }
