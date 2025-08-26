@@ -132,7 +132,6 @@ describe('viewQuizQuestions search', function () {
     });
 
     it('shows all questions after search bar is cleared', async () => {
-  
         const searchBox = await driver.findElement(By.id("searchInput"));
         const selectAllKey = process.platform === "darwin" ? Key.META : Key.CONTROL;
         await searchBox.sendKeys(Key.chord(selectAllKey, "a"), Key.BACK_SPACE);

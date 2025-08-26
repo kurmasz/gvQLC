@@ -18,7 +18,6 @@ import {ViewColors} from '../../src/sharedConstants';
 
 
 import { expect } from 'chai';
-import * as path from 'path';
 
 describe('viewQuizQuestions', function () {
     let driver: WebDriver;

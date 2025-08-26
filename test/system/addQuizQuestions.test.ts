@@ -10,17 +10,20 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
-import { Workbench, WebDriver, WebView, VSBrowser, NotificationType, TextEditor } from 'vscode-extension-tester';
+import { Workbench, WebDriver, WebView, VSBrowser, NotificationType, TextEditor, NewScmView } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
 import { logAllNotifications, waitForNotification, openFile, openWorkspace, openTempWorkspace } from '../helpers/systemHelpers';
+import { quizQuestionsFileName } from '../../src/sharedConstants';
 
 import { expect } from 'chai';
 import * as path from 'path';
+import * as fs from'fs';
 
 describe('addQuizQuestions', function () {
     let driver: WebDriver;
     let view: WebView;
-    let summaryContainer: WebElement;
+    let tempWorkspaceDir : string;
+    let workbench : Workbench;
 
     this.timeout(150_000);
 
@@ -28,12 +31,15 @@ describe('addQuizQuestions', function () {
         await driver.switchTo().defaultContent();
     });
 
+    before(async function() {
+        driver = VSBrowser.instance.driver;
+    });
+
     //
     // No file / no selection / no previous questions  
     //
     it('Notifies when no file is open in project without existing questions', async () => {
-        driver = VSBrowser.instance.driver;
-
+        
         const workbench = await openWorkspace(driver, 'cis371_server_empty');
         await workbench.executeCommand('gvQLC: Add Quiz Question');
         await waitForNotification(NotificationType.Error, (message) => {
@@ -75,15 +81,75 @@ describe('addQuizQuestions', function () {
     //
     // Add to existing questions
     //
-    it.skip('Adds a new quiz question to existing questions', async () => {
-        const { workbench, tempWorkspaceDir } = await openTempWorkspace(driver, 'cis371_server');
+    it('Copies selected text when initiating new quiz question', async () => {
+         ({ workbench, tempWorkspaceDir } = await openTempWorkspace(driver, 'cis371_server'));
+        await new Promise(res => setTimeout(res, 5000)); // crude but useful
         await openFile('sam/my_http_server.py');
-        // await new Promise(res => setTimeout(res, 10000)); // crude but useful
-
-        const editor = new TextEditor();
-        await editor.selectText('".html": handle_binary');
-        await workbench.executeCommand('gvQLC: Add Quiz Question');
         await new Promise(res => setTimeout(res, 10000)); // crude but useful
-   
+
+        view = await addQuizQuestion(driver, workbench, '".html": handle_binary');
     });
+
+    it('saves the question and answer when submitted', async () => {
+        const questionBox = await view.findWebElement(By.css('#question'));
+        await questionBox.clear();
+        await questionBox.sendKeys('This is the question.');
+
+        const answerBox = await view.findWebElement(By.css('#answer'));
+        await answerBox.clear();
+        await answerBox.sendKeys('And this is the answer.');
+
+        const submitButton = await view.findWebElement(By.css('#submitButton'));
+        await submitButton.click(); 
+
+await new Promise(res => setTimeout(res, 5000)); 
+
+        const questionsPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
+        const fileContent = await fs.promises.readFile(questionsPath, 'utf-8');
+        const data = JSON.parse(fileContent.toString());
+        expect(data.length).to.equal(15);
+        
+        const newQuestion = data[14];
+        expect(newQuestion.filePath).to.equal('sam/my_http_server.py');
+        expect(newQuestion.range).to.deep.equal({start: {line: 29, character: 4}, end: {line: 29, character: 26}});
+        expect(newQuestion.text).to.equal("This is the question.");
+        expect(newQuestion.highlightedCode).to.equal('".html": handle_binary');
+        expect(newQuestion.excludeFromQuiz).to.be.false;
+    });
+
+    // Make sure only one notification pops up. 
+    // Allow answer to be blank.
+    // Complain if question is blank
+    // Make sure stuff is properly escaped. 
+    // Nothing saved if tab is closed.
+    // What happens if question file doesn't exist yet? 
+
+
+
+    async function addQuizQuestion(driver: WebDriver, workbench: Workbench, textToSelect: string) {
+        const editor = new TextEditor();
+        await editor.selectText(textToSelect);
+        await workbench.executeCommand('gvQLC: Add Quiz Question');
+        await new Promise(res => setTimeout(res, 1000)); 
+
+        const tab = await driver.wait(until.elementLocated(By.css('[aria-label="Add Quiz Question"]')), 15_000);
+        await driver.wait(until.elementIsVisible(tab), 5_000);
+
+        // Switch to the frame containing the new view
+        const view = new WebView();
+        await view.switchToFrame();
+
+        // Check the title and number of questions.
+        await driver.wait(until.elementLocated(By.id('addQuizQuestionTitle')));
+        const element = await view.findWebElement(By.id('addQuizQuestionTitle'));
+        expect(await element.getText()).has.string('Add a Quiz Question');
+        const element2 = await view.findWebElement(By.id('codeBlock'));
+        expect(await element2.getText()).to.equal(textToSelect);
+      
+        return view;
+    }
+
+
+
+
 });

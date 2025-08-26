@@ -18,7 +18,7 @@ import * as Util from '../utilities';
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
 
-    if (!Util.verifyAndSetWorkspaceRoot()) {
+    if (!Util.loadPersistedData()) {
         return;
     }
 
@@ -122,7 +122,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     </style>
 </head>
 <body>
-    <h1>Add a Quiz Question</h1>
+    <h1 id='addQuizQuestionTitle'>Add a Quiz Question</h1>
 
     <p><strong>Edit Highlighted Code:</strong></p>
     <textarea id="codeBlock" class="code-area">${selectedText}</textarea>
@@ -137,7 +137,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     <p><strong>Add Answer (Optional):</strong></p>
     <textarea id="answer" placeholder="Type the answer to your question (optional)..." rows="4"></textarea>
     
-    <button onclick="submitPersonalizedQuestion()">Submit</button>
+    <button id="submitButton" onclick="submitPersonalizedQuestion()">Submit</button>
 
     <script>
         const vscode = acquireVsCodeApi();

@@ -8,7 +8,6 @@ the EXTENSION_MAP dict in my_http_server.py.
 
 GVSU CIS 371 2025
 
-Name: Anthony Boos
 """
 
 import os

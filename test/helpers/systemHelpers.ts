@@ -28,7 +28,7 @@ async function openWorkspaceFromPath(driver: WebDriver, folder: string) {
 }
 
 export async function openWorkspace(driver: WebDriver, folder: string) {
-    return openWorkspaceFromPath(driver, path.join('test-fixtures', folder));
+    return await openWorkspaceFromPath(driver, path.join('test-fixtures', folder));
 }
 
 export async function openTempWorkspace(driver: WebDriver, folder: string) {
@@ -96,6 +96,13 @@ export async function logAllNotifications() {
 export async function openFile(filePath: string) {
     const quickOpen = await (new Workbench).openCommandPrompt();
     await quickOpen.setText(filePath);
+    // TODO: Set up with a time limit.
+    while(true) {
+        const qp = await quickOpen.getQuickPicks();
+        if (qp.length > 0) {
+            break;
+        }
+    }
     await quickOpen.confirm();
 }
 

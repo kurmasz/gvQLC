@@ -17,14 +17,14 @@ import { GVQLC, ViewColors, configFileName, quizQuestionsFileName } from './shar
 
 import { ConfigData } from './types';
 
-// import {logToFile} from './fileLogger';
+import {logToFile} from './fileLogger';
 
 
 function _primaryFolderPath() {
   return vscode.workspace.workspaceFolders![0].uri.fsPath;
 }
 
-export function verifyAndSetWorkspaceRoot() {
+function verifyAndSetWorkspaceRoot() {
   if (!vscode.workspace.workspaceFolders) {
 
     // We only want to see this error as a modal once.
@@ -180,6 +180,7 @@ export function loadPersistedData() {
     return true;
   }
   if (verifyAndSetWorkspaceRoot()) {
+    logToFile(`(Re)Loading personalized Questoins data from ${quizQuestionsFileName}`);
     state.commentsData.push(...loadDataFromFile('commentsData.json'));
     state.questionsData.push(...loadDataFromFile('questionsData.json'));
     state.personalizedQuestionsData.push(...loadDataFromFile(quizQuestionsFileName));

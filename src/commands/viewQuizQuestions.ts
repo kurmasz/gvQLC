@@ -15,6 +15,7 @@ const state = gvQLC.state;
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
+import { logToFile } from '../fileLogger';
 
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
@@ -757,6 +758,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         if (message.type === 'saveChanges') {
             reorderedQuestions[message.index].highlightedCode = message.updatedCode;
             reorderedQuestions[message.index].text = message.updatedQuestion;
+            logToFile('Re-assigning personalizedQuestonsData with reordered questions from saveChanges');
             state.personalizedQuestionsData = reorderedQuestions;
             Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
             vscode.window.showInformationMessage('Changes saved successfully!');
@@ -764,6 +766,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
         if (message.type === 'toggleExclude') {
             reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
+            logToFile('Re-assigning personalizedQuestonsData with reordered questions from toggleExclude');
             state.personalizedQuestionsData = reorderedQuestions;
             Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
         }
