@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "target": "ES2022",
+    "outDir": "out",
+    "sourceMap": true,
+    "inlineSources": true,
+    "strict": true,
+    "rootDir": ".",
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", ".vscode-test", "test-resources", "src/ui-test/resources/**", ".test-extensions"],
+  "include": ["src", "test", ".eslintrc.json"]
+}

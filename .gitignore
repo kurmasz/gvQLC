@@ -1,0 +1,9 @@
+out
+node_modules
+.vscode-test/
+*.vsix
+test-resources/
+.test-extensions
+.DS_Store
+Thumbs.db
+.test_gitignore

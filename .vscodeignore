@@ -1,0 +1,12 @@
+src/**
+test-resources/**
+*test-extensions/**
+**/*.ts
+**/*.d.ts
+**/tsconfig.json
+resources/**
+../../**
+.github/
+.vscode/
+settings.json
+out/ui-test/

@@ -1,0 +1,27 @@
+---
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 5
+    labels:
+      - "skip-changelog"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      ESLint:
+        patterns: ["*eslint*"]
+    open-pull-requests-limit: 20
+    versioning-strategy: increase
+    ignore:
+      - dependency-name: "chai"
+        versions:
+          - ">=5"
+      - dependency-name: "@types/chai"
+        versions:
+          - ">=5"
+      - dependency-name: "@types/vscode"
