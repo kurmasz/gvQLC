@@ -280,6 +280,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
                 },
                 text: message.question,
                 highlightedCode: message.editedCode,
+                answer: message.answer,
                 excludeFromQuiz: false
             };
 
@@ -287,7 +288,11 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
             state.personalizedQuestionsData.push(questionData);
             await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
 
+            //
+            // Why is this here?  I think this is old code we can deprecate.
+            //
             // Save answer to quiz_questions_answers.json if provided
+            /*
             if (message.answer && message.answer.trim() !== '') {
                 try {
                     let answersData = await loadExistingAnswers();
@@ -306,8 +311,9 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
                     vscode.window.showErrorMessage(`Failed to save answer: ${error.message}`);
                 }
             }
+            */
 
-            vscode.window.showInformationMessage('Personalized question added successfully!');
+            vscode.window.showInformationMessage('Question added successfully.');
             panel.dispose();
         }
     });

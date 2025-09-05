@@ -10,7 +10,7 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
-import { Workbench, WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
+import { WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
 import { By, until, WebElement } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
@@ -154,7 +154,7 @@ describe('viewQuizQuestions', function () {
         expect(await header.getText()).to.equal('Student Question Summary');
     });
 
-    it('displays all students in alphabetical order', async () => {
+    it.skip('displays all students in alphabetical order', async () => {
         // IMPLEMENT ME!
         expect(true).to.be.false;
     });

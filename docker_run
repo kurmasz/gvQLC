@@ -1,0 +1,9 @@
+# Get the directory containing this script
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+
+docker run -it --rm \
+  --cap-add=SYS_ADMIN \
+  --security-opt seccomp=unconfined \
+  -v "$SCRIPT_DIR":/home/vscode \
+  -v gvqlc_node_modules:/home/vscode/node_modules \
+  gvqlc_test

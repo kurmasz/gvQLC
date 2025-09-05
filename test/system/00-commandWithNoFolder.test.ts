@@ -16,6 +16,37 @@ import { Workbench, NotificationType, WebDriver, VSBrowser } from 'vscode-extens
 import { logAllNotifications, waitForNotification } from '../helpers/systemHelpers';
 import { logFileName } from '../../src/fileLogger';
 
+import * as path from 'path';
+import * as childProcess from 'child_process';
+import { CodeUtil } from 'vscode-extension-tester/out/util/codeUtil'
+
+// const originalOpen = CodeUtil.prototype.open;
+
+// Monkey patch for Linux. 
+if (process.env.SANDBOX_MP) {
+	CodeUtil.prototype.open = function (...paths) {
+		console.log('In monkeypatched open');
+		const self = this as any;
+		const segments = paths.map((f) => `${f}`).join(' ');
+
+		const args = [
+			self.cliPath, "-r", segments,
+			'--no-sandbox', `--user-data-dir=${path.join(self.downloadFolder, 'settings')}`
+		];
+
+		const cli = childProcess.spawn(self.executablePath, args,
+			{
+				env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+			});
+
+
+		//cli.stdout.on('data', (data) => console.log('CLI stdout:', data.toString()));
+		//cli.stderr.on('data', (data) => console.error('CLI stderr:', data.toString()));
+
+		//cli.on('exit', (code) => console.log('CLI exited with code', code));
+	};
+}
+
 describe('Behavior with no folder open', function () {
 	let driver: WebDriver;
 	let workbench: Workbench;
