@@ -19,19 +19,17 @@ import { expect } from 'chai';
 import * as path from 'path';
 
 describe('viewQuizQuestions pagination', function () {
-    let driver: WebDriver;
     let view: WebView;
     let summaryContainer: WebElement;
 
     this.timeout(150_000);
 
     after(async function () {
-        await driver.switchTo().defaultContent();
+        await VSBrowser.instance.driver.switchTo().defaultContent();
     });
 
     it('opens the folder and runs the command', async () => {
-        driver = VSBrowser.instance.driver;
-        ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, 'cis371_server', '14'));
+        ({ view, summaryContainer } = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
     it('defaults to displaying 15 rows', async () => {
@@ -73,7 +71,7 @@ describe('viewQuizQuestions pagination', function () {
     //
     ////////////////////////////////
     it('Only shows first ten when paganation set to 10', async () => {
-        const rowsSelect = await driver.findElement(By.id("rowsPerPage"));
+        const rowsSelect = await VSBrowser.instance.driver.findElement(By.id("rowsPerPage"));
         await rowsSelect.click();
         const option10 = await rowsSelect.findElement(By.css('option[value="10"]'));
         await option10.click();
@@ -152,7 +150,7 @@ describe('viewQuizQuestions pagination', function () {
 
     it('Advances to page 2 by number button', async () => {
         // Finds: <button class="page-ban">2</button>
-        const button2 = await driver.findElement(By.xpath("//button[normalize-space()='2']"));
+        const button2 = await VSBrowser.instance.driver.findElement(By.xpath("//button[normalize-space()='2']"));
         await button2.click();
 
         const row0 = await view.findWebElement(By.css(`#row-0`));
@@ -230,7 +228,7 @@ describe('viewQuizQuestions pagination', function () {
     it('adjusts paganation when searching', async() => {
         
         // Set paganation to 10
-        const rowsSelect = await driver.findElement(By.id("rowsPerPage"));
+        const rowsSelect = await VSBrowser.instance.driver.findElement(By.id("rowsPerPage"));
         await rowsSelect.click();
         const option10 = await rowsSelect.findElement(By.css('option[value="10"]'));
         await option10.click();
@@ -238,11 +236,11 @@ describe('viewQuizQuestions pagination', function () {
         await verifyTotalPages(2);
 
         // Run a search that will produce two results
-        await searchFor(driver, 'awesome');
+        await searchFor('awesome');
         await verifyTotalPages(1);
 
         // Now run a search that will produce 13 results
-        await searchFor(driver, "Wh");
+        await searchFor("Wh");
         await verifyTotalPages(2);
     });
 

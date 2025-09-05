@@ -15,7 +15,7 @@ import {
   VSBrowser,
   TextEditor,
 } from "vscode-extension-tester";
-import { By, until, WebElement, Key } from "selenium-webdriver";
+import { By, until, error } from "selenium-webdriver";
 import { expect } from "chai";
 import * as path from "path";
 import * as fs from "fs-extra";
@@ -24,7 +24,8 @@ export async function pause(time: number) {
   await new Promise((res) => setTimeout(res, time));
 }
 
-async function openWorkspaceFromPath(driver: WebDriver, folder: string) {
+async function openWorkspaceFromPath(folder: string) {
+  const driver = VSBrowser.instance.driver;
   let basename = path.basename(folder);
 
   await VSBrowser.instance.openResources(folder, async () => {
@@ -33,19 +34,14 @@ async function openWorkspaceFromPath(driver: WebDriver, folder: string) {
     await driver.wait(until.elementIsVisible(element), 5_000);
   });
 
-  const workbench = new Workbench();
-  await workbench.wait();
-  return workbench;
+  await (new Workbench()).wait();
 }
 
-export async function openWorkspace(driver: WebDriver, folder: string) {
-  return await openWorkspaceFromPath(
-    driver,
-    path.resolve(path.join("test-fixtures", folder))
-  );
+export async function openWorkspace(folder: string) {
+  return await openWorkspaceFromPath(path.resolve(path.join("test-fixtures", folder)));
 }
 
-export async function openTempWorkspace(driver: WebDriver, folder: string) {
+export async function openTempWorkspace(folder: string) {
   const sourceDir = path.resolve(path.join("test-fixtures", folder));
   const tempWorkspaceDir = await fs.mkdtemp(
     path.resolve(path.join("test-fixtures-tmp", folder + "-"))
@@ -55,47 +51,56 @@ export async function openTempWorkspace(driver: WebDriver, folder: string) {
   console.log(tempWorkspaceDir);
 
   await fs.copy(sourceDir, tempWorkspaceDir);
-  const workbench = await openWorkspaceFromPath(driver, tempWorkspaceDir);
-  return { workbench, tempWorkspaceDir };
+  await openWorkspaceFromPath(tempWorkspaceDir);
+  return tempWorkspaceDir;
 }
 
 export async function waitForNotification(
   type: NotificationType,
   matcher: (str: string) => boolean,
   timeout = 4000
-) {
-  let center = await new Workbench().openNotificationsCenter();
-  const start = Date.now();
+): Promise<string> {
   let notifications: Notification[] = [];
   let messages: string[] = [];
-  while (Date.now() - start < timeout) {
-    notifications = await center.getNotifications(type);
-    messages = await Promise.all(
-      notifications.map(async (n) => n.getMessage())
-    );
-    // console.log(`Elapsed ${Date.now() - start}`);
-    // console.log(messages);
-    const matches = messages.filter(matcher);
-    expect(matches.length).to.be.at.most(1);
-    if (matches.length === 1) {
-      return matches[0];
+  let matchedMessage: string | undefined;
+
+  try {
+    await VSBrowser.instance.driver.wait(async () => {
+      const center = await new Workbench().openNotificationsCenter();
+      notifications = await center.getNotifications(type);
+      messages = await Promise.all(
+        notifications.map(async (n) => n.getMessage())
+      );
+      const matches = messages.filter(matcher);
+      expect(matches.length).to.be.at.most(1);
+      if (matches.length === 1) {
+        matchedMessage = matches[0];
+        return true;
+      }
+      return false;
+    }, timeout);
+  } catch (err) {
+    if (err instanceof error.TimeoutError) {
+      console.log("Giving waiting for notification");
+      await logAllNotifications();
+      console.log("-----");
+
+      //  I don't rememer why I thought we needed this.
+      // if (notifications.length > 0) { await center.clearAllNotifications(); }
+
+      if (notifications.length === 0) {
+        expect.fail("No notifications appeared.");
+      } else {
+        expect.fail(
+          `None of the notifications matched: ${messages.join(", ")}`
+        );
+      }
+    } else {
+      // re-throwing error.
+      throw err;
     }
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    center = await new Workbench().openNotificationsCenter();
-  } // end while
-
-  console.log("About to give up");
-  await logAllNotifications();
-  console.log("-----");
-
-  if (notifications.length > 0) {
-    await center.clearAllNotifications();
   }
-  if (notifications.length === 0) {
-    expect.fail("No notifications appeared.");
-  } else {
-    expect.fail(`None of the notifications matched: ${messages.join(", ")}`);
-  }
+  return matchedMessage!;
 }
 
 export async function logAllNotifications() {

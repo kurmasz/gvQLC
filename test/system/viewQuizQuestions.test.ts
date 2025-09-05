@@ -10,8 +10,8 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
-import { WebDriver, WebView, VSBrowser, NotificationType } from 'vscode-extension-tester';
-import { By, until, WebElement } from 'selenium-webdriver';
+import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
+import { By, WebElement } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
@@ -20,14 +20,13 @@ import {ViewColors} from '../../src/sharedConstants';
 import { expect } from 'chai';
 
 describe('viewQuizQuestions', function () {
-    let driver: WebDriver;
     let view: WebView;
     let summaryContainer: WebElement;
 
     this.timeout(150_000);
 
     after(async function() {
-        await driver.switchTo().defaultContent();
+        await VSBrowser.instance.driver.switchTo().defaultContent();
     });
 
     /////////////////////////
@@ -36,10 +35,8 @@ describe('viewQuizQuestions', function () {
     //
     /////////////////////////
     it('notifies when a folder has no gvQLC data', async () => {
-        driver = VSBrowser.instance.driver;
-
-        const workbench = await openWorkspace(driver, 'cis371_server_empty');
-        await workbench.executeCommand('gvQLC: View Quiz Questions');
+        await openWorkspace( 'cis371_server_empty');
+        await (new Workbench()).executeCommand('gvQLC: View Quiz Questions');
 
         await waitForNotification(NotificationType.Info, (message) => message === 'No personalized questions added yet!');
     });
@@ -50,7 +47,7 @@ describe('viewQuizQuestions', function () {
     //
     ///////////////////////// 
     it('opens the folder, runs the command and shows the title and total questions', async () => {      
-        ({view, summaryContainer} = await setUpQuizQuestionWebView(driver, 'cis371_server', '14'));
+        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
     it('displays the first queston', async () => {
