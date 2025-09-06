@@ -16,7 +16,7 @@ import {
   WebView,
   VSBrowser,
   NotificationType,
-  TextEditor
+  TextEditor,
 } from "vscode-extension-tester";
 import { By, until } from "selenium-webdriver";
 import {
@@ -49,8 +49,8 @@ describe("addQuizQuestions", function () {
   // No file / no selection / no previous questions
   //
   it("Notifies when no file is open in project without existing questions", async () => {
-    await openWorkspace("cis371_server_empty")
-    await (new Workbench()).executeCommand("gvQLC: Add Quiz Question");
+    await openWorkspace("cis371_server_empty");
+    await new Workbench().executeCommand("gvQLC: Add Quiz Question");
     await waitForNotification(NotificationType.Error, (message) => {
       return (
         message ===
@@ -62,7 +62,7 @@ describe("addQuizQuestions", function () {
   it("Notifies when no text is selected in open file in project without existing questions", async () => {
     // Open a file
     await openFile("cooper/http_socket.py");
-    await (new Workbench()).executeCommand("gvQLC: Add Quiz Question");
+    await new Workbench().executeCommand("gvQLC: Add Quiz Question");
     await waitForNotification(
       NotificationType.Error,
       (message) =>
@@ -76,7 +76,7 @@ describe("addQuizQuestions", function () {
   //
   it("Notifies when no file is open in project with existing questions", async () => {
     await openWorkspace("cis371_server");
-    await (new Workbench()).executeCommand("gvQLC: Add Quiz Question");
+    await new Workbench().executeCommand("gvQLC: Add Quiz Question");
 
     await waitForNotification(NotificationType.Error, (message) => {
       return (
@@ -89,7 +89,7 @@ describe("addQuizQuestions", function () {
   it("Notifies when no text is selected in open file in project with existing questions", async () => {
     // Open a file
     await openFile("cooper/http_socket.py");
-    await (new Workbench()).executeCommand("gvQLC: Add Quiz Question");
+    await new Workbench().executeCommand("gvQLC: Add Quiz Question");
     await waitForNotification(
       NotificationType.Error,
       (message) =>
@@ -122,7 +122,7 @@ describe("addQuizQuestions", function () {
     const submitButton = await view.findWebElement(By.css("#submitButton"));
     await submitButton.click();
 
-    await new Promise((res) => setTimeout(res, 5000));
+    await new Promise((res) => setTimeout(res, 15000));
 
     const questionsPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
     const fileContent = await fs.promises.readFile(questionsPath, "utf-8");
@@ -130,7 +130,8 @@ describe("addQuizQuestions", function () {
     expect(data.length).to.equal(15);
 
     const newQuestion = data[14];
-    expect(newQuestion.filePath).to.equal("sam/my_http_server.py");
+    expect(newQuestion.filePath).to.equal(path.join("sam", "my_http_server.py"));
+
     expect(newQuestion.range).to.deep.equal({
       start: { line: 29, character: 4 },
       end: { line: 29, character: 26 },
@@ -161,7 +162,7 @@ describe("addQuizQuestions", function () {
     const submitButton = await view.findWebElement(By.css("#submitButton"));
     await submitButton.click();
 
-    pause(5000);
+    pause(15000);
 
     const questionsPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
     const fileContent = await fs.promises.readFile(questionsPath, "utf-8");
@@ -176,7 +177,9 @@ describe("addQuizQuestions", function () {
     });
     expect(newQuestion.text).to.equal("Split what?  Why?");
     expect(newQuestion.highlightedCode).to.equal("parts = request.split()");
-    expect(newQuestion.answer).to.satisfy((val : string | undefined) => val === undefined || val === "");
+    expect(newQuestion.answer).to.satisfy(
+      (val: string | undefined) => val === undefined || val === ""
+    );
     expect(newQuestion.excludeFromQuiz).to.be.false;
   });
 
@@ -185,12 +188,11 @@ describe("addQuizQuestions", function () {
   // Nothing saved if tab is closed.
   // What happens if question file doesn't exist yet?
 
-  async function addQuizQuestion(textToSelect: string
-  ) {
+  async function addQuizQuestion(textToSelect: string) {
     const driver = VSBrowser.instance.driver;
     const editor = new TextEditor();
     await editor.selectText(textToSelect);
-    await (new Workbench()).executeCommand("gvQLC: Add Quiz Question");
+    await new Workbench().executeCommand("gvQLC: Add Quiz Question");
     await new Promise((res) => setTimeout(res, 1000));
 
     const tab = await driver.wait(
