@@ -34,11 +34,13 @@ async function openWorkspaceFromPath(folder: string) {
     await driver.wait(until.elementIsVisible(element), 5_000);
   });
 
-  await (new Workbench()).wait();
+  await new Workbench().wait();
 }
 
 export async function openWorkspace(folder: string) {
-  return await openWorkspaceFromPath(path.resolve(path.join("test-fixtures", folder)));
+  return await openWorkspaceFromPath(
+    path.resolve(path.join("test-fixtures", folder))
+  );
 }
 
 export async function openTempWorkspace(folder: string) {
@@ -177,4 +179,61 @@ export async function openFile(filePath: string) {
     }
   }
   throw new Error("Timeout waiting for editor to become interactable");
+}
+
+export async function actAndAwaitUpdate(
+  path: string,
+  action: () => Promise<void>,
+  timeout = 15000
+) {
+  const originalParsedInput = JSON.parse(fs.readFileSync(path, "utf-8"));
+  if (
+    !("data" in originalParsedInput) ||
+    !("uniqID" in originalParsedInput) ||
+    !("timestamp" in originalParsedInput)
+  ) {
+    console.log(
+      "Object in ",
+      originalParsedInput,
+      "does not have the expected structure."
+    );
+    console.log(fs.readFileSync(path, "utf-8"));
+  }
+  expect(originalParsedInput).to.have.property("data");
+  expect(originalParsedInput).to.have.property("uniqID");
+  expect(originalParsedInput).to.have.property("timestamp");
+
+  console.log("Original: ");
+  console.log(originalParsedInput.uniqID);
+  console.log(originalParsedInput.timestamp);
+
+  await action();
+
+  let updatedData;
+  await VSBrowser.instance.driver.wait(async () => {
+    try {
+      const currentParsedInput = JSON.parse(fs.readFileSync(path, "utf-8"));
+      if (currentParsedInput.uniqID === originalParsedInput.uniqID) {
+        console.log("Update not complete.");
+      } else {
+        console.log('Setting updated data.');
+        updatedData = currentParsedInput;
+        return true;
+      }
+    } catch (err) {
+      if (err instanceof SyntaxError) {
+        console.log("Caught file mid-write");
+      } else {
+        throw err;
+      }
+    }
+    // Default wait for wait() is too short for this case.
+    await new Promise((r) => setTimeout(r, 1000));
+    console.log('Go around');
+    return false;
+  }, timeout);
+
+  console.log('returning updated data');
+  console.log(updatedData);
+  return updatedData!.data;
 }

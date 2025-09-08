@@ -28,6 +28,7 @@ import {
   openTempWorkspace,
   assertNumNotifications,
   dismissAllNotifications,
+  actAndAwaitUpdate,
 } from "../helpers/systemHelpers";
 import { quizQuestionsFileName } from "../../src/sharedConstants";
 
@@ -120,17 +121,22 @@ describe("addQuizQuestions", function () {
     await answerBox.sendKeys("And this is the answer.");
 
     const submitButton = await view.findWebElement(By.css("#submitButton"));
-    await submitButton.click();
-
-    await new Promise((res) => setTimeout(res, 15000));
 
     const questionsPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
-    const fileContent = await fs.promises.readFile(questionsPath, "utf-8");
-    const data = JSON.parse(fileContent.toString());
+    const data = await actAndAwaitUpdate(
+      questionsPath,
+      async () => {
+        await submitButton.click();
+      },
+      60_000
+    );
+
     expect(data.length).to.equal(15);
 
     const newQuestion = data[14];
-    expect(newQuestion.filePath).to.equal(path.join("sam", "my_http_server.py"));
+    expect(newQuestion.filePath).to.equal(
+      path.join("sam", "my_http_server.py")
+    );
 
     expect(newQuestion.range).to.deep.equal({
       start: { line: 29, character: 4 },
@@ -160,13 +166,16 @@ describe("addQuizQuestions", function () {
     await questionBox.sendKeys("Split what?  Why?");
 
     const submitButton = await view.findWebElement(By.css("#submitButton"));
-    await submitButton.click();
-
-    pause(15000);
 
     const questionsPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
-    const fileContent = await fs.promises.readFile(questionsPath, "utf-8");
-    const data = JSON.parse(fileContent.toString());
+    const data = await actAndAwaitUpdate(
+      questionsPath,
+      async () => {
+        await submitButton.click();
+      },
+      60_000
+    );
+
     expect(data.length).to.equal(16);
 
     const newQuestion = data[15];

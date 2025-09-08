@@ -67,7 +67,13 @@ export function loadDataFromFile(fileName: string) {
   const workspaceDir = getWorkspaceDirectory();
   const filePath = path.join(workspaceDir, fileName);
   if (fs.existsSync(filePath)) {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const rawInput = fs.readFileSync(filePath, 'utf-8');
+    const parsedInput = JSON.parse(rawInput);
+    if (typeof parsedInput === 'string' || Array.isArray(parsedInput)) {
+      return parsedInput;
+    } else {
+      return parsedInput.data;
+    }
   }
   return [];
 }
@@ -217,18 +223,25 @@ export function renderMustache(filename: string, data: any): string {
 }
 
 export async function saveDataToFile(filename: string, data: any, useJSON = true) {
+  
+  // timestamp and uniqID are used so the automated tests can be confident that the 
+  // previous operation has completed (e.g., detect when the file being read is an old 
+  // version).
+  const toWrite = {
+    data: data,
+    timestamp: new Date().toISOString(),
+    uniqID: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+  };
+  
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
     vscode.window.showErrorMessage('No workspace folder is open.');
     return;
   }
 
-  if (useJSON) {
-    data = JSON.stringify(data, null, 2);
-  }
-
+  const output = useJSON ? JSON.stringify(toWrite, null, 2) : data;
   const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
-  await vscode.workspace.fs.writeFile(uri, Buffer.from(data));
+  await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
 }
 
 export function chooseQuestionColor(numQuestionsForStudent: number, modeQuestionsForStudent: number) {
