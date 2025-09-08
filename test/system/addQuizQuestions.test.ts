@@ -179,7 +179,9 @@ describe("addQuizQuestions", function () {
     expect(data.length).to.equal(16);
 
     const newQuestion = data[15];
-    expect(newQuestion.filePath).to.equal("sam/my_http_server.py");
+    expect(newQuestion.filePath).to.equal(
+      path.join("sam", "my_http_server.py")
+    );
     expect(newQuestion.range).to.deep.equal({
       start: { line: 75, character: 4 },
       end: { line: 75, character: 27 },
