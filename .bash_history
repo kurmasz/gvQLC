@@ -36,3 +36,9 @@ ls /tmp/test-resources/chromedriver-linux64/
 rm -rf /tmp/test-resources/
 npm run test
 exit
+npm install
+exit
+grep run package.json 
+less package.json 
+xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npm run test
+exit

@@ -1,0 +1,104 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.4
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/vscode/.npmrc
+5 silly config load:file:/usr/local/etc/npmrc
+6 verbose title npm install
+7 verbose argv "install"
+8 verbose logfile logs-max:10 dir:/home/vscode/.npm/_logs/2025-09-12T14_22_33_149Z-
+9 verbose logfile /home/vscode/.npm/_logs/2025-09-12T14_22_33_149Z-debug-0.log
+10 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+11 silly logfile start cleaning logs, removing 1 files
+12 silly logfile done cleaning log files
+13 silly idealTree buildDeps
+14 verbose shrinkwrap failed to load node_modules/.package-lock.json out of date, updated: node_modules
+15 silly reify mark retired [
+15 silly reify   '/home/vscode/node_modules/eslint',
+15 silly reify   '/home/vscode/node_modules/.bin/eslint'
+15 silly reify ]
+16 silly reify mark retired [
+16 silly reify   '/home/vscode/node_modules/mocha',
+16 silly reify   '/home/vscode/node_modules/.bin/mocha',
+16 silly reify   '/home/vscode/node_modules/.bin/_mocha'
+16 silly reify ]
+17 silly reify mark retired [ '/home/vscode/node_modules/@eslint/js' ]
+18 silly reify mark retired [ '/home/vscode/node_modules/@eslint-community/eslint-utils' ]
+19 silly reify mark retired [ '/home/vscode/node_modules/@stylistic/eslint-plugin' ]
+20 silly reify mark retired [ '/home/vscode/node_modules/@types/node' ]
+21 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/project-service' ]
+22 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/eslint-plugin' ]
+23 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/parser' ]
+24 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/scope-manager' ]
+25 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/tsconfig-utils' ]
+26 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/typescript-estree' ]
+27 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/types' ]
+28 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/type-utils' ]
+29 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/visitor-keys' ]
+30 silly reify mark retired [ '/home/vscode/node_modules/@typescript-eslint/utils' ]
+31 silly reify moves {
+31 silly reify   '/home/vscode/node_modules/eslint': '/home/vscode/node_modules/.eslint-EdolPjxt',
+31 silly reify   '/home/vscode/node_modules/.bin/eslint': '/home/vscode/node_modules/.bin/.eslint-XytyT7p6',
+31 silly reify   '/home/vscode/node_modules/mocha': '/home/vscode/node_modules/.mocha-BW5vTEgJ',
+31 silly reify   '/home/vscode/node_modules/.bin/mocha': '/home/vscode/node_modules/.bin/.mocha-SXJTDmRP',
+31 silly reify   '/home/vscode/node_modules/.bin/_mocha': '/home/vscode/node_modules/.bin/._mocha-tQCllmvb',
+31 silly reify   '/home/vscode/node_modules/@eslint/js': '/home/vscode/node_modules/@eslint/.js-E1kF9gX3',
+31 silly reify   '/home/vscode/node_modules/@eslint-community/eslint-utils': '/home/vscode/node_modules/@eslint-community/.eslint-utils-PVc6bMEA',
+31 silly reify   '/home/vscode/node_modules/@stylistic/eslint-plugin': '/home/vscode/node_modules/@stylistic/.eslint-plugin-l2CJtFXQ',
+31 silly reify   '/home/vscode/node_modules/@types/node': '/home/vscode/node_modules/@types/.node-iMstfpnq',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/project-service': '/home/vscode/node_modules/@typescript-eslint/.project-service-WKnzWtYn',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/eslint-plugin': '/home/vscode/node_modules/@typescript-eslint/.eslint-plugin-qxAjd5L2',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/parser': '/home/vscode/node_modules/@typescript-eslint/.parser-mx9UOYlI',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/scope-manager': '/home/vscode/node_modules/@typescript-eslint/.scope-manager-aV0ElXMC',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/tsconfig-utils': '/home/vscode/node_modules/@typescript-eslint/.tsconfig-utils-NGJNwTCe',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/typescript-estree': '/home/vscode/node_modules/@typescript-eslint/.typescript-estree-8lUFqJ7W',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/types': '/home/vscode/node_modules/@typescript-eslint/.types-LPEiH2Vq',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/type-utils': '/home/vscode/node_modules/@typescript-eslint/.type-utils-PB3ussd6',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/visitor-keys': '/home/vscode/node_modules/@typescript-eslint/.visitor-keys-lS8HmnrU',
+31 silly reify   '/home/vscode/node_modules/@typescript-eslint/utils': '/home/vscode/node_modules/@typescript-eslint/.utils-r02Xa4d8'
+31 silly reify }
+32 verbose stack Error: EACCES: permission denied, rename '/home/vscode/node_modules/eslint' -> '/home/vscode/node_modules/.eslint-EdolPjxt'
+32 verbose stack     at async Object.rename (node:internal/fs/promises:782:10)
+32 verbose stack     at async moveFile (/usr/local/lib/node_modules/npm/node_modules/@npmcli/fs/lib/move-file.js:30:5)
+32 verbose stack     at async Promise.allSettled (index 0)
+32 verbose stack     at async [reifyPackages] (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:325:11)
+32 verbose stack     at async Arborist.reify (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:142:5)
+32 verbose stack     at async Install.exec (/usr/local/lib/node_modules/npm/lib/commands/install.js:150:5)
+32 verbose stack     at async Npm.exec (/usr/local/lib/node_modules/npm/lib/npm.js:207:9)
+32 verbose stack     at async module.exports (/usr/local/lib/node_modules/npm/lib/cli/entry.js:74:5)
+33 error code EACCES
+34 error syscall rename
+35 error path /home/vscode/node_modules/eslint
+36 error dest /home/vscode/node_modules/.eslint-EdolPjxt
+37 error errno -13
+38 error Error: EACCES: permission denied, rename '/home/vscode/node_modules/eslint' -> '/home/vscode/node_modules/.eslint-EdolPjxt'
+38 error     at async Object.rename (node:internal/fs/promises:782:10)
+38 error     at async moveFile (/usr/local/lib/node_modules/npm/node_modules/@npmcli/fs/lib/move-file.js:30:5)
+38 error     at async Promise.allSettled (index 0)
+38 error     at async [reifyPackages] (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:325:11)
+38 error     at async Arborist.reify (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:142:5)
+38 error     at async Install.exec (/usr/local/lib/node_modules/npm/lib/commands/install.js:150:5)
+38 error     at async Npm.exec (/usr/local/lib/node_modules/npm/lib/npm.js:207:9)
+38 error     at async module.exports (/usr/local/lib/node_modules/npm/lib/cli/entry.js:74:5) {
+38 error   errno: -13,
+38 error   code: 'EACCES',
+38 error   syscall: 'rename',
+38 error   path: '/home/vscode/node_modules/eslint',
+38 error   dest: '/home/vscode/node_modules/.eslint-EdolPjxt'
+38 error }
+39 error
+39 error The operation was rejected by your operating system.
+39 error It is likely you do not have the permissions to access this file as the current user
+39 error
+39 error If you believe this might be a permissions issue, please double-check the
+39 error permissions of the file and its containing directories, or try running
+39 error the command again as root/Administrator.
+40 silly unfinished npm timer reify 1757686953813
+41 silly unfinished npm timer reify:retireShallow 1757686954478
+42 verbose cwd /home/vscode
+43 verbose os Linux 6.10.14-linuxkit
+44 verbose node v20.19.4
+45 verbose npm  v10.8.2
+46 verbose exit -13
+47 verbose code -13
+48 error A complete log of this run can be found in: /home/vscode/.npm/_logs/2025-09-12T14_22_33_149Z-debug-0.log
