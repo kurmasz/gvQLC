@@ -1,6 +1,4 @@
 """
-Anderson Yeakey, CIS 371 Section 02
-
 http_socket.py
 
 This class opens a socket, then provides a means to perform both text and binary operations.

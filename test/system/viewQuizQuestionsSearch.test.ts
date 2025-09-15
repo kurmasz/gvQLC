@@ -10,33 +10,28 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
-import { WebDriver, WebView, VSBrowser } from 'vscode-extension-tester';
+import { WebDriver, WebView, VSBrowser, VSCODE_VERSION_MAX } from 'vscode-extension-tester';
 import { By, until, WebElement, Key } from 'selenium-webdriver';
 import { verifyQuestionDisplayed, verifyVisibility, searchFor, setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
 import { ViewColors } from '../../src/sharedConstants';
 
 import { expect } from 'chai';
-import * as path from 'path';
 
 describe('viewQuizQuestions search', function () {
-    let driver: WebDriver;
     let view: WebView;
-    let summaryContainer: WebElement;
 
     this.timeout(150_000);
 
     after(async function () {
-        await driver.switchTo().defaultContent();
+        await VSBrowser.instance.driver.switchTo().defaultContent();
     });
 
     it('opens the folder and runs the command', async () => {
-        driver = VSBrowser.instance.driver;
-        const folder = path.resolve(__dirname, '..', '..', '..', 'test-fixtures', 'cis371_server');
-        ({ view, summaryContainer } = await setUpQuizQuestionWebView(driver, folder, '14'));
+        ({ view } = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
     it('searches multiple columns and displays rows correctly.', async () => {
-        await searchFor(driver, '2');
+        await searchFor('2');
         await verifyFilterCount(7);
 
         // example match by question label
@@ -113,7 +108,7 @@ describe('viewQuizQuestions search', function () {
 
     // Question search (I suppose the previous test makes this redundant.)
     it('searches the question', async () => {
-        await searchFor(driver, 'need');
+        await searchFor('need');
         await verifyFilterCount(1);
 
         const expected = `    if path[-1] != '/':
@@ -135,8 +130,7 @@ describe('viewQuizQuestions search', function () {
     });
 
     it('shows all questions after search bar is cleared', async () => {
-  
-        const searchBox = await driver.findElement(By.id("searchInput"));
+        const searchBox = await VSBrowser.instance.driver.findElement(By.id("searchInput"));
         const selectAllKey = process.platform === "darwin" ? Key.META : Key.CONTROL;
         await searchBox.sendKeys(Key.chord(selectAllKey, "a"), Key.BACK_SPACE);
 
@@ -149,7 +143,7 @@ describe('viewQuizQuestions search', function () {
 
 
     it('displays message if no matches', async() => {
-        await searchFor(driver, 'n0suchStr1ngF0und');
+        await searchFor('n0suchStr1ngF0und');
         const element = await view.findWebElement(By.css('#filterCount'));
         expect(await element.getText()).to.equal('No matches');
     });

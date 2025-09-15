@@ -5,10 +5,6 @@ Helper functions to handle various filetype requests.
 
 Needed to support my function mapping modification to
 the EXTENSION_MAP dict in my_http_server.py.
-
-GVSU CIS 371 2025
-
-Name: Anthony Boos
 """
 
 import os

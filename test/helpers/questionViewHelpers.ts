@@ -8,30 +8,21 @@
  * *********************************************************************************/
 
 
-import { WebDriver, VSBrowser, Workbench, WebView } from 'vscode-extension-tester';
+import { VSBrowser, WebDriver, WebView, Workbench } from 'vscode-extension-tester';
 import { By, until, WebElement, Key } from 'selenium-webdriver';
+import { openWorkspace } from './systemHelpers';
 import { expect } from 'chai';
-import * as path from 'path';
 
-export async function setUpQuizQuestionWebView(driver: WebDriver, folder: string, expectedQuestionTotal: string): Promise<{
+
+export async function setUpQuizQuestionWebView(folder: string, expectedQuestionTotal: string): Promise<{
     view: WebView;
     summaryContainer: WebElement;
 }> {
-
-    let basename = path.basename(folder);
-    await VSBrowser.instance.openResources(folder, async () => {
-        const selector = By.css(`[aria-label="Explorer Section: ${basename}"]`);
-        const element = await driver.wait(until.elementLocated(selector), 10_000);
-        await driver.wait(until.elementIsVisible(element), 5_000);
-    });
-
-    const workbench = new Workbench();
-    await workbench.wait();
-    // console.log(await new EditorView().getOpenEditorTitles());
-
+    const driver = VSBrowser.instance.driver;
+    await openWorkspace(folder);
 
     // Run the command
-    await workbench.executeCommand('gvQLC: View Quiz Questions');
+    await (new Workbench()).executeCommand('gvQLC: View Quiz Questions');
     await new Promise(res => setTimeout(res, 10000)); // crude but useful
 
     // const tabs = await driver.findElements(By.css('.tab-label'));
@@ -115,8 +106,8 @@ export async function verifyVisibility(container: WebElement, expectedVisibility
     }
 }
 
-export async function searchFor(driver: WebDriver, term: string | null = null) {
-    const searchBox = await driver.findElement(By.id("searchInput"));
+export async function searchFor(term: string | null = null) {
+    const searchBox = await VSBrowser.instance.driver.findElement(By.id("searchInput"));
     await searchBox.clear();
     if (term !== null) {
         await searchBox.sendKeys(term);
