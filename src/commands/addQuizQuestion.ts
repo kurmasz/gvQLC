@@ -15,13 +15,17 @@ import { quizQuestionsFileName } from '../sharedConstants';
 
 import * as Util from '../utilities';
 
+/** Refactoring Notes: Could maybe do a conceptual restructuring,
+such as making a setup/var section*/
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
 
+    /** Refactoring Notes: Good*/
     if (!Util.loadPersistedData()) {
         return;
     }
 
+    /** Refactoring Notes: Could make a helper here*/
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         vscode.window.showErrorMessage('gvQLC: No active editor tab found. (You must have a code snippet selected to add a quiz question.)');
@@ -32,15 +36,18 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         return;
     }
 
+    /** Refactoring Notes: Good*/
     const selection = editor.selection;
     if (selection.isEmpty) {
         vscode.window.showErrorMessage('gvQLC: No code selected. (You must have a code snippet selected to add a quiz question.)');
         return;
     }
 
+    /** Refactoring Notes: Good*/
     const range = new vscode.Range(selection.start, selection.end);
     let selectedText = editor.document.getText(range);
 
+    /** Refactoring Notes: relativePath is only used once, maybe think about sleeker way to do this*/
     // Get workspace root and calculate relative path
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (!workspaceFolders) {
@@ -51,6 +58,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const absolutePath = editor.document.uri.fsPath;
     const relativePath = path.relative(workspaceRoot, absolutePath);
 
+    /** Refactoring Notes: Seems fine, is let necessary?*/
     // Get existing questions for suggestions
     let existingQuestions = [];
     try {
@@ -62,6 +70,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         console.log('Could not load existing questions:', error);
     }
 
+    /** Refactoring Notes: Not used, where would it be used, can we trim it?*/
     // Function to load existing answers
     const loadExistingAnswers = async () => {
         try {
@@ -73,6 +82,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         }
     };
 
+    /** Refactoring Notes: Good*/
     // Create a Webview Panel for adding a personalized question
     const panel = vscode.window.createWebviewPanel(
         'addPersonalizedQuestion',
@@ -81,6 +91,8 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         { enableScripts: true }
     );
 
+    /** Refactoring Notes: Contains one very long script*/
+    /** Refactoring Notes: not done reviewing*/
     // HTML content for the Webview
     panel.webview.html = `
 <!DOCTYPE html>
@@ -267,6 +279,8 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 </html>
     `;
 
+    /** Refactoring Notes: only one message type, why, does nothing if wrong msg type*/
+    /** Refactoring Notes: studentName, submissionRoot deprecated*/
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'submitQuestion') {
