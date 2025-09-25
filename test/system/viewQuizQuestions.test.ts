@@ -152,17 +152,17 @@ describe('viewQuizQuestions', function () {
     });
 
     it('displays all students in alphabetical order', async () => {
-        var student_names = []
-        var alphabetical_names = []
+        var student_names = [];
+        var alphabetical_names = [];
         const table = await summaryContainer.findElement(By.css('table'));
         const tbody = await table.findElement(By.css('tbody'));
         const trs = await tbody.findElements(By.css('tr'));
-        for (let i = 0; i < trs.length, i++) {
-            const tds = await trs[i].findElements(By.css('td'))
-            var student_name = await tds[0].getText()
-            student_names.push(student_name)
+        for (let i = 0; i < trs.length; i++) {
+            const tds = await trs[i].findElements(By.css('td'));
+            var student_name = await tds[0].getText();
+            student_names.push(student_name);
         }
-        alphabetical_names = await student_names.sort()
+        alphabetical_names = await student_names.sort();
         expect(student_names == alphabetical_names).to.be.true;
     });
 
