@@ -15,8 +15,17 @@ import { quizQuestionsFileName } from '../sharedConstants';
 
 import * as Util from '../utilities';
 
-/** Refactoring Notes: Could maybe do a conceptual restructuring,
-such as making a setup/var section*/
+/* Refactoring Notes (Richard Roy): 
+    With the exception of the suggestions feature
+    and the no config file error on adding questions,
+    both of which are not working for me by default,
+    the main goal of refactoring the html code into a
+    different file is complete.
+    TODO:
+        If within scope, fix data.map issue
+        in the suggestions feature and get it
+        working, could not test refactor of 
+        this part as it is not working in general*/
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
 
@@ -91,10 +100,25 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         { enableScripts: true }
     );
 
-    /** Refactoring Notes: Contains one very long script*/
     /** Refactoring Notes: not done reviewing*/
     // HTML content for the Webview
-    panel.webview.html = `
+    const htmlData = {
+        selectedText: selectedText,
+        existingQuestions: JSON.stringify(existingQuestions),
+    };
+    panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
+    //TODO: fix suggestions feature on original
+    //      and transfer to refactor in views dir
+    // below is here for reference:
+    // the suggestions feature is not working
+    // pre refactoring for me,
+    // data.map is throwing an error:
+    /*Could not load existing questions: TypeError: data.map is not a function
+        at /Users/richyroy/Documents/Code/Capstone/f25-code-quiz/src/commands/addQuizQuestion.ts:68:34
+        at Kb.h (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:41557) {vslsStack: Array(2), stack: 'TypeError: data.map is not a function
+        at …h/api/node/extensionHostProcess.js:112:41557)', message: 'data.map is not a function'}
+    */
+    /*panel.webview.html*/ const foo = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -279,7 +303,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 </html>
     `;
 
-    /** Refactoring Notes: only one message type, why, does nothing if wrong msg type*/
+    /** Refactoring Notes: only one message type, why? does nothing if wrong msg type*/
     /** Refactoring Notes: studentName, submissionRoot deprecated*/
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
