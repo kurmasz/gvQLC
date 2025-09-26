@@ -29,12 +29,10 @@ import * as Util from '../utilities';
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
 
-    /** Refactoring Notes: Good*/
     if (!Util.loadPersistedData()) {
         return;
     }
 
-    /** Refactoring Notes: Could make a helper here*/
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         vscode.window.showErrorMessage('gvQLC: No active editor tab found. (You must have a code snippet selected to add a quiz question.)');
@@ -45,14 +43,12 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         return;
     }
 
-    /** Refactoring Notes: Good*/
     const selection = editor.selection;
     if (selection.isEmpty) {
         vscode.window.showErrorMessage('gvQLC: No code selected. (You must have a code snippet selected to add a quiz question.)');
         return;
     }
 
-    /** Refactoring Notes: Good*/
     const range = new vscode.Range(selection.start, selection.end);
     let selectedText = editor.document.getText(range);
 
@@ -67,7 +63,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const absolutePath = editor.document.uri.fsPath;
     const relativePath = path.relative(workspaceRoot, absolutePath);
 
-    /** Refactoring Notes: Seems fine, is let necessary?*/
     // Get existing questions for suggestions
     let existingQuestions = [];
     try {
@@ -91,7 +86,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         }
     };
 
-    /** Refactoring Notes: Good*/
     // Create a Webview Panel for adding a personalized question
     const panel = vscode.window.createWebviewPanel(
         'addPersonalizedQuestion',
@@ -100,7 +94,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         { enableScripts: true }
     );
 
-    /** Refactoring Notes: not done reviewing*/
     // HTML content for the Webview
     const htmlData = {
         selectedText: selectedText,
@@ -109,15 +102,18 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
     //TODO: fix suggestions feature on original
     //      and transfer to refactor in views dir
-    // below is here for reference:
+    
+    // HTML & error below are here for reference:
     // the suggestions feature is not working
     // pre refactoring for me,
     // data.map is throwing an error:
+
     /*Could not load existing questions: TypeError: data.map is not a function
         at /Users/richyroy/Documents/Code/Capstone/f25-code-quiz/src/commands/addQuizQuestion.ts:68:34
         at Kb.h (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:41557) {vslsStack: Array(2), stack: 'TypeError: data.map is not a function
         at …h/api/node/extensionHostProcess.js:112:41557)', message: 'data.map is not a function'}
     */
+
     /*panel.webview.html*/ const foo = `
 <!DOCTYPE html>
 <html lang="en">

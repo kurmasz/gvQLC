@@ -40,7 +40,6 @@
     <h1 id='addQuizQuestionTitle'>Add a Quiz Question</h1>
 
     <p><strong>Edit Highlighted Code:</strong></p>
-    <!--below is changed-->
     <textarea id="codeBlock" class="code-area">{{selectedText}}</textarea>
     <button onclick="copyAndPasteCode()">Copy & Paste Code</button>
     
@@ -57,8 +56,6 @@
 
     <script>
         const vscode = acquireVsCodeApi();
-        //below is changed
-        //const existingQuestions = ${JSON.stringify(existingQuestions)};
         let currentInput = '';
         let activeSuggestionIndex = -1;
 
@@ -96,8 +93,10 @@
                 return;
             }
 
-            //below is changed (existingQuestions is passed in now)
-            // not currently functioning in original
+            //refactoring: 
+            //  (existingQuestions is passed in via mustache now)
+            //  not currently functioning in original
+            //  could not test refactor
             const filtered = {existingQuestions}.filter(q => 
                 q && q.toLowerCase().includes(currentInput))
                 .slice(0, 5);
@@ -109,7 +108,9 @@
 
             suggestionsContainer.innerHTML = filtered.map(q => {
                 const escapedText = q.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                // below is changed
+                //refactoring:
+                //  can not currently test refactor as suggestions 
+                //  are broken in original
                 //return \`<div class="suggestion-item">\${escapedText}</div>\`;
                 return `<div class="suggestion-item">{{escapedText}}</div>`;
             }).join('');
@@ -157,15 +158,9 @@
             );
             
             const codeToInsert = selectedCode || codeTextArea.value;
-            //below is changed
-            //may need to completely remake this part
-            //const formattedCode = \`~~~\\n\${codeToInsert}\\n~~~\`;
-            // vvv replacement, functions (no tests cover this!)
             const formattedCode = "~~~\n" + codeToInsert + "\n~~~";
 
             if (existingContent) {
-                //below is changed
-                //questionArea.value = existingContent + "\\n\\n" + formattedCode;
                 questionArea.value = existingContent + "\n\n" + formattedCode;
             } else {
                 questionArea.value = formattedCode;
