@@ -62,7 +62,7 @@
     "eslint": "^9.36.0",
     "eslint-define-config": "^2.1.0",
     "fs-extra": "^11.3.2",
-    "mocha": "^11.7.2",
+    "mocha": "^11.7.3",
     "mustache": "^4.2.0",
     "source-map-support": "^0.5.21",
     "typescript": "^5.9.2",
