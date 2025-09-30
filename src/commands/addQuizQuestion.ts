@@ -15,6 +15,20 @@ import { quizQuestionsFileName } from '../sharedConstants';
 
 import * as Util from '../utilities';
 
+/* Refactoring Notes (Richard Roy): 
+    With the exception of the suggestions feature
+    and the no config file error on adding questions,
+    both of which are not working for me by default,
+    the main goal of refactoring the html code into a
+    different file is complete.
+    Also, the loadExistingAnswers func is only called
+    in deprecated code, leaving it in until suggestions
+    bug is fixed or deemed out of scope
+    TODO:
+        If within scope, fix data.map issue
+        in the suggestions feature and get it
+        working, could not test refactor of 
+        this part as it is not working in general*/
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
 
@@ -62,6 +76,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         console.log('Could not load existing questions:', error);
     }
 
+    /** Refactoring Notes: Used inside of deprecated code, can we trim it?*/
     // Function to load existing answers
     const loadExistingAnswers = async () => {
         try {
@@ -81,8 +96,24 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         { enableScripts: true }
     );
 
+    //TODO: fix suggestions feature on original
+    //      and transfer to refactor in views dir
     // HTML content for the Webview
-    panel.webview.html = `
+    const htmlData = {
+        selectedText: selectedText,
+        existingQuestions: JSON.stringify(existingQuestions),
+    };
+    panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
+    // HTML section & error below are here for reference:
+    // the suggestions feature is not working
+    // pre refactoring for me,
+    // data.map is throwing an error:
+    /*Could not load existing questions: TypeError: data.map is not a function
+        at /Users/richyroy/Documents/Code/Capstone/f25-code-quiz/src/commands/addQuizQuestion.ts:68:34
+        at Kb.h (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:41557) {vslsStack: Array(2), stack: 'TypeError: data.map is not a function
+        at …h/api/node/extensionHostProcess.js:112:41557)', message: 'data.map is not a function'}
+    */
+    /*panel.webview.html*/ const foo = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -267,11 +298,11 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 </html>
     `;
 
+    /** Refactoring Notes: only one message type, does nothing if wrong msg type*/
+    /** Refactoring Notes: studentName, submissionRoot deprecated*/
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'submitQuestion') {
-            const submissionRoot = (await config()).submissionRoot;
-            const studentName = Util.extractStudentName(editor.document.uri.fsPath, submissionRoot);
             const questionData = {
                 filePath: relativePath, // Using relative path here
                 range: {
@@ -287,31 +318,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
             // Save to personalizedQuestions.json
             state.personalizedQuestionsData.push(questionData);
             await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
-
-            //
-            // Why is this here?  I think this is old code we can deprecate.
-            //
-            // Save answer to quiz_questions_answers.json if provided
-            /*
-            if (message.answer && message.answer.trim() !== '') {
-                try {
-                    let answersData = await loadExistingAnswers();
-                    answersData.push({
-                        questionId: state.personalizedQuestionsData.length - 1,
-                        questionText: message.question,
-                        answer: message.answer.trim(),
-                        studentName: studentName,
-                        filePath: relativePath, // Using relative path here too
-                        timestamp: new Date().toISOString(),
-                        highlightedCode: message.editedCode
-                    });
-                    await Util.saveDataToFile('quiz_questions_answers.json', answersData);
-                    vscode.window.showInformationMessage('Answer saved successfully!');
-                } catch (error: any) {
-                    vscode.window.showErrorMessage(`Failed to save answer: ${error.message}`);
-                }
-            }
-            */
 
             vscode.window.showInformationMessage('Question added successfully.');
             panel.dispose();

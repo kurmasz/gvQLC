@@ -31,51 +31,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return;
     }
 
-    // Convert relative paths to absolute paths for display
-    // TODO: I don't think we need this
-    /*
-    const questionsWithAbsolutePaths = state.personalizedQuestionsData.map(question => {
-        const newPath = path.isAbsolute(question.filePath) ? question.filePath : path.join(gvQLC.workspaceRoot().name, question.filePath);
-        return {
-            ...question,
-            filePath: newPath,
-            relativePath: question.filePath
-        };
-    });
-    */
-
-    /*
-    const getAllCISStudents = async () => {
-        try {
-            const cisStudents = new Set<string>();
-            let quizDirectoryName = "CIS"; // Default fallback
-
-            // Get quiz directory name from config
-            const config = await gvQLC.config();
-            if (config.submissionRoot) {
-                quizDirectoryName = config.submissionRoot;
-            }
-
-            // Look for students in the specified directory
-            const folderUri = gvQLC.workspaceRoot().uri;
-            if (folderUri.fsPath.includes(quizDirectoryName)) {
-                const files = await vscode.workspace.fs.readDirectory(folderUri);
-                for (const [name, type] of files) {
-                    if (type === vscode.FileType.Directory) {
-                        cisStudents.add(name);
-                    }
-                }
-            }
-
-            return Array.from(cisStudents).sort();
-        } catch (error) {
-            console.error("Error fetching students:", error);
-            return new Set<string>();
-        }
-    };
-    */
-
-
     const mapStudentName = (name: string) => {
         return state.studentNameMapping[name] || name;
     };
