@@ -65,13 +65,22 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const absolutePath = editor.document.uri.fsPath;
     const relativePath = path.relative(workspaceRoot, absolutePath);
 
+    // Bugfixing Notes (Richard Roy):
+    // This has an error every time, though once a 
+    // quizQuestions file exists, it shouldn't
+
     // Get existing questions for suggestions
     let existingQuestions = [];
     try {
         const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
+        console.log(uri);
         const fileContent = await vscode.workspace.fs.readFile(uri);
+        console.log(fileContent);
         const data = JSON.parse(fileContent.toString());
-        existingQuestions = data.map((item: { text: string; }) => item.text).filter(Boolean);
+        // Bugfixing: data seems to be an object that contains a data array
+        console.log(data);
+        //existingQuestions = data.map((item: { text: string; }) => item.text).filter(Boolean);
+        existingQuestions = data.data.map((item: { text: string; }) => item.text).filter(Boolean);
     } catch (error) {
         console.log('Could not load existing questions:', error);
     }
@@ -113,7 +122,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         at Kb.h (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:41557) {vslsStack: Array(2), stack: 'TypeError: data.map is not a function
         at …h/api/node/extensionHostProcess.js:112:41557)', message: 'data.map is not a function'}
     */
-    /*panel.webview.html*/ const foo = `
+    /*panel.webview.html = */ const foo = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
