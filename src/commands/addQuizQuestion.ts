@@ -112,7 +112,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         selectedText: selectedText,
         existingQuestions: JSON.stringify(existingQuestions),
     };
-    //panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
+    panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
     // HTML section & error below are here for reference:
     // the suggestions feature is not working
     // pre refactoring for me,
@@ -122,7 +122,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         at Kb.h (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:41557) {vslsStack: Array(2), stack: 'TypeError: data.map is not a function
         at …h/api/node/extensionHostProcess.js:112:41557)', message: 'data.map is not a function'}
     */
-    panel.webview.html = `
+    /*panel.webview.html = */ const foo = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
