@@ -129,6 +129,126 @@ describe('viewQuizQuestions', function () {
         });
     });
 
+    it('Refreshes the page', async () => {
+        expect(await view.isDisplayed()).to.be.true;
+        var refreshBtn = await view.findWebElement(By.id('refreshBtn'));
+        expect(await refreshBtn.isDisplayed()).to.be.true;
+        await refreshBtn.click();
+        expect(await view.isDisplayed()).to.be.true;
+        var expectedNew = `                while line := file.readline():
+                    socket.send_text_line(line)`;
+
+        await verifyQuestionDisplayed(view, {
+            rowIndex: 0,
+            rowLabel: '1a',
+            color: ViewColors.GREEN,
+            file: 'antonio/my_http_server.py',
+            code: expectedNew,
+            question: "Explain the difference between `=` and `:=`",
+        });
+    });
+
+    it('Saves the updated question', async () => {
+
+        // Verifies original text
+        var question = await view.findElement(By.id('question-0'));
+        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+
+        // Sends new text to question text area
+        var newQuestion = "Explain the difference between `=` and `:=`. Hello";
+        question.sendKeys(". Hello");
+
+        // Clicks the save button
+        var tbody = await view.findElement(By.css('tbody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+        var buttons = await tds[4].findElements(By.css('button'));
+        buttons[0].click();
+
+        // Clicks the refresh button
+        var refreshBtn = await view.findWebElement(By.id('refreshBtn'));
+        await refreshBtn.click();
+
+        // Confirms the change
+        var question = await view.findElement(By.id('question-0'));
+        expect(question.getText()).to.be(newQuestion);
+     
+    });
+
+    it('Reverts the changes to a question', async () => {
+        // Verify original question
+        var question = await view.findElement(By.id('question-0'));
+        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+
+        // Add text to question
+        question.sendKeys(". Hello");
+
+        // Verify text was added
+        expect(question.getText()).to.be("Explain the difference between `=` and `:=`. Hello");
+
+        // Clicks the revert button
+        var tbody = await view.findElement(By.css('tbody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+        var buttons = await tds[4].findElements(By.css('button'));
+        buttons[1].click();
+
+        // Expects question text to revert to original
+        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+    });
+
+    it('Copies the full question when no text is highlighted', async () => {
+        //Verifies the question text to copy
+        var question = await view.findElement(By.id('question-0'));
+        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+
+        //Finds and clicks the copy button
+        var tbody = await view.findElement(By.css('tbody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+        var buttons = await tds[4].findElements(By.css('button'));
+        buttons[3].click();
+
+        // Verifies it was copied to clipboard
+        expect(navigator.clipboard.readText()).to.be("Explain the difference between `=` and `:=`");
+    });
+
+    it('Copies part of the question when text is highlighted', async () => {
+        var tbody = await view.findElement(By.css('tbody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+
+        // Find question text and highlight an area
+        var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
+        expect(question.value).to.be("Explain the difference between `=` and `:=`");
+        question.selectionStart = 0;
+        question.selectionEnd = 10;
+
+        // Click the copy button
+        var buttons = await tds[4].findElements(By.css('button'));
+        buttons[3].click();
+        
+        // Confirm only highlighted section was copied
+        expect(navigator.clipboard.readText()).to.be("Explain the");
+    });
+
+    it('Excludes a question when the "Exclude Question" box is checked', async () => {
+        var checkbox = await view.findWebElement(By.id('exclude-0'));
+        // Originally not excluded
+        expect(await checkbox.isDisplayed()).to.be.true;
+        expect(await checkbox.isSelected()).to.equal('false');
+        
+        // Should be excluded
+        await checkbox.click();
+        expect(await checkbox.isDisplayed()).to.be.true;
+        expect(await checkbox.isSelected()).to.equal('true');
+
+        // Unexclude it
+        await checkbox.click();
+        expect(await checkbox.isDisplayed()).to.be.true;
+        expect(await checkbox.isSelected()).to.equal('false');
+    });
+
     /////////////////////////
     //
     // Student Summary
@@ -162,7 +282,7 @@ describe('viewQuizQuestions', function () {
             var student_name = await tds[0].getText();
             student_names.push(student_name);
         }
-        alphabetical_names = await student_names.sort();
+        alphabetical_names = student_names.sort();
         expect(student_names == alphabetical_names).to.be.true;
     });
 
