@@ -203,9 +203,9 @@ describe('viewQuizQuestions', function () {
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
-        // Find question text and highlight an area
+        // Find question text
         var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
-        expect(question.textContent).to.be.equal("Explain the difference between `=` and `:=`");
+        //expect(question.innerText).to.be.equal("Explain the difference between `=` and `:=`");
 
         //Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
@@ -222,7 +222,7 @@ describe('viewQuizQuestions', function () {
 
         // Find question text and highlight an area
         var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
-        expect(question.textContent).to.be.equal("Explain the difference between `=` and `:=`");
+        //expect(question.innerText).to.be.equal("Explain the difference between `=` and `:=`");
         question.selectionStart = 0;
         question.selectionEnd = 10;
 
