@@ -62,18 +62,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         console.log('Could not load existing questions:', error);
     }
 
-    /** Refactoring Notes: Used inside of deprecated code, can we trim it?*/
-    // Function to load existing answers
-    const loadExistingAnswers = async () => {
-        try {
-            const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
-            const fileContent = await vscode.workspace.fs.readFile(uri);
-            return JSON.parse(fileContent.toString());
-        } catch (error) {
-            return [];
-        }
-    };
-
     // Create a Webview Panel for adding a personalized question
     const panel = vscode.window.createWebviewPanel(
         'addPersonalizedQuestion',
@@ -89,8 +77,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     };
     panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
 
-    /** Refactoring Notes: only one message type, does nothing if wrong msg type*/
-    /** Refactoring Notes: studentName, submissionRoot deprecated*/
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'submitQuestion') {
