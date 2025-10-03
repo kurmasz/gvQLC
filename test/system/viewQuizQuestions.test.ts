@@ -149,9 +149,8 @@ describe('viewQuizQuestions', function () {
     });
 
     it('Saves the updated question', async () => {
-
         // Verifies original text
-        var question = await view.findElement(By.id('question-0'));
+        var question = await view.findWebElement(By.id('question-0'));
         expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
 
         // Sends new text to question text area
@@ -159,7 +158,7 @@ describe('viewQuizQuestions', function () {
         question.sendKeys(". Hello");
 
         // Clicks the save button
-        var tbody = await view.findElement(By.css('tbody'));
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
         var buttons = await tds[4].findElements(By.css('button'));
@@ -177,7 +176,7 @@ describe('viewQuizQuestions', function () {
 
     it('Reverts the changes to a question', async () => {
         // Verify original question
-        var question = await view.findElement(By.id('question-0'));
+        var question = await view.findWebElement(By.id('question-0'));
         expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
 
         // Add text to question
@@ -187,7 +186,7 @@ describe('viewQuizQuestions', function () {
         expect(question.getText()).to.be("Explain the difference between `=` and `:=`. Hello");
 
         // Clicks the revert button
-        var tbody = await view.findElement(By.css('tbody'));
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
         var buttons = await tds[4].findElements(By.css('button'));
@@ -199,11 +198,11 @@ describe('viewQuizQuestions', function () {
 
     it('Copies the full question when no text is highlighted', async () => {
         //Verifies the question text to copy
-        var question = await view.findElement(By.id('question-0'));
+        var question = await view.findWebElement(By.id('question-0'));
         expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
 
         //Finds and clicks the copy button
-        var tbody = await view.findElement(By.css('tbody'));
+        var tbody = await view.findElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
         var buttons = await tds[4].findElements(By.css('button'));
@@ -214,7 +213,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('Copies part of the question when text is highlighted', async () => {
-        var tbody = await view.findElement(By.css('tbody'));
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
@@ -227,7 +226,7 @@ describe('viewQuizQuestions', function () {
         // Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
         buttons[3].click();
-        
+
         // Confirm only highlighted section was copied
         expect(navigator.clipboard.readText()).to.be("Explain the");
     });
@@ -236,17 +235,17 @@ describe('viewQuizQuestions', function () {
         var checkbox = await view.findWebElement(By.id('exclude-0'));
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
-        expect(await checkbox.isSelected()).to.equal('false');
+        expect(await checkbox.isSelected()).to.equal(false);
         
         // Should be excluded
         await checkbox.click();
         expect(await checkbox.isDisplayed()).to.be.true;
-        expect(await checkbox.isSelected()).to.equal('true');
+        expect(await checkbox.isSelected()).to.equal(true);
 
         // Unexclude it
         await checkbox.click();
         expect(await checkbox.isDisplayed()).to.be.true;
-        expect(await checkbox.isSelected()).to.equal('false');
+        expect(await checkbox.isSelected()).to.equal(false);
     });
 
     /////////////////////////
