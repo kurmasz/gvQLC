@@ -129,7 +129,7 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it.skip('Refreshes the page', async () => {
+    it('Refreshes the page', async () => {
         const refreshBtn = await view.findWebElement(By.id('refreshBtn'));
 
         expect(await refreshBtn.isDisplayed()).to.be.true;
