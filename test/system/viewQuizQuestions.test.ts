@@ -15,6 +15,7 @@ import { By, WebElement } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
+import * as vscode from 'vscode';
 
 
 import { expect } from 'chai';
@@ -212,7 +213,7 @@ describe('viewQuizQuestions', function () {
         buttons[3].click();
 
         // Verifies it was copied to clipboard
-        expect(await navigator.clipboard.readText()).to.be.equal("Explain the difference between `=` and `:=`");
+        expect(await vscode.env.clipboard.readText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
     it('Copies part of the question when text is highlighted', async () => {
@@ -231,7 +232,7 @@ describe('viewQuizQuestions', function () {
         buttons[3].click();
 
         // Confirm only highlighted section was copied
-        expect(await navigator.clipboard.readText()).to.be.equal("Explain the");
+        expect(await vscode.env.clipboard.readText()).to.be.equal("Explain the");
     });
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
