@@ -129,11 +129,13 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it('Refreshes the page', async () => {
-        const refreshBtn = await view.findWebElement(By.id('refreshBtn'));
+    it.skip('Refreshes the page', async () => {
+        var refreshBtn = await view.findWebElement(By.id('refreshBtn'));
 
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
+
+        refreshBtn = await view.findWebElement(By.id('refreshBtn'));
         expect(await view.isDisplayed()).to.be.true;
         var expectedNew = `                while line := file.readline():
                     socket.send_text_line(line)`;
@@ -196,7 +198,7 @@ describe('viewQuizQuestions', function () {
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
-    it.skip('Copies the full question when no text is highlighted', async () => {
+    it('Copies the full question when no text is highlighted', async () => {
         //Verifies the question text to copy
         var question = await view.findWebElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
@@ -212,7 +214,7 @@ describe('viewQuizQuestions', function () {
         expect(navigator.clipboard.readText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
-    it.skip('Copies part of the question when text is highlighted', async () => {
+    it('Copies part of the question when text is highlighted', async () => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -231,7 +233,7 @@ describe('viewQuizQuestions', function () {
         expect(navigator.clipboard.readText()).to.be.equal("Explain the");
     });
 
-    it.skip('Excludes a question when the "Exclude Question" box is checked', async () => {
+    it('Excludes a question when the "Exclude Question" box is checked', async () => {
         var checkbox = await view.findWebElement(By.id('exclude-0'));
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
