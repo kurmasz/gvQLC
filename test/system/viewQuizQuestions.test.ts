@@ -130,8 +130,8 @@ describe('viewQuizQuestions', function () {
     });
 
     it('Refreshes the page', async () => {
-        expect(await view.isDisplayed()).to.be.true;
-        var refreshBtn = await view.findWebElement(By.id('refreshBtn'));
+        const refreshBtn = await view.findWebElement(By.id('refreshBtn'));
+
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
         expect(await view.isDisplayed()).to.be.true;
@@ -151,7 +151,7 @@ describe('viewQuizQuestions', function () {
     it('Saves the updated question', async () => {
         // Verifies original text
         var question = await view.findWebElement(By.id('question-0'));
-        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
         // Sends new text to question text area
         var newQuestion = "Explain the difference between `=` and `:=`. Hello";
@@ -170,20 +170,20 @@ describe('viewQuizQuestions', function () {
 
         // Confirms the change
         var question = await view.findElement(By.id('question-0'));
-        expect(question.getText()).to.be(newQuestion);
+        expect(await question.getText()).to.be.equal(newQuestion);
      
     });
 
     it('Reverts the changes to a question', async () => {
         // Verify original question
         var question = await view.findWebElement(By.id('question-0'));
-        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
         // Add text to question
         question.sendKeys(". Hello");
 
         // Verify text was added
-        expect(question.getText()).to.be("Explain the difference between `=` and `:=`. Hello");
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`. Hello");
 
         // Clicks the revert button
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
@@ -193,13 +193,13 @@ describe('viewQuizQuestions', function () {
         buttons[1].click();
 
         // Expects question text to revert to original
-        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
     it('Copies the full question when no text is highlighted', async () => {
         //Verifies the question text to copy
         var question = await view.findWebElement(By.id('question-0'));
-        expect(question.getText()).to.be("Explain the difference between `=` and `:=`");
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
         //Finds and clicks the copy button
         var tbody = await view.findElement(By.id('questionsTableBody'));
@@ -209,7 +209,7 @@ describe('viewQuizQuestions', function () {
         buttons[3].click();
 
         // Verifies it was copied to clipboard
-        expect(navigator.clipboard.readText()).to.be("Explain the difference between `=` and `:=`");
+        expect(navigator.clipboard.readText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
     it('Copies part of the question when text is highlighted', async () => {
@@ -219,7 +219,7 @@ describe('viewQuizQuestions', function () {
 
         // Find question text and highlight an area
         var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
-        expect(question.value).to.be("Explain the difference between `=` and `:=`");
+        expect(question.value).to.be.equal("Explain the difference between `=` and `:=`");
         question.selectionStart = 0;
         question.selectionEnd = 10;
 
@@ -228,7 +228,7 @@ describe('viewQuizQuestions', function () {
         buttons[3].click();
 
         // Confirm only highlighted section was copied
-        expect(navigator.clipboard.readText()).to.be("Explain the");
+        expect(navigator.clipboard.readText()).to.be.equal("Explain the");
     });
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
