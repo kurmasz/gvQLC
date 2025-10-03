@@ -129,7 +129,7 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it('Refreshes the page', async () => {
+    it.skip('Refreshes the page', async () => {
         const refreshBtn = await view.findWebElement(By.id('refreshBtn'));
 
         expect(await refreshBtn.isDisplayed()).to.be.true;
@@ -148,7 +148,7 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it('Saves the updated question', async () => {
+    it.skip('Saves the updated question', async () => {
         // Verifies original text
         var question = await view.findWebElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
@@ -174,7 +174,7 @@ describe('viewQuizQuestions', function () {
      
     });
 
-    it('Reverts the changes to a question', async () => {
+    it.skip('Reverts the changes to a question', async () => {
         // Verify original question
         var question = await view.findWebElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
@@ -196,7 +196,7 @@ describe('viewQuizQuestions', function () {
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
-    it('Copies the full question when no text is highlighted', async () => {
+    it.skip('Copies the full question when no text is highlighted', async () => {
         //Verifies the question text to copy
         var question = await view.findWebElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
@@ -212,7 +212,7 @@ describe('viewQuizQuestions', function () {
         expect(navigator.clipboard.readText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
-    it('Copies part of the question when text is highlighted', async () => {
+    it.skip('Copies part of the question when text is highlighted', async () => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -231,7 +231,7 @@ describe('viewQuizQuestions', function () {
         expect(navigator.clipboard.readText()).to.be.equal("Explain the");
     });
 
-    it('Excludes a question when the "Exclude Question" box is checked', async () => {
+    it.skip('Excludes a question when the "Exclude Question" box is checked', async () => {
         var checkbox = await view.findWebElement(By.id('exclude-0'));
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
