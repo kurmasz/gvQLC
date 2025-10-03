@@ -197,7 +197,7 @@ describe('viewQuizQuestions', function () {
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
-    it.skip('Copies the full question when no text is highlighted', async () => {
+    it('Copies the full question when no text is highlighted', async () => {
         // Issues getting to clipboard to confirm it did copy
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
@@ -218,7 +218,7 @@ describe('viewQuizQuestions', function () {
         //expect(await window.navigator.clipboard.readText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
-    it.skip('Copies part of the question when text is highlighted', async () => {
+    it('Copies part of the question when text is highlighted', async () => {
         // Issues getting to clipboard to confirm it did copy
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
