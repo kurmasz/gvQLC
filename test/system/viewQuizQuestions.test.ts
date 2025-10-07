@@ -176,7 +176,7 @@ describe('viewQuizQuestions', function () {
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
         // Add text to question
-        question.sendKeys(". Hello");
+        await question.sendKeys(". Hello");
 
         // Verify text was added
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`. Hello");
@@ -186,7 +186,7 @@ describe('viewQuizQuestions', function () {
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
         var buttons = await tds[4].findElements(By.css('button'));
-        buttons[1].click();
+        await buttons[1].click();
 
         // Expects question text to revert to original
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
