@@ -175,11 +175,12 @@ describe('viewQuizQuestions', function () {
         var question = await view.findWebElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
-        // Add text to question
-        await question.sendKeys(". Hello");
+        // Clear question
+        await question.clear();
 
-        // Verify text was added
-        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`. Hello");
+        // Verify clear
+        var question = await view.findWebElement(By.id('question-0'));
+        expect(await question.getText()).to.be.equal("");
 
         // Clicks the revert button
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
@@ -189,6 +190,7 @@ describe('viewQuizQuestions', function () {
         await buttons[1].click();
 
         // Expects question text to revert to original
+        var question = await view.findWebElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
