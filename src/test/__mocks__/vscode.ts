@@ -28,12 +28,19 @@ export const workspace = {
         update: () => Promise.resolve()
     }),
     workspaceFolders: [],
-    onDidChangeConfiguration: () => ({ dispose: () => {} })
+    onDidChangeConfiguration: () => ({ dispose: () => {} }),
+    fs: {
+        stat: () => Promise.resolve(),
+        readFile: () => Promise.resolve(Buffer.from('')),
+        writeFile: () => Promise.resolve(),
+        readDirectory: () => Promise.resolve([])
+    }
 };
 
 export const Uri = {
     file: (path: string) => ({ fsPath: path, path }),
-    parse: (uri: string) => ({ fsPath: uri, path: uri })
+    parse: (uri: string) => ({ fsPath: uri, path: uri }),
+    joinPath: (...args: any[]) => ({ fsPath: args.join('/'), path: args.join('/') })
 };
 
 export const ExtensionContext = {};
@@ -48,4 +55,11 @@ export const ViewColumn = {
     One: 1,
     Two: 2,
     Three: 3
+};
+
+export const FileType = {
+    Unknown: 0,
+    File: 1,
+    Directory: 2,
+    SymbolicLink: 64
 };

@@ -1,8 +1,9 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import * as fs from 'fs';
 import * as path from 'path';
 import { tmpdir } from 'os';
+// Use require for fs to avoid getter issues with import *
+const fs = require('fs');
 
 import { logToFile, logFileName } from '../fileLogger';
 
@@ -13,8 +14,9 @@ suite('FileLogger Test Suite', () => {
 
     setup(() => {
         sandbox = sinon.createSandbox();
-        // replace instead of stub because appendFileSync is non-configurable in this Node build
-        appendFileSyncStub = sandbox.replace(fs, 'appendFileSync', sandbox.stub()) as unknown as sinon.SinonStub;
+        // Create a stub for appendFileSync
+        appendFileSyncStub = sandbox.stub();
+        (fs as any).appendFileSync = appendFileSyncStub;
         consoleLogSpy = sandbox.spy(console, 'log');
     });
 

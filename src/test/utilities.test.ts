@@ -2,8 +2,10 @@ import { expect } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
-import * as Mustache from 'mustache';
+
+// Use require for Node.js built-ins and external modules to avoid getter issues with import *
+const fs = require('fs');
+const Mustache = require('mustache');
 
 import * as utilities from '../utilities';
 import * as gvQLC from '../gvQLC';
@@ -32,10 +34,14 @@ suite('Utilities Test Suite', () => {
         showErrorMessageStub = sandbox.stub(vscode.window, 'showErrorMessage');
         showWarningMessageStub = sandbox.stub(vscode.window, 'showWarningMessage');
         
-        // Mock fs functions
-        readFileSyncStub = sandbox.stub(fs, 'readFileSync');
-        writeFileSyncStub = sandbox.stub(fs, 'writeFileSync');
-        existsSyncStub = sandbox.stub(fs, 'existsSync');
+        // Create stubs for fs functions and assign directly
+        readFileSyncStub = sandbox.stub();
+        writeFileSyncStub = sandbox.stub();
+        existsSyncStub = sandbox.stub();
+        
+        (fs as any).readFileSync = readFileSyncStub;
+        (fs as any).writeFileSync = writeFileSyncStub;
+        (fs as any).existsSync = existsSyncStub;
 
         // Mock workspace
         sandbox.stub(vscode.workspace, 'workspaceFolders').value([mockWorkspace]);
@@ -53,6 +59,8 @@ suite('Utilities Test Suite', () => {
 
     teardown(() => {
         sandbox.restore();
+        // Note: fs functions are not explicitly restored as they're module-level
+        // and will be reset between test file executions
     });
 
     suite('getWorkspaceDirectory function', () => {
