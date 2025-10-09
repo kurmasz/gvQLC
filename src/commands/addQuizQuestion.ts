@@ -22,6 +22,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         return;
     }
 
+    // Make sure student file is open
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         vscode.window.showErrorMessage('gvQLC: No active editor tab found. (You must have a code snippet selected to add a quiz question.)');
@@ -32,12 +33,12 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         return;
     }
 
+    // Get highlighted code from student's file
     const selection = editor.selection;
     if (selection.isEmpty) {
         vscode.window.showErrorMessage('gvQLC: No code selected. (You must have a code snippet selected to add a quiz question.)');
         return;
     }
-
     const range = new vscode.Range(selection.start, selection.end);
     let selectedText = editor.document.getText(range);
 
@@ -70,11 +71,12 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         { enableScripts: true }
     );
 
-    // HTML content for the Webview
+    // Data passed to the mustache template
     const htmlData = {
         selectedText: selectedText,
         existingQuestions: JSON.stringify(existingQuestions)
     };
+    // HTML content for the Webview
     panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
 
     // Handle messages from the Webview
