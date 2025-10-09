@@ -43,6 +43,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     const config = await gvQLC.config();
     const allStudentsPromise = Util.getAllStudentNames(config);
 
+    // Separate out questions with student name as key for array of question data
     const questionsByStudent: Record<string, PersonalizedQuestionsData[]> = {};
     const submissionRoot = config.submissionRoot;
     for (const question of state.personalizedQuestionsData) {
@@ -53,6 +54,8 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         questionsByStudent[studentName].push(question);
     }
 
+    // Record the amount of questions assigned to each student
+    // and how many students have x number of questions.
     const frequencyMap = new Map<number, number>();
 
     const studentQuestionCounts = new Map<string, number>();
@@ -80,6 +83,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     console.log(`Max questions assigned to any student: ${maxQuestions}`);
     console.log(`Most common number of questions (mode): ${modeQuestions}`);
 
+    // Create labels for each student's questions (e.g., 1a, 1b, 2a, etc.)
     const questionLabels: Record<string, string> = {};
     const studentNumbers: Record<string, number> = {};
 
@@ -87,6 +91,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     let questionIndex = 0;
     const sortedStudentNames = Object.keys(questionsByStudent).sort();
 
+    // Assign student numbers and question labels in alphabetical order of student names
     for (const studentName of sortedStudentNames) {
         studentNumbers[studentName] = studentCounter;
         const questions = questionsByStudent[studentName];
@@ -99,20 +104,23 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         studentCounter++;
     }
 
+    // Reorder questions so that they are grouped by student number
     const reorderedQuestions: PersonalizedQuestionsData[] = [];
     for (const studentName of sortedStudentNames) {
         reorderedQuestions.push(...questionsByStudent[studentName]);
     }
 
+    // Create HTML for summary table of students and their questions
     const buildSummaryTable = (allStudentNames: string[]) => {
 
-        // Create a list of student names where those students with 
-        // no questions are at the end of the list.
+        // Get a sorted list of all students (those with and without questions)
         const allStudents: string[] = Array.from(new Set<string>([
             ...Object.keys(questionsByStudent),
             ...allStudentNames
         ])).sort();
 
+        // Create row for each student, chooses color 
+        // based on number of questions compared to mode
         const summaryRows = allStudents.map(student => {
             const count = studentQuestionCounts.get(student) || 0;
             const hasQuestions = count > 0;
@@ -127,6 +135,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
           `;
         }).join('');
 
+        // HTML for the complete summary table
         return `
           <div id="summaryTableContainer" style="display: none; max-height: 300px; overflow-y: auto; margin-top: 20px;">
               <h2>Student Question Summary</h2>
@@ -150,6 +159,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return text.length > charLimit ? text.slice(0, charLimit) + '...' : text;
     };
 
+    // Create HTML for the main questions table
     const questionsTable = reorderedQuestions.map((question, index) => {
         const studentName = extractStudentName(question.filePath, submissionRoot);
         const count = studentQuestionCounts.get(studentName) || 0;
@@ -171,6 +181,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
         const highlightedCode = escapeHtmlAttr(question.highlightedCode);
 
+        // HTML for each question row
         return `
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
@@ -202,6 +213,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         { enableScripts: true }
     );
 
+    // Data passed to the mustache template
     const data = {
         totalQuestions: reorderedQuestions.length,
         summaryTable: buildSummaryTable(await allStudentsPromise),
@@ -214,6 +226,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage((message) => {
+        // Save button functionality
         if (message.type === 'saveChanges') {
             reorderedQuestions[message.index].highlightedCode = message.updatedCode;
             reorderedQuestions[message.index].text = message.updatedQuestion;
@@ -223,6 +236,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             vscode.window.showInformationMessage('Changes saved successfully!');
         }
 
+        // Exclude from quiz checkbox functionality
         if (message.type === 'toggleExclude') {
             reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
             logToFile('Re-assigning personalizedQuestonsData with reordered questions from toggleExclude');
@@ -230,11 +244,13 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
         }
 
+        // Edit button functionality
         if (message.type === 'editQuestion') {
             vscode.window.showErrorMessage("Prepare openQuestionPanel and uncomment line below", message, { modal: true }, "OK");
             // openEditQuestionPanel(message.index);
         }
 
+        // Refresh view button functionality
         if (message.type === 'refreshView') {
             panel.dispose();
             vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
