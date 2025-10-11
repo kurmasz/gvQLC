@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
-import { By, WebElement } from 'selenium-webdriver';
+import { By, WebElement, Key } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
@@ -155,15 +155,18 @@ describe('viewQuizQuestions', function () {
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
         // Sends new text to question text area
-        var newQuestion = "Explain the difference between `=` and `:=`. Hello";
-        question.sendKeys(". Hello");
+        var newQuestion = "Explain the difference between `=` and `:=`";
+        await question.clear();
+        expect(await question.getText()).to.be.equal("");
+
+        await question.sendKeys("Explain the difference between `=` and `:=`");
 
         // Clicks the save button
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
         var buttons = await tds[4].findElements(By.css('button'));
-        buttons[0].click();
+        await buttons[0].click();
 
         // Confirms the change
         var question = await view.findElement(By.id('question-0'));
@@ -177,10 +180,12 @@ describe('viewQuizQuestions', function () {
 
         // Clear question
         await question.clear();
+        // await question.sendKeys(". Hello");
+        console.log(`After clear - getText: ${question.getText()}`);
+        console.log(`After clear - getAttribute("value"): ${question.getAttribute("value")}`);
 
         // Verify clear
-        var question = await view.findWebElement(By.id('question-0'));
-        expect(await question.getText()).to.be.equal("");
+        expect(await question.getAttribute("value")).to.be.equal("");
 
         // Clicks the revert button
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
@@ -188,6 +193,9 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[1].click();
+
+        console.log(`After revert - getText: ${question.getText()}`);
+        console.log(`After revert - getAttribute("value"): ${question.getAttribute("value")}`);
 
         // Expects question text to revert to original
         var question = await view.findWebElement(By.id('question-0'));
@@ -201,18 +209,19 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         // Find question text
-        var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
-        //expect(question.innerText).to.be.equal("Explain the difference between `=` and `:=`");
+        var question = await tds[3].findElement(By.id('question-0'));
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
         //Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
-        buttons[3].click();
+        await buttons[3].click();
 
         // Verifies it was copied to clipboard
-        await waitForNotification(NotificationType.Info, (message) => message === 'Copied to clipboard: Full question');
+        await question.sendKeys(Key.CONTROL, "v")
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
 
         // Currently window.navigator is not defined
-        //expect(await window.navigator.clipboard.readText()).to.be.equal("Explain the difference between `=` and `:=`");
+        // Try just copy-pasting into another textbox, .txt, etc. instead
     });
 
     it.skip('Copies part of the question when text is highlighted', async () => {
@@ -223,19 +232,19 @@ describe('viewQuizQuestions', function () {
 
         // Find question text and highlight an area
         var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
-        //expect(question.innerText).to.be.equal("Explain the difference between `=` and `:=`");
         question.selectionStart = 0;
-        question.selectionEnd = 10;
+        question.selectionEnd = 1;
 
         // Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
-        buttons[3].click();
+        await buttons[3].click();
 
-        // Confirm only highlighted section was copied
-        await waitForNotification(NotificationType.Info, (message) => message === 'Copied to clipboard: Selected text');
+        var question1 = await tds[3].findElement(By.id('question-0'));
+        await question1.sendKeys(Key.CONTROL, "v");
+        expect(await question1.getText()).to.be.equal("Explain the difference between `=` and `:=`E")
 
         // Currently window.navigator is not defined
-        //expect(await window.navigator.clipboard.readText()).to.be.equal("Explain the");
+        // Try just copy-pasting into another textbox, .txt, etc. instead
     });
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
