@@ -121,12 +121,14 @@ describe("addQuizQuestions", function () {
 
     const buttons = await view.findWebElements(By.css("button"));
     await buttons[0].click();
+    console.log(`After click: getText - ${await questionBox.getText()}`);
+    console.log(`After click: getAttribute("value") - ${await questionBox.getAttribute("value")}`);
 
     expect(await questionBox.getText()).to.be.equal(
       `~~~
       ".html": handle_binary
       ~~~`);
-  })
+  });
 
   it("Copies part of the code segment when text is highlighted", async () => {
     const questionBox = await view.findWebElement(By.css("#question"));
@@ -142,7 +144,7 @@ describe("addQuizQuestions", function () {
       `~~~
       "
       ~~~`);
-  })
+  });
 
   it("saves the question and answer when submitted", async () => {
     const questionBox = await view.findWebElement(By.css("#question"));

@@ -181,8 +181,8 @@ describe('viewQuizQuestions', function () {
         // Clear question
         await question.clear();
         // await question.sendKeys(". Hello");
-        console.log(`After clear - getText: ${question.getText()}`);
-        console.log(`After clear - getAttribute("value"): ${question.getAttribute("value")}`);
+        console.log(`After clear - getText: ${await question.getText()}`);
+        console.log(`After clear - getAttribute("value"): ${await question.getAttribute("value")}`);
 
         // Verify clear
         expect(await question.getAttribute("value")).to.be.equal("");
@@ -194,8 +194,8 @@ describe('viewQuizQuestions', function () {
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[1].click();
 
-        console.log(`After revert - getText: ${question.getText()}`);
-        console.log(`After revert - getAttribute("value"): ${question.getAttribute("value")}`);
+        console.log(`After revert - getText: ${await question.getText()}`);
+        console.log(`After revert - getAttribute("value"): ${await question.getAttribute("value")}`);
 
         // Expects question text to revert to original
         var question = await view.findWebElement(By.id('question-0'));
@@ -217,11 +217,10 @@ describe('viewQuizQuestions', function () {
         await buttons[3].click();
 
         // Verifies it was copied to clipboard
-        await question.sendKeys(Key.CONTROL, "v")
+        await question.sendKeys(Key.CONTROL, "v");
+        console.log(`After paste - getText: ${await question.getText()}`);
+        console.log(`After paste - getAttribute("value"): ${await question.getAttribute("value")}`);
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
-
-        // Currently window.navigator is not defined
-        // Try just copy-pasting into another textbox, .txt, etc. instead
     });
 
     it('Copies part of the question when text is highlighted', async () => {
@@ -241,10 +240,9 @@ describe('viewQuizQuestions', function () {
 
         var question1 = await tds[3].findElement(By.id('question-0'));
         await question1.sendKeys(Key.CONTROL, "v");
-        expect(await question1.getText()).to.be.equal("Explain the difference between `=` and `:=`E")
-
-        // Currently window.navigator is not defined
-        // Try just copy-pasting into another textbox, .txt, etc. instead
+        console.log(`After paste - getText: ${await question1.getText()}`);
+        console.log(`After paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
+        expect(await question1.getText()).to.be.equal("Explain the difference between `=` and `:=`E");
     });
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
