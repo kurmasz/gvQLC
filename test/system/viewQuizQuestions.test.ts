@@ -158,6 +158,7 @@ describe('viewQuizQuestions', function () {
         var questionText = "Explain the difference between `=` and `:=`";
         await question.clear();
         expect(await question.getAttribute("value")).to.be.equal("");
+        console.log("After clear");
 
         await question.sendKeys(questionText);
 
@@ -169,7 +170,7 @@ describe('viewQuizQuestions', function () {
         await buttons[0].click();
 
         // Confirms the change
-        var question = await view.findElement(By.id('question-0'));
+        console.log("After click");
         expect(await question.getAttribute("value")).to.be.equal(questionText);
     });
 
@@ -207,11 +208,9 @@ describe('viewQuizQuestions', function () {
         //Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[3].click();
-        console.log(`Before paste - getAttribute("value"): ${await question.getAttribute("value")}`);
 
         // Verifies it was copied to clipboard
         await question.sendKeys(Key.CONTROL, "v", Key.NULL);
-        console.log(`After paste - getAttribute("value"): ${await question.getAttribute("value")}`);
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
         await buttons[1].click();
     });
