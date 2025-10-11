@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
-import { By, WebElement, Key } from 'selenium-webdriver';
+import { By, WebElement, Key, Actions } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
@@ -128,27 +128,6 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it.skip('Refreshes the page', async () => {
-        var refreshBtn = await view.findWebElement(By.id('refreshBtn'));
-
-        expect(await refreshBtn.isDisplayed()).to.be.true;
-        await refreshBtn.click();
-
-        refreshBtn = await view.findWebElement(By.id('refreshBtn'));
-        expect(await view.isDisplayed()).to.be.true;
-        var expectedNew = `                while line := file.readline():
-                    socket.send_text_line(line)`;
-
-        await verifyQuestionDisplayed(view, {
-            rowIndex: 0,
-            rowLabel: '1a',
-            color: ViewColors.GREEN,
-            file: 'antonio/my_http_server.py',
-            code: expectedNew,
-            question: "Explain the difference between `=` and `:=`",
-        });
-    });
-
     it('Saves the updated question', async () => {
         // Verifies original text
         var question = await view.findWebElement(By.id('question-0'));
@@ -158,7 +137,6 @@ describe('viewQuizQuestions', function () {
         var questionText = "Explain the difference between `=` and `:=`";
         await question.clear();
         expect(await question.getAttribute("value")).to.be.equal("");
-        console.log("After clear");
 
         await question.sendKeys(questionText);
 
@@ -170,7 +148,6 @@ describe('viewQuizQuestions', function () {
         await buttons[0].click();
 
         // Confirms the change
-        console.log("After click");
         expect(await question.getAttribute("value")).to.be.equal(questionText);
     });
 
@@ -355,5 +332,32 @@ describe('viewQuizQuestions', function () {
 
         const container = await view.findWebElement(By.css('#summaryTableContainer'));
         expect(await container.isDisplayed()).to.be.false;
+    });
+
+    it('Refreshes the page', async () => {
+        var refreshBtn = await view.findWebElement(By.id('refreshBtn'));
+
+        expect(await refreshBtn.isDisplayed()).to.be.true;
+        await refreshBtn.click();
+
+        refreshBtn = await view.findWebElement(By.id('refreshBtn'));
+        expect(await view.isDisplayed()).to.be.true;
+        await refreshBtn.click();
+
+        after(async function() {
+            await VSBrowser.instance.driver.switchTo().defaultContent();
+        });
+
+        var expectedNew = `                while line := file.readline():
+                    socket.send_text_line(line)`;
+
+        await verifyQuestionDisplayed(view, {
+            rowIndex: 0,
+            rowLabel: '1a',
+            color: ViewColors.GREEN,
+            file: 'antonio/my_http_server.py',
+            code: expectedNew,
+            question: "Explain the difference between `=` and `:=`",
+        });
     });
 });
