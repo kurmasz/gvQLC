@@ -121,10 +121,8 @@ describe("addQuizQuestions", function () {
 
     const buttons = await view.findWebElements(By.css("button"));
     await buttons[0].click();
-    console.log(`After click: getText - ${await questionBox.getText()}`);
-    console.log(`After click: getAttribute("value") - ${await questionBox.getAttribute("value")}`);
 
-    expect(await questionBox.getText()).to.be.equal(
+    expect(await questionBox.getAttribute("value")).to.be.equal(
       `~~~
       ".html": handle_binary
       ~~~`);
@@ -140,7 +138,7 @@ describe("addQuizQuestions", function () {
     questionBox1.selectionEnd = 1;
     await buttons[0].click();
 
-    expect(await questionBox.getText()).to.be.equal(
+    expect(await questionBox.getAttribute("value")).to.be.equal(
       `~~~
       "
       ~~~`);

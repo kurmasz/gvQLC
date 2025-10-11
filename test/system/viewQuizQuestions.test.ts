@@ -178,13 +178,8 @@ describe('viewQuizQuestions', function () {
         var question = await view.findWebElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
-        // Clear question
+        // Clear question and verify clear
         await question.clear();
-        // await question.sendKeys(". Hello");
-        console.log(`After clear - getText: ${await question.getText()}`);
-        console.log(`After clear - getAttribute("value"): ${await question.getAttribute("value")}`);
-
-        // Verify clear
         expect(await question.getAttribute("value")).to.be.equal("");
 
         // Clicks the revert button
@@ -193,9 +188,6 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[1].click();
-
-        console.log(`After revert - getText: ${await question.getText()}`);
-        console.log(`After revert - getAttribute("value"): ${await question.getAttribute("value")}`);
 
         // Expects question text to revert to original
         var question = await view.findWebElement(By.id('question-0'));
@@ -215,12 +207,14 @@ describe('viewQuizQuestions', function () {
         //Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[3].click();
+        console.log(`Before paste - getText: ${await question.getText()}`);
+        console.log(`Before paste - getAttribute("value"): ${await question.getAttribute("value")}`);
 
         // Verifies it was copied to clipboard
-        await question.sendKeys(Key.CONTROL, "v");
+        await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         console.log(`After paste - getText: ${await question.getText()}`);
         console.log(`After paste - getAttribute("value"): ${await question.getAttribute("value")}`);
-        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
     });
 
     it('Copies part of the question when text is highlighted', async () => {
@@ -231,15 +225,17 @@ describe('viewQuizQuestions', function () {
 
         // Find question text and highlight an area
         var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
+        var question1 = await tds[3].findElement(By.id('question-0'));
         question.selectionStart = 0;
         question.selectionEnd = 1;
 
         // Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[3].click();
+        console.log(`Before paste - getText: ${await question1.getText()}`);
+        console.log(`Before paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
 
-        var question1 = await tds[3].findElement(By.id('question-0'));
-        await question1.sendKeys(Key.CONTROL, "v");
+        await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
         console.log(`After paste - getText: ${await question1.getText()}`);
         console.log(`After paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
         expect(await question1.getText()).to.be.equal("Explain the difference between `=` and `:=`E");
