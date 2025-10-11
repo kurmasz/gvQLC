@@ -207,14 +207,13 @@ describe('viewQuizQuestions', function () {
         //Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[3].click();
-        console.log(`Before paste - getText: ${await question.getText()}`);
         console.log(`Before paste - getAttribute("value"): ${await question.getAttribute("value")}`);
 
         // Verifies it was copied to clipboard
         await question.sendKeys(Key.CONTROL, "v", Key.NULL);
-        console.log(`After paste - getText: ${await question.getText()}`);
         console.log(`After paste - getAttribute("value"): ${await question.getAttribute("value")}`);
-        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
+        expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`");
+        await buttons[1].click();
     });
 
     it('Copies part of the question when text is highlighted', async () => {
@@ -227,18 +226,17 @@ describe('viewQuizQuestions', function () {
         var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
         var question1 = await tds[3].findElement(By.id('question-0'));
         question.selectionStart = 0;
-        question.selectionEnd = 1;
+        question.selectionEnd = 2;
 
         // Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[3].click();
-        console.log(`Before paste - getText: ${await question1.getText()}`);
         console.log(`Before paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
 
         await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
-        console.log(`After paste - getText: ${await question1.getText()}`);
         console.log(`After paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
-        expect(await question1.getText()).to.be.equal("Explain the difference between `=` and `:=`E");
+        expect(await question1.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`E");
+        await buttons[1].click();
     });
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
