@@ -119,7 +119,7 @@ describe("addQuizQuestions", function () {
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.clear();
 
-    const buttons = await view.findElements(By.css("button"));
+    const buttons = await view.findWebElements(By.css("button"));
     await buttons[0].click();
 
     expect(await questionBox.getText()).to.be.equal(
@@ -133,7 +133,7 @@ describe("addQuizQuestions", function () {
     const questionBox1 = await view.findWebElement(By.css("#question")) as unknown as HTMLTextAreaElement;
     await questionBox.clear();
 
-    const buttons = await view.findElements(By.css("button"));
+    const buttons = await view.findWebElements(By.css("button"));
     questionBox1.selectionStart = 0;
     questionBox1.selectionEnd = 1;
     await buttons[0].click();
