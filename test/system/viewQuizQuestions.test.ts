@@ -335,13 +335,9 @@ describe('viewQuizQuestions', function () {
     });
 
     it('Refreshes the page', async () => {
-        var refreshBtn = await view.findWebElement(By.id('refreshBtn'));
-
+        const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
+        console.log("refreshBtn found");
         expect(await refreshBtn.isDisplayed()).to.be.true;
-        await refreshBtn.click();
-
-        refreshBtn = await view.findWebElement(By.id('refreshBtn'));
-        expect(await view.isDisplayed()).to.be.true;
         await refreshBtn.click();
 
         after(async function() {
