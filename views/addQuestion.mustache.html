@@ -93,14 +93,11 @@
                 return;
             }
 
-            //refactoring: 
-            //  (existingQuestions is passed in via mustache now)
-            //  not currently functioning in original
-            //  could not test refactor
-            const filtered = {existingQuestions}.filter(q => 
+            const filtered = {{{existingQuestions}}}.filter(q => 
                 q && q.toLowerCase().includes(currentInput))
                 .slice(0, 5);
-
+            console.log(filtered);
+            console.log("test");
             if (filtered.length === 0) {
                 hideSuggestions();
                 return;
@@ -108,11 +105,7 @@
 
             suggestionsContainer.innerHTML = filtered.map(q => {
                 const escapedText = q.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                //refactoring:
-                //  can not currently test refactor as suggestions 
-                //  are broken in original
-                //return \`<div class="suggestion-item">\${escapedText}</div>\`;
-                return `<div class="suggestion-item">{{escapedText}}</div>`;
+                return '<div class="suggestion-item">' + escapedText + '</div>';
             }).join('');
 
             document.querySelectorAll('.suggestion-item').forEach((item, index) => {
