@@ -11,11 +11,10 @@
  * *********************************************************************************/
 
 import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
-import { By, WebElement } from 'selenium-webdriver';
+import { By, WebElement, Key, Actions } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
-
 
 import { expect } from 'chai';
 
@@ -129,6 +128,112 @@ describe('viewQuizQuestions', function () {
         });
     });
 
+    it('Saves the updated question', async () => {
+        // Verifies original text
+        var question = await view.findWebElement(By.id('question-0'));
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
+
+        // Sends new text to question text area
+        var questionText = "Explain the difference between `=` and `:=`";
+        await question.clear();
+        expect(await question.getAttribute("value")).to.be.equal("");
+
+        await question.sendKeys(questionText);
+
+        // Clicks the save button
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+        var buttons = await tds[4].findElements(By.css('button'));
+        await buttons[0].click();
+
+        // Confirms the change
+        expect(await question.getAttribute("value")).to.be.equal(questionText);
+    });
+
+    it('Reverts the changes to a question', async () => {
+        // Verify original question
+        var question = await view.findWebElement(By.id('question-0'));
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
+
+        // Clear question and verify clear
+        await question.clear();
+        expect(await question.getAttribute("value")).to.be.equal("");
+
+        // Clicks the revert button
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+        var buttons = await tds[4].findElements(By.css('button'));
+        await buttons[1].click();
+
+        // Expects question text to revert to original
+        var question = await view.findWebElement(By.id('question-0'));
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
+    });
+
+    it('Copies the full question when no text is highlighted', async () => {
+        // Issues getting to clipboard to confirm it did copy
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+
+        // Find question text
+        var question = await tds[3].findElement(By.id('question-0'));
+        expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
+
+        //Click the copy button
+        var buttons = await tds[4].findElements(By.css('button'));
+        await buttons[3].click();
+
+        // Verifies it was copied to clipboard
+        await question.sendKeys(Key.CONTROL, "v", Key.NULL);
+        expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
+        await buttons[1].click();
+    });
+
+    it.skip('Copies part of the question when text is highlighted', async () => {
+        // Will fail if run
+        // Issue with selectionStart and selectionEnd not actually highlighting text
+        // So it'll copy the full text instead
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+
+        // Find question text and highlight an area
+        var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
+        var question1 = await tds[3].findElement(By.id('question-0'));
+        question.selectionStart = 0;
+        question.selectionEnd = 2;
+
+        // Click the copy button
+        var buttons = await tds[4].findElements(By.css('button'));
+        await buttons[3].click();
+        console.log(`Before paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
+
+        await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
+        console.log(`After paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
+        expect(await question1.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`E");
+        await buttons[1].click();
+    });
+
+    it('Excludes a question when the "Exclude Question" box is checked', async () => {
+        var checkbox = await view.findWebElement(By.id('exclude-0'));
+        // Originally not excluded
+        expect(await checkbox.isDisplayed()).to.be.true;
+        expect(await checkbox.isSelected()).to.equal(false);
+        
+        // Should be excluded
+        await checkbox.click();
+        expect(await checkbox.isDisplayed()).to.be.true;
+        expect(await checkbox.isSelected()).to.equal(true);
+
+        // Unexclude it
+        await checkbox.click();
+        expect(await checkbox.isDisplayed()).to.be.true;
+        expect(await checkbox.isSelected()).to.equal(false);
+    });
+
     /////////////////////////
     //
     // Student Summary
@@ -162,7 +267,7 @@ describe('viewQuizQuestions', function () {
             var student_name = await tds[0].getText();
             student_names.push(student_name);
         }
-        alphabetical_names = await student_names.sort();
+        alphabetical_names = student_names.sort();
         expect(student_names == alphabetical_names).to.be.true;
     });
 
@@ -227,5 +332,30 @@ describe('viewQuizQuestions', function () {
 
         const container = await view.findWebElement(By.css('#summaryTableContainer'));
         expect(await container.isDisplayed()).to.be.false;
+    });
+
+    it.skip('Refreshes the page', async () => {
+        // Issues with the after(async function() { lines
+
+        const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
+        console.log("refreshBtn found");
+        expect(await refreshBtn.isDisplayed()).to.be.true;
+        await refreshBtn.click();
+
+        after(async function() {
+            await VSBrowser.instance.driver.switchTo().defaultContent();
+        });
+
+        var expectedNew = `                while line := file.readline():
+                    socket.send_text_line(line)`;
+
+        await verifyQuestionDisplayed(view, {
+            rowIndex: 0,
+            rowLabel: '1a',
+            color: ViewColors.GREEN,
+            file: 'antonio/my_http_server.py',
+            code: expectedNew,
+            question: "Explain the difference between `=` and `:=`",
+        });
     });
 });

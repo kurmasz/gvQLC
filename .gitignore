@@ -7,3 +7,8 @@ test-resources/
 .DS_Store
 Thumbs.db
 .test_gitignore
+
+gvQLC.quizQuestions.json
+personalizedQuestions.json
+
+gvQLC.quizQuestions.json
