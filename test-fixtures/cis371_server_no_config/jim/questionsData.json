@@ -1,0 +1,19 @@
+[
+  {
+    "filePath": "/Users/kurmasz/Documents/LocalResearch/QLC/qlc_workspace/cis371_server/jim/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 145,
+        "character": 0
+      },
+      "end": {
+        "line": 145,
+        "character": 18
+      }
+    },
+    "text": "What happens if you don't close the socket? ",
+    "highlightedCode": "    socket.close()",
+    "answer": "",
+    "timestamp": "2025-05-07T18:39:14.441Z"
+  }
+]

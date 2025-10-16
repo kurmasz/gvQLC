@@ -77,7 +77,8 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
 
     const mapStudentName = (name: string) => {
-        return state.studentNameMapping[name] || name;
+        return name;
+        // return state.studentNameMapping[name] || name;
     };
 
     // config is lazy-loaded (so that the modal dialog asking the user to 
@@ -85,7 +86,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     // command that needs a config file).
     // Because the function is async, it is cleaner and more efficient to hold
     // onto the config and pass it around once we obtain it.
-    const config = await gvQLC.config();
+    const config = await gvQLC.config(true);
     const allStudentsPromise = Util.getAllStudentNames(config);
 
     const questionsByStudent: Record<string, PersonalizedQuestionsData[]> = {};

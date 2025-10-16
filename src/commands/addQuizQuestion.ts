@@ -270,8 +270,14 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'submitQuestion') {
-            const submissionRoot = (await config()).submissionRoot;
+           
+            
+            // TODO: Is studentName here because it might be useful later when we 
+            // add the quiz prep feature?)
+            /* 
+            const submissionRoot = (await config(true)).submissionRoot;
             const studentName = Util.extractStudentName(editor.document.uri.fsPath, submissionRoot);
+            */
             const questionData = {
                 filePath: relativePath, // Using relative path here
                 range: {

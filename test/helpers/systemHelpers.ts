@@ -37,13 +37,15 @@ async function openWorkspaceFromPath(folder: string) {
   await new Workbench().wait();
 }
 
-export async function openWorkspace(folder: string) {
-  return await openWorkspaceFromPath(
-    path.resolve(path.join("test-fixtures", folder))
-  );
+export function fixturePath(fixtureName: string) {
+  return path.resolve(path.join("test-fixtures", fixtureName));
 }
 
-export async function openTempWorkspace(folder: string) {
+export async function openWorkspace(folder: string) {
+  return await openWorkspaceFromPath(fixturePath(folder));
+}
+
+export async function makeTempCopy(folder: string) {
   const sourceDir = path.resolve(path.join("test-fixtures", folder));
   const tempWorkspaceDir = await fs.mkdtemp(
     path.resolve(path.join("test-fixtures-tmp", folder + "-"))
@@ -53,6 +55,11 @@ export async function openTempWorkspace(folder: string) {
   console.log(tempWorkspaceDir);
 
   await fs.copy(sourceDir, tempWorkspaceDir);
+  return tempWorkspaceDir;
+}
+
+export async function openTempWorkspace(folder: string) {
+  const tempWorkspaceDir = await makeTempCopy(folder);
   await openWorkspaceFromPath(tempWorkspaceDir);
   return tempWorkspaceDir;
 }
@@ -94,7 +101,7 @@ export async function waitForNotification(
         expect.fail("No notifications appeared.");
       } else {
         expect.fail(
-          `None of the notifications matched: ${messages.join(", ")}`
+          `None of these notifications matched the target: ${messages.map((msg) => `"${msg}"`).join(", ")}`
         );
       }
     } else {
@@ -216,7 +223,7 @@ export async function actAndAwaitUpdate(
       if (currentParsedInput.uniqID === originalParsedInput.uniqID) {
         console.log("Update not complete.");
       } else {
-        console.log('Setting updated data.');
+        console.log("Setting updated data.");
         updatedData = currentParsedInput;
         return true;
       }
@@ -229,11 +236,11 @@ export async function actAndAwaitUpdate(
     }
     // Default wait for wait() is too short for this case.
     await new Promise((r) => setTimeout(r, 1000));
-    console.log('Go around');
+    console.log("Go around");
     return false;
   }, timeout);
 
-  console.log('returning updated data');
+  console.log("returning updated data");
   console.log(updatedData);
   return updatedData!.data;
 }

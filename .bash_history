@@ -42,3 +42,5 @@ grep run package.json
 less package.json 
 xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npm run test
 exit
+npm run test:system:linux
+npm run test:system:linux
