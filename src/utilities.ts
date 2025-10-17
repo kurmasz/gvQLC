@@ -188,7 +188,7 @@ export function loadPersistedData() {
   }
   if (verifyAndSetWorkspaceRoot()) {
     logToFile(
-      `(Re)Loading personalized Questoins data from ${quizQuestionsFileName}`
+      `(Re)Loading personalized Questions data from ${quizQuestionsFileName}`
     );
     state.commentsData.push(...loadDataFromFile("commentsData.json"));
     state.questionsData.push(...loadDataFromFile("questionsData.json"));

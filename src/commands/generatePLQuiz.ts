@@ -25,12 +25,13 @@ import { logToFile } from "../fileLogger";
 export const generatePLQuizCommand = vscode.commands.registerCommand(
   "gvqlc.generatePLQuiz",
   async () => {
+    logToFile('Enter generatePLQuizCommand');
     // This should verify that a workspace is open and return if not.
     if (!Util.loadPersistedData()) {
       console.log("Could not load data");
       return false;
     }
-
+    logToFile('Checking data length');
     // It is important that the question length be tested before
     // accessing the config file. That way we don't create a config
     // file unless there are existing questions.
@@ -48,7 +49,7 @@ export const generatePLQuizCommand = vscode.commands.registerCommand(
     const config = await getConfig(true);
     logToFile("Returned from getConfig()");
     logToFile(config);
-    
+
     if (!config.pl_ready) {
       vscode.window.showErrorMessage("Config file has not been customized.");
 
