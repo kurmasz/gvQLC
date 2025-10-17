@@ -6,8 +6,8 @@
 5 silly config load:file:/usr/local/etc/npmrc
 6 verbose title npm run test:system:base
 7 verbose argv "run" "test:system:base"
-8 verbose logfile logs-max:10 dir:/home/vscode/.npm/_logs/2025-10-17T16_10_45_404Z-
-9 verbose logfile /home/vscode/.npm/_logs/2025-10-17T16_10_45_404Z-debug-0.log
+8 verbose logfile logs-max:10 dir:/home/vscode/.npm/_logs/2025-10-17T16_37_17_514Z-
+9 verbose logfile /home/vscode/.npm/_logs/2025-10-17T16_37_17_514Z-debug-0.log
 10 silly logfile start cleaning logs, removing 1 files
 11 silly logfile done cleaning log files
 12 verbose cwd /home/vscode

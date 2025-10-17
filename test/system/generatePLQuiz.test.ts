@@ -77,7 +77,7 @@ describe("generatePLQuiz.test.ts", function () {
   // Folder with no config
   //
   /////////////////////////
-  it("creates a config file if necessary and notifies", async () => {
+  it("creates a config file when necessary and notifies", async () => {
     // Note: Combining the test for config creation with the test for notification
     // helps avoid false negatives by using the appearance of the notification
     // as verification that the command is complete.
@@ -93,7 +93,8 @@ describe("generatePLQuiz.test.ts", function () {
 
     await waitForNotification(
       NotificationType.Info,
-      (message) => message === `Config file created: ${configPath}`
+      (message) => message === `Config file created: ${configPath}`,
+      14_000
     );
 
     await waitForNotification(

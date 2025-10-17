@@ -4,10 +4,10 @@
 3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
 4 silly config load:file:/home/vscode/.npmrc
 5 silly config load:file:/usr/local/etc/npmrc
-6 verbose title npm run test:system:linux
-7 verbose argv "run" "test:system:linux"
-8 verbose logfile logs-max:10 dir:/home/vscode/.npm/_logs/2025-10-17T16_10_44_907Z-
-9 verbose logfile /home/vscode/.npm/_logs/2025-10-17T16_10_44_907Z-debug-0.log
+6 verbose title npm run vscode:prepublish
+7 verbose argv "run" "vscode:prepublish"
+8 verbose logfile logs-max:10 dir:/home/vscode/.npm/_logs/2025-10-17T16_37_18_877Z-
+9 verbose logfile /home/vscode/.npm/_logs/2025-10-17T16_37_18_877Z-debug-0.log
 10 silly logfile start cleaning logs, removing 1 files
 11 silly logfile done cleaning log files
 12 verbose cwd /home/vscode
