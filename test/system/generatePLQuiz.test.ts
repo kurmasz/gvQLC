@@ -32,7 +32,7 @@ import {
   verifyExactDirectoryContents,
 } from "../helpers/plHelpers";
 
-import { configFileName } from "../../src/sharedConstants";
+import { configFileName, quizQuestionsFileName } from '../../src/sharedConstants';
 
 import * as path from "path";
 import * as fs from "fs";
@@ -93,6 +93,9 @@ describe("generatePLQuiz.test.ts", function () {
     // Make sure the fixture didn't get messed up.
     const configPath = path.join(tempWorkspaceDir, configFileName);
     expect(fs.existsSync(configPath)).to.be.false;
+
+    const qPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
+    expect(fs.existsSync(qPath), `Where is ${qPath}`).to.be.true;
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 

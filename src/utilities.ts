@@ -84,7 +84,7 @@ export function loadDataFromFile(fileName: string) {
   logToFile(`Enter loadDataFromFile ${fileName}`);
   const workspaceDir = getWorkspaceDirectory();
   const filePath = path.join(workspaceDir, fileName);
-  logToFile(`Processing loadDataFromFile for ${filePath}`)
+  logToFile(`Processing loadDataFromFile for ${filePath}`);
   if (fs.existsSync(filePath)) {
     const rawInput = fs.readFileSync(filePath, "utf-8");
     const parsedInput = JSON.parse(rawInput);
@@ -199,8 +199,8 @@ export function loadPersistedData() {
     logToFile(
       `(Re)Loading personalized Questions data from ${quizQuestionsFileName}`
     );
-    state.commentsData.push(...loadDataFromFile("commentsData.json"));
-    state.questionsData.push(...loadDataFromFile("questionsData.json"));
+    state.commentsData.push(...loadDataFromFile("commentsData.json"));   // zk Not presently used
+    state.questionsData.push(...loadDataFromFile("questionsData.json")); // zk Not presently used
     state.personalizedQuestionsData.push(
       ...loadDataFromFile(quizQuestionsFileName)
     );

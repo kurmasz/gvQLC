@@ -50,9 +50,9 @@ export async function makeTempCopy(folder: string) {
   const tempWorkspaceDir = await fs.mkdtemp(
     path.resolve(path.join("test-fixtures-tmp", folder + "-"))
   );
-  console.log("----------------------");
-  console.log(sourceDir);
-  console.log(tempWorkspaceDir);
+
+  console.log(`copying ${sourceDir} to ${tempWorkspaceDir}`);
+  
 
   await fs.copy(sourceDir, tempWorkspaceDir);
   return tempWorkspaceDir;
