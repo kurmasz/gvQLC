@@ -7,8 +7,8 @@
 6 silly config load:file:/usr/local/etc/npmrc
 7 verbose title npm list
 8 verbose argv "list" "--production" "--parseable" "--depth" "99999" "--loglevel" "error"
-9 verbose logfile logs-max:10 dir:/home/vscode/.npm/_logs/2025-10-16T20_09_19_444Z-
-10 verbose logfile /home/vscode/.npm/_logs/2025-10-16T20_09_19_444Z-debug-0.log
+9 verbose logfile logs-max:10 dir:/home/vscode/.npm/_logs/2025-10-17T16_10_53_361Z-
+10 verbose logfile /home/vscode/.npm/_logs/2025-10-17T16_10_53_361Z-debug-0.log
 11 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
 12 silly logfile start cleaning logs, removing 1 files
 13 silly logfile done cleaning log files

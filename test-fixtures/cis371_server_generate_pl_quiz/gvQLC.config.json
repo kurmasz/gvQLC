@@ -14,7 +14,7 @@
   "timeLimitMin": 45,
   "daysForGrading": 14,
   "reviewEndDate": "2025-05-23T23:59:59",
-  "password": "luggage",
+  "password": "luggage1234",
   "language": "java",
   "studentNameMapping": {  }
 }

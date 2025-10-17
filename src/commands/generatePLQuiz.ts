@@ -19,11 +19,11 @@ import { quizQuestionsFileName } from "../sharedConstants";
 import * as Util from "../utilities";
 import { PersonalizedQuestionsData } from "../types";
 import { openConfigFileEditTab } from "../configFile";
+import { isTypedArray } from "util/types";
 
 export const generatePLQuizCommand = vscode.commands.registerCommand(
   "gvqlc.generatePLQuiz",
   async () => {
-
     // This should verify that a workspace is open and return if not.
     if (!Util.loadPersistedData()) {
       console.log("Could not load data");
@@ -31,8 +31,8 @@ export const generatePLQuizCommand = vscode.commands.registerCommand(
     }
 
     // It is important that the question length be tested before
-    // accessing the config file. That way we don't create a config 
-    // file unless there are existing questions. 
+    // accessing the config file. That way we don't create a config
+    // file unless there are existing questions.
     if (state.personalizedQuestionsData.length === 0) {
       vscode.window.showErrorMessage(
         "No personalized questions available to generate the quiz!"
@@ -40,12 +40,12 @@ export const generatePLQuizCommand = vscode.commands.registerCommand(
       return;
     }
 
-    // Calling getConfig() and openConfigFile() 
-    // here is safe because we have already verified that 
+    // Calling getConfig() and openConfigFile()
+    // here is safe because we have already verified that
     // there is a workspace open.
     const config = await getConfig(true);
     if (!config.pl_ready) {
-      vscode.window.showErrorMessage('Config file has not been customized.');
+      vscode.window.showErrorMessage("Config file has not been customized.");
 
       // TODO: Add test to verify that window is opened in a different column
       openConfigFileEditTab();
@@ -160,7 +160,9 @@ ${question.text || "No question text provided"}
 </markdown>
     ${
       question.highlightedCode
-        ? `<pl-code language="${config.language}">\n${Util.escapeHtmlAttr(question.highlightedCode)}\n</pl-code>`
+        ? `<pl-code language="${config.language}">\n${Util.escapeHtmlAttr(
+            question.highlightedCode
+          )}\n</pl-code>`
         : ""
     }
 </pl-question-panel>`;
@@ -196,6 +198,17 @@ ${question.text || "No question text provided"}
         fs.mkdirSync(studentAssessmentFolderPath, { recursive: true });
       }
 
+      // toISOString will add a time zone (UTC by default).
+      const startOfReviewUTC = new Date(
+        new Date(config.startDate).getTime() + config.daysForGrading * 86400000
+      ).toISOString();
+
+      // Remove teh time zone component so that PL
+      // will interpret the value in local time (as defined
+      // by the course).
+      const startOfReview = startOfReviewUTC.endsWith('Z') ? startOfReviewUTC.slice(0, -1) : startOfReviewUTC;
+
+
       // Generate infoAssessment.json for student
       const infoAssessmentContent = {
         uuid: randomUUID(),
@@ -215,11 +228,9 @@ ${question.text || "No question text provided"}
           },
           {
             mode: "Public",
+            uids: [studentName],
             credit: 0,
-            startDate: new Date(
-              new Date(config.startDate).getTime() +
-                config.daysForGrading * 86400000
-            ).toISOString(),
+            startDate: startOfReview,
             endDate: config.reviewEndDate,
             active: false,
           },
@@ -272,7 +283,9 @@ ${question.text || "No question text provided"}
         // Extract the code blocks and question text
         const questionText = question.text || "No question text provided";
         const codeBlock = question.highlightedCode
-          ? `<pl-code language="${config.language}">\n${Util.escapeHtmlAttr(question.highlightedCode)}\n</pl-code>`
+          ? `<pl-code language="${config.language}">\n${Util.escapeHtmlAttr(
+              question.highlightedCode
+            )}\n</pl-code>`
           : "";
 
         combinedHTMLContent += `
