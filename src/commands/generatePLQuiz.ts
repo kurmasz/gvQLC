@@ -29,9 +29,10 @@ export const generatePLQuizCommand = vscode.commands.registerCommand(
     // This should verify that a workspace is open and return if not.
     if (!Util.loadPersistedData()) {
       console.log("Could not load data");
+      logToFile('Could not load persisted data');
       return false;
     }
-    logToFile('Checking data length');
+    logToFile(`Checking data length: ${state.personalizedQuestionsData.length}`);
     // It is important that the question length be tested before
     // accessing the config file. That way we don't create a config
     // file unless there are existing questions.

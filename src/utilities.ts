@@ -80,22 +80,28 @@ export function getWorkspaceDirectory() {
 
 // Helper function to load data from a file in the workspace directory
 export function loadDataFromFile(fileName: string) {
+  logToFile(`Enter loadDataFromFile ${fileName}`);
   const workspaceDir = getWorkspaceDirectory();
   const filePath = path.join(workspaceDir, fileName);
   if (fs.existsSync(filePath)) {
     const rawInput = fs.readFileSync(filePath, "utf-8");
     const parsedInput = JSON.parse(rawInput);
+    logToFile(`File ${fileName} parsed.`);
     if (typeof parsedInput === "string" || Array.isArray(parsedInput)) {
       return parsedInput;
     } else {
       return parsedInput.data;
     }
   }
+  logToFile(`File ${fileName} doesn't exist. Returning []`);
   return [];
 }
 
 // Helper function to ensure quizQuestionsFileName is added to .gitignore
 export function ensureGitignoreForQuizQuestionsFile() {
+  
+  // TODO: Has this been tested?
+
   // We need to divert this activity in the test environment, otherwise,
   // the .gitignore file will prevent the CI tests from running properly.
   const isTestEnv =
@@ -119,6 +125,7 @@ export function ensureGitignoreForQuizQuestionsFile() {
     // Create a .gitignore file and add quizQuestionsFileName
     fs.writeFileSync(gitignorePath, `${quizQuestionsFileName}\n`);
   }
+  logToFile('Leaving ensureGitignoreForQuizQuestions');
 }
 
 // TODO Still need to handle error cases (empty filePath,
@@ -196,8 +203,10 @@ export function loadPersistedData() {
       ...loadDataFromFile(quizQuestionsFileName)
     );
 
+    logToFile('Before ensureGitIgnore');
     // Ensure quizQuestionsFileName is in .gitignore
     ensureGitignoreForQuizQuestionsFile();
+    logToFile('After ensureGitIgnore');
     state.dataLoaded = true;
     return true;
   }
