@@ -43,6 +43,7 @@ export function fixturePath(fixtureName: string) {
   );
   const msg = `Fixture path ${answer} should exist but does not.`;
   expect(fs.existsSync(answer), msg).to.be.true;
+  console.log(`Fixture ${answer} exists`);
   return answer;
 }
 
@@ -61,7 +62,7 @@ export async function makeTempCopy(folder: string) {
 
   const msg = `Temp fixture path ${tempWorkspaceDir} should exist but does not.`;
   expect(fs.existsSync(tempWorkspaceDir), msg).to.be.true;
-
+  console.log(`Temp directory ${tempWorkspaceDir} exists.`);
   return tempWorkspaceDir;
 }
 

@@ -96,9 +96,10 @@ describe("generatePLQuiz.test.ts", function () {
     expect(fs.existsSync(configPath)).to.be.false;
 
     const qPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
-    const files = fs.readdirSync(qPath);
-    logToFile(`Contents of ${qPath}`);
-    logToFile(files.join("\n"));
+    console.log('About to check copy.');
+    const files = fs.readdirSync(tempWorkspaceDir);
+    console.log(`Contents of ${tempWorkspaceDir}`);
+    console.log(files.join("\n"));
 
 
     expect(fs.existsSync(qPath), `Where is "${qPath}"?`).to.be.true;
