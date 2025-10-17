@@ -98,15 +98,10 @@ describe("generatePLQuiz.test.ts", function () {
 
     let count = 1;
     await VSBrowser.instance.driver.wait(async () => {
-      console.log(`Looking for config ${count}`);
+      console.log(`(${count}) Looking for config ${configPath}`);
       count++;
       return fs.existsSync(configPath);
     }, 60_000);
-
-    expect(
-      fs.existsSync(configPath),
-      `Looking for ${configPath} after executing command`
-    ).to.be.true;
 
     await waitForNotification(
       NotificationType.Info,

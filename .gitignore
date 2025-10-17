@@ -7,3 +7,5 @@ test-resources/
 .DS_Store
 Thumbs.db
 .test_gitignore
+.npm
+gvQLC_log.txt

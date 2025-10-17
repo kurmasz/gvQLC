@@ -76,9 +76,9 @@ jobs:
         if: ${{ matrix.os != 'windows-latest' }}
         run: find . -path './node_modules' -prune -o -print
 
-      - name: Code
+      - name: Print Logs
         if: always()
-        run: cat out/test/helpers/systemHelpers.js
+        run: cat gvQLC_log.txt
 
   check:
     if: always()
