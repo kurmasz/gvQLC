@@ -14,8 +14,7 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
-//export const logFileName = path.join(os.tmpdir(), 'gvQLC_log.txt');
-export const logFileName = path.join(process.cwd(), 'gvQLC_log.txt');
+export const logFileName = path.join(require('os').tmpdir(), 'gvQLC_log.txt');
 export function logToFile(msg: unknown): void {
   let output: string;
 

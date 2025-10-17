@@ -78,7 +78,11 @@ jobs:
 
       - name: Print Logs
         if: always()
-        run: cat gvQLC_log.txt
+        run: |
+          LOGFILE="$(node -p "require('path').join(require('os').tmpdir(), 'gvQLC_log.txt')")"
+          echo "Log file is at: $LOGFILE"
+          cat "$LOGFILE" || echo "No log file found"
+
 
   check:
     if: always()

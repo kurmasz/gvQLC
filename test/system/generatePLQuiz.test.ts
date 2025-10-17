@@ -101,12 +101,11 @@ describe("generatePLQuiz.test.ts", function () {
       console.log(`(${count}) Looking for config ${configPath}`);
       count++;
       return fs.existsSync(configPath);
-    }, 60_000);
+    }, 25_000);
 
     await waitForNotification(
       NotificationType.Info,
-      (message) => message === `Config file created: ${configPath}`,
-      14_000 // TODO: Reduce this when we find the bug.
+      (message) => message === `Config file created: ${configPath}`
     );
 
     await waitForNotification(
