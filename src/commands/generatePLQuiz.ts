@@ -19,7 +19,8 @@ import { quizQuestionsFileName } from "../sharedConstants";
 import * as Util from "../utilities";
 import { PersonalizedQuestionsData } from "../types";
 import { openConfigFileEditTab } from "../configFile";
-import { isTypedArray } from "util/types";
+import { logToFile } from "../fileLogger";
+
 
 export const generatePLQuizCommand = vscode.commands.registerCommand(
   "gvqlc.generatePLQuiz",
@@ -43,7 +44,11 @@ export const generatePLQuizCommand = vscode.commands.registerCommand(
     // Calling getConfig() and openConfigFile()
     // here is safe because we have already verified that
     // there is a workspace open.
+    logToFile("About to call getConfig()");
     const config = await getConfig(true);
+    logToFile("Returned from getConfig()");
+    logToFile(config);
+    
     if (!config.pl_ready) {
       vscode.window.showErrorMessage("Config file has not been customized.");
 

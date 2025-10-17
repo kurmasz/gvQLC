@@ -13,6 +13,7 @@ import * as fs from "fs";
 import { configFileName } from "./sharedConstants";
 import { ConfigData } from "./types";
 import * as gvQLC from "./gvQLC";
+import { logToFile } from './fileLogger';
 
 const defaultConfig : ConfigData = {
     submissionRoot: '.',
@@ -46,11 +47,14 @@ export async function loadConfigData(
   onCreate?: (configName: string) => void
 ): Promise<ConfigData> {
   const configURI = getConfigURI();
+  logToFile(`Loading ConfigData from ${configURI.fsPath}`);
   if (fs.existsSync(configURI.fsPath)) {
+    logToFile(`Config file exists ${configURI.fsPath}`);
     const fileData = await vscode.workspace.fs.readFile(configURI);
     const config = JSON.parse(fileData.toString()) as ConfigData;
     return config;
   } else {
+    logToFile(`Creating new config file ${configURI.fsPath}`);
     const config = await createConfigFile(configURI, onCreate);
     return config !== undefined ? config : defaultConfig;
   }
@@ -60,8 +64,10 @@ export async function createConfigFile(
   configURI: vscode.Uri = getConfigURI(),
   onCreate?: (configName: string) => void
 ): Promise<ConfigData | undefined> {
+  logToFile(`Enter createConfigFile ${configURI.fsPath}`);
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
+    logToFile('Leaving createConfigFile because there are no workspace folders');
     vscode.window.showErrorMessage("Unable to create config file: No workspace is open.");
     return undefined;
   }
@@ -71,6 +77,7 @@ export async function createConfigFile(
   const configPath = configURI.fsPath;
 
   if (fs.existsSync(configPath)) {
+    logToFile('Config path already exists');
     const overwrite = await vscode.window.showWarningMessage(
       "Config file already exists. Overwrite?",
       { modal: true },
@@ -79,16 +86,26 @@ export async function createConfigFile(
     );
 
     if (overwrite !== "Yes") {
+      logToFile('Exit createConfigFile without creating becuase user declined to overwrite.');
       return undefined;
     }
   }
 
-  fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
+  try {
+    fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
+  } catch (err) {
+    logToFile(`Writing of config file ${configPath} failed:`);
+    logToFile(err);
+    throw err;
+  }
+
   if (onCreate) {
     onCreate(configPath);
   } else {
     vscode.window.showInformationMessage(`Config file created: ${configPath}`);
   }
+  logToFile('Creation of config file successful');
+  logToFile(defaultConfig);
   return defaultConfig;
 }
 

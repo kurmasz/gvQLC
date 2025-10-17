@@ -11,6 +11,7 @@ import * as vscode from "vscode";
 
 import { PersonalizedQuestionsData, ConfigData } from "./types";
 import { loadConfigData } from "./configFile";
+import { logToFile } from './fileLogger';
 
 // Thoughts
 // * Store filenames relative to project root.
@@ -62,6 +63,7 @@ export function setWorkspaceRoot(root: vscode.WorkspaceFolder) {
 let configData = null as ConfigData | null;
 export async function config(forceReload = false): Promise<ConfigData> {
   if (!configData || forceReload) {
+    logToFile(`Config reload needed (forceReload = ${forceReload}`);
     configData = await loadConfigData();
   }
   return configData;
