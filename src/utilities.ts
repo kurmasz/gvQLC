@@ -74,6 +74,7 @@ export function getWorkspaceDirectory() {
   if (vscode.workspace.workspaceFolders) {
     return _primaryFolderPath();
   } else {
+    logToFile('Throwing error because no workspace folder found');
     throw new Error("No workspace folder found.");
   }
 }
@@ -83,17 +84,18 @@ export function loadDataFromFile(fileName: string) {
   logToFile(`Enter loadDataFromFile ${fileName}`);
   const workspaceDir = getWorkspaceDirectory();
   const filePath = path.join(workspaceDir, fileName);
+  logToFile(`Processing loadDataFromFile for ${filePath}`)
   if (fs.existsSync(filePath)) {
     const rawInput = fs.readFileSync(filePath, "utf-8");
     const parsedInput = JSON.parse(rawInput);
-    logToFile(`File ${fileName} parsed.`);
+    logToFile(`File ${filePath} parsed.`);
     if (typeof parsedInput === "string" || Array.isArray(parsedInput)) {
       return parsedInput;
     } else {
       return parsedInput.data;
     }
   }
-  logToFile(`File ${fileName} doesn't exist. Returning []`);
+  logToFile(`File ${filePath} doesn't exist. Returning []`);
   return [];
 }
 
