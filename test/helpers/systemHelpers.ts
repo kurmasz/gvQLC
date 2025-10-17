@@ -38,7 +38,12 @@ async function openWorkspaceFromPath(folder: string) {
 }
 
 export function fixturePath(fixtureName: string) {
-  return path.resolve(path.join("test-fixtures", fixtureName));
+  const answer = path.resolve(
+    path.join(process.cwd(), "test-fixtures", fixtureName)
+  );
+  const msg = `Fixture path ${answer} should exist but does not.`;
+  expect(fs.existsSync(answer), msg).to.be.true;
+  return answer;
 }
 
 export async function openWorkspace(folder: string) {
@@ -46,15 +51,17 @@ export async function openWorkspace(folder: string) {
 }
 
 export async function makeTempCopy(folder: string) {
-  const sourceDir = path.resolve(path.join("test-fixtures", folder));
+  const sourceDir = fixturePath(folder);
   const tempWorkspaceDir = await fs.mkdtemp(
-    path.resolve(path.join("test-fixtures-tmp", folder + "-"))
+    path.resolve(path.join(process.cwd(), "test-fixtures-tmp", folder + "-"))
   );
 
   console.log(`copying ${sourceDir} to ${tempWorkspaceDir}`);
-  
-
   await fs.copy(sourceDir, tempWorkspaceDir);
+
+  const msg = `Temp fixture path ${tempWorkspaceDir} should exist but does not.`;
+  expect(fs.existsSync(tempWorkspaceDir), msg).to.be.true;
+
   return tempWorkspaceDir;
 }
 
@@ -101,7 +108,9 @@ export async function waitForNotification(
         expect.fail("No notifications appeared.");
       } else {
         expect.fail(
-          `None of these notifications matched the target: ${messages.map((msg) => `"${msg}"`).join(", ")}`
+          `None of these notifications matched the target: ${messages
+            .map((msg) => `"${msg}"`)
+            .join(", ")}`
         );
       }
     } else {
