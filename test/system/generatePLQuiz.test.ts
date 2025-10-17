@@ -10,7 +10,12 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
-import { WebView, NotificationType, Workbench } from "vscode-extension-tester";
+import {
+  VSBrowser,
+  WebView,
+  NotificationType,
+  Workbench,
+} from "vscode-extension-tester";
 import { WebElement } from "selenium-webdriver";
 import {
   openWorkspace,
@@ -91,10 +96,22 @@ describe("generatePLQuiz.test.ts", function () {
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
+    let count = 1;
+    await VSBrowser.instance.driver.wait(async () => {
+      console.log(`Looking for config ${count}`);
+      count++;
+      return fs.existsSync(configPath);
+    }, 60_000);
+
+    expect(
+      fs.existsSync(configPath),
+      `Looking for ${configPath} after executing command`
+    ).to.be.true;
+
     await waitForNotification(
       NotificationType.Info,
       (message) => message === `Config file created: ${configPath}`,
-      14_000
+      14_000 // TODO: Reduce this when we find the bug.
     );
 
     await waitForNotification(
