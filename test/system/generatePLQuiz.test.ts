@@ -38,6 +38,7 @@ import * as path from "path";
 import * as fs from "fs";
 
 import { expect } from "chai";
+import { logToFile } from "../../src/fileLogger";
 
 describe("generatePLQuiz.test.ts", function () {
   const GENERATE_PL_QUIZ_COMMAND = "gvQLC: Generate PrairieLearn Quiz";
@@ -95,7 +96,12 @@ describe("generatePLQuiz.test.ts", function () {
     expect(fs.existsSync(configPath)).to.be.false;
 
     const qPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
-    expect(fs.existsSync(qPath), `Where is ${qPath}`).to.be.true;
+    const files = fs.readdirSync(qPath);
+    logToFile(`Contents of ${qPath}`);
+    logToFile(files.join("\n"));
+
+
+    expect(fs.existsSync(qPath), `Where is "${qPath}"?`).to.be.true;
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
