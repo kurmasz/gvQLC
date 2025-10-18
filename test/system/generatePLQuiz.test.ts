@@ -92,26 +92,19 @@ describe("generatePLQuiz.test.ts", function () {
     const tempWorkspaceDir = await openTempWorkspace(workspaceName);
 
     // Make sure the fixture didn't get messed up.
+    // (1) This fixture shouldn't have a config file. (It is possible
+    // that someone using this fixture to debug code could run the 
+    // command resulting in a config file being added.)
     const configPath = path.join(tempWorkspaceDir, configFileName);
     expect(fs.existsSync(configPath)).to.be.false;
 
-    const qPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
-    console.log('About to check copy.');
-    const files = fs.readdirSync(tempWorkspaceDir);
-    console.log(`Contents of ${tempWorkspaceDir}`);
-    console.log(files.join("\n"));
-
-
-    expect(fs.existsSync(qPath), `Where is "${qPath}"?`).to.be.true;
+    // (2) This fixture *should* have a questions file. (Previously, 
+    // I had a messed-up .gitignore so the questions file didn't get 
+    // pushed, so tests passed locally, but failed in GitHub Actions.)
+    const questionsPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
+    expect(fs.existsSync(questionsPath), `Where is "${questionsPath}"?`).to.be.true;
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
-
-    let count = 1;
-    await VSBrowser.instance.driver.wait(async () => {
-      console.log(`(${count}) Looking for config ${configPath}`);
-      count++;
-      return fs.existsSync(configPath);
-    }, 25_000);
 
     await waitForNotification(
       NotificationType.Info,
