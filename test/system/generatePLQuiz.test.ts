@@ -24,6 +24,7 @@ import {
   waitForNotification,
   dismissAllNotifications,
   fixturePath,
+  logAllNotifications,
 } from "../helpers/systemHelpers";
 
 import {
@@ -106,7 +107,8 @@ describe("generatePLQuiz.test.ts", function () {
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
-    console.log('Await 1');
+    await logAllNotifications();
+    console.log('Await 1: ');
     await waitForNotification(
       NotificationType.Info,
       // (message) => message === `Config file created: ${configPath}`
@@ -140,6 +142,7 @@ describe("generatePLQuiz.test.ts", function () {
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
+ 
     await waitForNotification(
       NotificationType.Info,
       (message) => message === "Successfully generated PrairieLearn Quiz."
