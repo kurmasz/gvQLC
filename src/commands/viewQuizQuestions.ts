@@ -8,6 +8,7 @@
  * *********************************************************************************/
 
 import * as vscode from 'vscode';
+import path from 'path';
 
 import * as gvQLC from '../gvQLC';
 const state = gvQLC.state;
@@ -16,6 +17,7 @@ import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
+import { stringify } from 'querystring';
 
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
@@ -219,7 +221,9 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return `
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-              <td title="${question.filePath}">${shortenedFilePath}</td>
+              <td title="${question.filePath}">
+                <button onclick="openFileAt('${question.filePath}?${question.range.start.line}?${question.range.start.character}?${question.range.end.line}?${question.range.end.character}')">${shortenedFilePath}</button>
+              </td>
               <td>
                   <textarea class="code-area" id="code-${index}">${highlightedCode || 'No highlighted code'}</textarea>
               </td>
@@ -754,7 +758,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     `;
 
     // Handle messages from the Webview
-    panel.webview.onDidReceiveMessage((message) => {
+    panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'saveChanges') {
             reorderedQuestions[message.index].highlightedCode = message.updatedCode;
             reorderedQuestions[message.index].text = message.updatedQuestion;
@@ -787,6 +791,26 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
         if (message.type === 'showErrorMessage') {
             vscode.window.showErrorMessage(message.message);
+        }
+
+        if (message.type === 'openFileAt') {
+            //vscode.window.showErrorMessage(`Opening file ${message.filepath} ${message.start_line} ${message.start_char} ${message.end_line} ${message.end_char}`);
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (!root) {
+                vscode.window.showErrorMessage("Open a workspace folder first.");
+                return;
+            }
+            const fullPath = path.join(root, message.file_path);
+            try {
+                const doc = await vscode.workspace.openTextDocument(fullPath);
+                const editor = await vscode.window.showTextDocument(doc, { preview: false });
+                const posStart = new vscode.Position(Number(message.start_line), Number(message.start_char));
+                const posEnd = new vscode.Position(Number(message.end_line), Number(message.end_char));
+                editor.revealRange(new vscode.Range(posStart, posEnd), vscode.TextEditorRevealType.InCenter);
+                editor.selection = new vscode.Selection(posStart, posEnd);
+            } catch (e) {
+                vscode.window.showErrorMessage("Could not open file: " + String(e));
+            }
         }
     });
 });

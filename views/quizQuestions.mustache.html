@@ -455,6 +455,30 @@
             vscode.postMessage({ type: 'editQuestion', index });
         }
 
+        function openFileAt(value_string) {
+            var values = value_string.split("?");
+            vscode.postMessage({ type: 'openFileAt', file_path: values[0], start_line: values[1], start_char: values[2], end_line: values[3], end_char: values[4] });
+        }
+/*
+        async function openFileAt(question) {
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (!root) {
+                vscode.window.showErrorMessage("Open a workspace folder first.");
+                return;
+            }
+            const fullPath = path.join(root, question.filePath);
+            try {
+                const doc = await vscode.workspace.openTextDocument(fullPath);
+                const editor = await vscode.window.showTextDocument(doc, { preview: false });
+                const posStart = new vscode.Position(question.range.start.line, question.range.start.character);
+                const posEnd = new vscode.Position(question.range.end.line, question.range.end.character);
+                editor.revealRange(new vscode.Range(posStart, posEnd), vscode.TextEditorRevealType.InCenter);
+                editor.selection = new vscode.Selection(posStart, posEnd);
+            } catch (e) {
+                vscode.window.showErrorMessage("Could not open file: " + String(e));
+            }
+        }
+*/
         // Initialize the table when the page loads
         window.addEventListener('load', initializeTable);
     </script>
