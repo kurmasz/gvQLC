@@ -85,6 +85,10 @@ export async function waitForNotification(
     await VSBrowser.instance.driver.wait(async () => {
       const center = await new Workbench().openNotificationsCenter();
       notifications = await center.getNotifications(type);
+      if (notifications.length === 0) {
+        return false;
+      }
+      await new Promise(r => setTimeout(r, 150));
       messages = await Promise.all(
         notifications.map(async (n) => n.getMessage())
       );
@@ -121,6 +125,18 @@ export async function waitForNotification(
   }
   return matchedMessage!;
 }
+
+// Use when debugging why the target string doesn't match 
+// any of the notifications
+export function makeVerboseEqualityMatcher(target: string) {
+      return (message: string) => {
+        console.log(`Comparing =>${message}<= and =>${target}<=`);
+        const answer = message === target;
+        console.log('Result: ', answer);
+        return answer;
+      };
+}
+
 
 export async function logAllNotifications() {
   const center = await new Workbench().openNotificationsCenter();
