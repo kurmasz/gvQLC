@@ -88,7 +88,12 @@ export async function waitForNotification(
     
       numNotifications = 0;
       messages = [];
-      for (const n of await center.getNotifications(type)) {
+      const notifications = await center.getNotifications(type);
+      if (notifications.length === 0) {
+        return false;
+      }
+      VSBrowser.instance.driver.sleep(75);
+      for (const n of notifications ) {
         const message = await n.getMessage();
         if (matcher(message)) {
           matchedMessage = message;
@@ -99,20 +104,6 @@ export async function waitForNotification(
         ++numNotifications;
       }
       return false;
-    
-      /*
-      notifications = await center.getNotifications(type);
-      messages = await Promise.all(
-        notifications.map(async (n) => n.getMessage())
-      );
-      const matches = messages.filter(matcher);
-      expect(matches.length).to.be.at.most(1);
-      if (matches.length === 1) {
-        matchedMessage = matches[0];
-        return true;
-      }
-      return false;
-      */
     }, timeout);
   } catch (err) {
     if (err instanceof error.TimeoutError) {

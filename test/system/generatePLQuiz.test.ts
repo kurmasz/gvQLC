@@ -106,6 +106,7 @@ describe("generatePLQuiz.test.ts", function () {
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
+    console.log('Await 1');
     await waitForNotification(
       NotificationType.Info,
       // (message) => message === `Config file created: ${configPath}`
@@ -118,6 +119,7 @@ describe("generatePLQuiz.test.ts", function () {
       }
     );
 
+    console.log('Await 2');
     await waitForNotification(
       NotificationType.Error,
       (message) => message === "Config file has not been customized."
