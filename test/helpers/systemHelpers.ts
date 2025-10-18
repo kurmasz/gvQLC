@@ -19,6 +19,7 @@ import { By, until, error } from "selenium-webdriver";
 import { expect } from "chai";
 import * as path from "path";
 import * as fs from "fs-extra";
+import { match } from "assert";
 
 export async function pause(time: number) {
   await new Promise((res) => setTimeout(res, time));
@@ -77,18 +78,30 @@ export async function waitForNotification(
   matcher: (str: string) => boolean,
   timeout = 4000
 ): Promise<string> {
-  let notifications: Notification[] = [];
+  let numNotifications = 0;
   let messages: string[] = [];
   let matchedMessage: string | undefined;
-
+  const center = await new Workbench().openNotificationsCenter();
+  
   try {
     await VSBrowser.instance.driver.wait(async () => {
-      const center = await new Workbench().openNotificationsCenter();
-      notifications = await center.getNotifications(type);
-      if (notifications.length === 0) {
-        return false;
+    
+      numNotifications = 0;
+      messages = [];
+      for (const n of await center.getNotifications(type)) {
+        const message = await n.getMessage();
+        if (matcher(message)) {
+          matchedMessage = message;
+          return true;
+        } else {
+          messages.push(message);
+        }
+        ++numNotifications;
       }
-      await new Promise(r => setTimeout(r, 150));
+      return false;
+    
+      /*
+      notifications = await center.getNotifications(type);
       messages = await Promise.all(
         notifications.map(async (n) => n.getMessage())
       );
@@ -99,6 +112,7 @@ export async function waitForNotification(
         return true;
       }
       return false;
+      */
     }, timeout);
   } catch (err) {
     if (err instanceof error.TimeoutError) {
@@ -109,7 +123,7 @@ export async function waitForNotification(
       //  I don't rememer why I thought we needed this.
       // if (notifications.length > 0) { await center.clearAllNotifications(); }
 
-      if (notifications.length === 0) {
+      if (numNotifications === 0) {
         expect.fail("No notifications appeared.");
       } else {
         expect.fail(
