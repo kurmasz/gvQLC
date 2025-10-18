@@ -115,7 +115,14 @@ describe("generatePLQuiz.test.ts", function () {
 
     await waitForNotification(
       NotificationType.Info,
-      (message) => message === `Config file created: ${configPath}`
+      // (message) => message === `Config file created: ${configPath}`
+      (message) => {
+        const target = `Config file created: ${configPath}`;
+        console.log(`Comparing =>${message}<= and =>${target}<=`);
+        const answer = message === target;
+        console.log('Result: ', answer);
+        return answer;
+      }
     );
 
     await waitForNotification(
