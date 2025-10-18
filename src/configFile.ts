@@ -9,6 +9,7 @@
 
 import * as vscode from "vscode";
 import * as fs from "fs";
+import * as path from 'path';
 
 import { configFileName } from "./sharedConstants";
 import { ConfigData } from "./types";
@@ -94,7 +95,7 @@ export async function createConfigFile(
   try {
     fs.writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2));
   } catch (err) {
-    logToFile(`Writing of config file ${configPath} failed:`);
+    logToFile(`Writing of config file ${path.join(configPath)} failed:`);
     logToFile(err);
     throw err;
   }

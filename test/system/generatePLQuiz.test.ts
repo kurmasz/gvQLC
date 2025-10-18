@@ -115,7 +115,7 @@ describe("generatePLQuiz.test.ts", function () {
       (message) => {
         const target = `Config file created: ${configPath}`;
         console.log(`Comparing =>${message}<= and =>${target}<=`);
-        const answer = message === target;
+        const answer = process.platform === 'win32' ? message.toLowerCase() === target.toLowerCase()  : message === target;
         console.log('Result: ', answer);
         return answer;
       }
