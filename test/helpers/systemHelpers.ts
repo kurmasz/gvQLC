@@ -82,17 +82,16 @@ export async function waitForNotification(
   let messages: string[] = [];
   let matchedMessage: string | undefined;
   const center = await new Workbench().openNotificationsCenter();
-  
+
   try {
     await VSBrowser.instance.driver.wait(async () => {
-    
       numNotifications = 0;
       messages = [];
       const notifications = await center.getNotifications(type);
       if (notifications.length === 0) {
         return false;
       }
-      for (const n of notifications ) {
+      for (const n of notifications) {
         const message = await n.getMessage();
         if (matcher(message)) {
           matchedMessage = message;
@@ -130,17 +129,16 @@ export async function waitForNotification(
   return matchedMessage!;
 }
 
-// Use when debugging why the target string doesn't match 
+// Use when debugging why the target string doesn't match
 // any of the notifications
 export function makeVerboseEqualityMatcher(target: string) {
-      return (message: string) => {
-        console.log(`Comparing =>${message}<= and =>${target}<=`);
-        const answer = message === target;
-        console.log('Result: ', answer);
-        return answer;
-      };
+  return (message: string) => {
+    console.log(`Comparing =>${message}<= and =>${target}<=`);
+    const answer = message === target;
+    console.log("Result: ", answer);
+    return answer;
+  };
 }
-
 
 export async function logAllNotifications() {
   const center = await new Workbench().openNotificationsCenter();
@@ -150,10 +148,14 @@ export async function logAllNotifications() {
     NotificationType.Info,
   ];
   for (const notificationType of allTypes) {
-    const notifications = await center.getNotifications(notificationType);
-    const messages = await Promise.all(
-      notifications.map(async (n) => n.getMessage())
-    );
+    let messages: string[] = [];
+    for (const n of await center.getNotifications(notificationType)) {
+      try {
+        messages.push(await n.getMessage());
+      } catch (e) {
+        messages.push(`Error: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
     console.log(notificationType);
     console.log(messages);
   }
