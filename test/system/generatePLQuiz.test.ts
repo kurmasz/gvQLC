@@ -69,8 +69,6 @@ describe("generatePLQuiz.test.ts", function () {
     await dismissAllNotifications();
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
-    console.log('Looking for No Personalized questions notification');
-    await logAllNotifications();
     await waitForNotification(
       NotificationType.Error,
       (message) =>

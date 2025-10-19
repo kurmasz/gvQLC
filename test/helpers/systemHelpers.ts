@@ -44,7 +44,6 @@ export function fixturePath(fixtureName: string) {
   );
   const msg = `Fixture path ${answer} should exist but does not.`;
   expect(fs.existsSync(answer), msg).to.be.true;
-  console.log(`Fixture ${answer} exists`);
   return answer;
 }
 
@@ -63,7 +62,6 @@ export async function makeTempCopy(folder: string) {
 
   const msg = `Temp fixture path ${tempWorkspaceDir} should exist but does not.`;
   expect(fs.existsSync(tempWorkspaceDir), msg).to.be.true;
-  console.log(`Temp directory ${tempWorkspaceDir} exists.`);
   return tempWorkspaceDir;
 }
 
@@ -117,7 +115,7 @@ export async function waitForNotification(
     }, timeout);
   } catch (err) {
     if (err instanceof error.TimeoutError) {
-      console.log("Giving waiting for notification");
+      console.log("Giving up waiting for notification");
       await logAllNotifications();
       console.log("-----");
 
@@ -168,7 +166,7 @@ export async function logAllNotifications(label?: string) {
         break;
       } catch (innerErr) {
         if (innerErr instanceof error.StaleElementReferenceError) {
-          console.log("Stale error getting notifications: ", innerErr.message);
+          console.log("!!! Stale error getting notifications: ", innerErr.message);
           continue;
         } else {
           throw innerErr;
@@ -272,9 +270,9 @@ export async function actAndAwaitUpdate(
   expect(originalParsedInput).to.have.property("uniqID");
   expect(originalParsedInput).to.have.property("timestamp");
 
-  console.log("Original: ");
-  console.log(originalParsedInput.uniqID);
-  console.log(originalParsedInput.timestamp);
+  // console.log("Original: ");
+  // console.log(originalParsedInput.uniqID);
+  // console.log(originalParsedInput.timestamp);
 
   await action();
 
@@ -285,7 +283,6 @@ export async function actAndAwaitUpdate(
       if (currentParsedInput.uniqID === originalParsedInput.uniqID) {
         console.log("Update not complete.");
       } else {
-        console.log("Setting updated data.");
         updatedData = currentParsedInput;
         return true;
       }
@@ -302,7 +299,7 @@ export async function actAndAwaitUpdate(
     return false;
   }, timeout);
 
-  console.log("returning updated data");
-  console.log(updatedData);
+  // console.log("returning updated data");
+  // console.log(updatedData);
   return updatedData!.data;
 }
