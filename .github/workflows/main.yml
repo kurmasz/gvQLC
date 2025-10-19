@@ -83,6 +83,7 @@ jobs:
           LOGFILE="$(node -p "require('path').join(require('os').tmpdir(), 'gvQLC_log.txt')")"
           echo "Log file is at: $LOGFILE"
           cat "$LOGFILE" || echo "No log file found"
+          cat out test/systemHelpers.js
 
 
   check:

@@ -87,26 +87,35 @@ export async function waitForNotification(
     await VSBrowser.instance.driver.wait(async () => {
       numNotifications = 0;
       messages = [];
-      const notifications = await center.getNotifications(type);
-      if (notifications.length === 0) {
-        return false;
-      }
-      for (const n of notifications) {
-        const message = await n.getMessage();
-        if (matcher(message)) {
-          matchedMessage = message;
-          return true;
-        } else {
-          messages.push(message);
+      try {
+        const notifications = await center.getNotifications(type);
+        if (notifications.length === 0) {
+          return false;
         }
-        ++numNotifications;
+        for (const n of notifications) {
+          const message = await n.getMessage();
+          if (matcher(message)) {
+            matchedMessage = message;
+            return true;
+          } else {
+            messages.push(message);
+          }
+          ++numNotifications;
+        }
+        return false;
+      } catch (innerErr) {
+        if (innerErr instanceof error.StaleElementReferenceError) {
+          console.warn("Stale element while reading message, retrying...", innerErr.message);
+          return false;
+        } else {
+          throw innerErr;
+        }
       }
-      return false;
     }, timeout);
   } catch (err) {
     if (err instanceof error.TimeoutError) {
       console.log("Giving waiting for notification");
-      await logAllNotifications();
+      await logAllNotifications("");
       console.log("-----");
 
       //  I don't rememer why I thought we needed this.
@@ -140,7 +149,7 @@ export function makeVerboseEqualityMatcher(target: string) {
   };
 }
 
-export async function logAllNotifications() {
+export async function logAllNotifications(label: string) {
   const center = await new Workbench().openNotificationsCenter();
   const allTypes = [
     NotificationType.Error,
@@ -156,6 +165,7 @@ export async function logAllNotifications() {
         messages.push(`Error: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
+    console.log(label);
     console.log(notificationType);
     console.log(messages);
   }
@@ -175,9 +185,9 @@ export async function assertNumNotifications(expectedNum: number) {
   }
   if (observedNotificationTotal !== expectedNum) {
     console.log(
-      `loggin all notifications because ${observedNotificationTotal} !== ${expectedNum}`
+      `logging all notifications because ${observedNotificationTotal} !== ${expectedNum}`
     );
-    await logAllNotifications();
+    await logAllNotifications("");
   }
   expect(observedNotificationTotal).to.equal(expectedNum);
 }
