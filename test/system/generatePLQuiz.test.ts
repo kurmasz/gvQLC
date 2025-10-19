@@ -54,7 +54,7 @@ describe("generatePLQuiz.test.ts", function () {
   //
   /////////////////////////
 
-  it("notifies when a folder has no gvQLC data but does not create config", async () => {
+  it("notifies when a folder has no question data (and also does not create config)", async () => {
     // Note: Combining the test for the notification with the "no create" tests
     // helps avoid false positivies by using the appearance of the notification
     // as verification that the command is complete.
@@ -69,6 +69,8 @@ describe("generatePLQuiz.test.ts", function () {
     await dismissAllNotifications();
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
+    console.log('Looking for No Personalized questions notification');
+    await logAllNotifications();
     await waitForNotification(
       NotificationType.Error,
       (message) =>
