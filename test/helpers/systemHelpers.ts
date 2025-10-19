@@ -92,7 +92,6 @@ export async function waitForNotification(
       if (notifications.length === 0) {
         return false;
       }
-      VSBrowser.instance.driver.sleep(75);
       for (const n of notifications ) {
         const message = await n.getMessage();
         if (matcher(message)) {

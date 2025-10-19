@@ -160,7 +160,7 @@ describe("generatePLQuiz.test.ts", function () {
 
     // For some reason, calling logAllNotifications does something to avoid 
     // a StaleElementReferenceError. I can't explain it --- it just works. 
-    await logAllNotifications();
+    //await logAllNotifications();
     await waitForNotification(
       NotificationType.Error,
       (message) => message === "Config file has not been customized."
@@ -181,7 +181,6 @@ describe("generatePLQuiz.test.ts", function () {
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
- 
     await waitForNotification(
       NotificationType.Info,
       (message) => message === "Successfully generated PrairieLearn Quiz."

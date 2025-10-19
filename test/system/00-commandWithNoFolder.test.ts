@@ -69,11 +69,9 @@ describe('Behavior with no folder open', function () {
 	//
 	// "View Quiz Questions"
 	//
-	it('should display modal error message when "View Quiz Questoins" command run', async function () {
-		console.log(`The log file: ${logFileName}`);
+	it('should display modal error message when "View Quiz Questions" command run', async function () {
 		await workbench.executeCommand('gvQLC: View Quiz Questions');
 		await new Promise(resolve => setTimeout(resolve, 5_000));
-		logAllNotifications();
 
 		await waitForNotification(NotificationType.Error, (message: string) => {
 			return message.indexOf('gvQLC requires a workspace folder to be open. (modal)') >= 0;
