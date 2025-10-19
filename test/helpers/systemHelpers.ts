@@ -105,7 +105,10 @@ export async function waitForNotification(
         return false;
       } catch (innerErr) {
         if (innerErr instanceof error.StaleElementReferenceError) {
-          console.warn("Stale element while reading message, retrying...", innerErr.message);
+          console.warn(
+            "Stale element while reading message, retrying...",
+            innerErr.message
+          );
           return false;
         } else {
           throw innerErr;
@@ -158,7 +161,22 @@ export async function logAllNotifications(label?: string) {
   ];
   for (const notificationType of allTypes) {
     let messages: string[] = [];
-    for (const n of await center.getNotifications(notificationType)) {
+    let notifications = [];
+    while (true) {
+      try {
+        notifications = await center.getNotifications(notificationType);
+        break;
+      } catch (innerErr) {
+        if (innerErr instanceof error.StaleElementReferenceError) {
+          console.log("Stale error getting notifications: ", innerErr.message);
+          continue;
+        } else {
+          throw innerErr;
+        }
+      }
+    }
+
+    for (const n of notifications) {
       try {
         messages.push(await n.getMessage());
       } catch (e) {
