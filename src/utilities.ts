@@ -81,21 +81,17 @@ export function getWorkspaceDirectory() {
 
 // Helper function to load data from a file in the workspace directory
 export function loadDataFromFile(fileName: string) {
-  logToFile(`Enter loadDataFromFile ${fileName}`);
   const workspaceDir = getWorkspaceDirectory();
   const filePath = path.join(workspaceDir, fileName);
-  logToFile(`Processing loadDataFromFile for ${filePath}`);
   if (fs.existsSync(filePath)) {
     const rawInput = fs.readFileSync(filePath, "utf-8");
     const parsedInput = JSON.parse(rawInput);
-    logToFile(`File ${filePath} parsed.`);
     if (typeof parsedInput === "string" || Array.isArray(parsedInput)) {
       return parsedInput;
     } else {
       return parsedInput.data;
     }
   }
-  logToFile(`File ${filePath} doesn't exist. Returning []`);
   return [];
 }
 
@@ -208,9 +204,6 @@ export function loadPersistedData() {
     return true;
   }
   if (verifyAndSetWorkspaceRoot()) {
-    logToFile(
-      `(Re)Loading personalized Questions data from ${quizQuestionsFileName}`
-    );
     state.commentsData.push(...loadDataFromFile("commentsData.json"));   // zk Not presently used
     state.questionsData.push(...loadDataFromFile("questionsData.json")); // zk Not presently used
     state.personalizedQuestionsData.push(

@@ -48,14 +48,11 @@ export async function loadConfigData(
   onCreate?: (configName: string) => void
 ): Promise<ConfigData> {
   const configURI = getConfigURI();
-  logToFile(`Loading ConfigData from ${configURI.fsPath}`);
   if (fs.existsSync(configURI.fsPath)) {
-    logToFile(`Config file exists ${configURI.fsPath}`);
     const fileData = await vscode.workspace.fs.readFile(configURI);
     const config = JSON.parse(fileData.toString()) as ConfigData;
     return config;
   } else {
-    logToFile(`Creating new config file ${configURI.fsPath}`);
     const config = await createConfigFile(configURI, onCreate);
     return config !== undefined ? config : defaultConfig;
   }
@@ -65,7 +62,6 @@ export async function createConfigFile(
   configURI: vscode.Uri = getConfigURI(),
   onCreate?: (configName: string) => void
 ): Promise<ConfigData | undefined> {
-  logToFile(`Enter createConfigFile ${configURI.fsPath}`);
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders) {
     logToFile('Leaving createConfigFile because there are no workspace folders');

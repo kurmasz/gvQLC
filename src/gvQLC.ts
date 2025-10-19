@@ -63,7 +63,6 @@ export function setWorkspaceRoot(root: vscode.WorkspaceFolder) {
 let configData = null as ConfigData | null;
 export async function config(forceReload = false): Promise<ConfigData> {
   if (!configData || forceReload) {
-    logToFile(`Config reload needed (forceReload = ${forceReload}`);
     configData = await loadConfigData();
   }
   return configData;

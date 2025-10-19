@@ -19,7 +19,6 @@ import { By, until, error } from "selenium-webdriver";
 import { expect } from "chai";
 import * as path from "path";
 import * as fs from "fs-extra";
-import { match } from "assert";
 
 export async function pause(time: number) {
   await new Promise((res) => setTimeout(res, time));
