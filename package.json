@@ -71,6 +71,6 @@
     "mustache": "^4.2.0",
     "source-map-support": "^0.5.21",
     "typescript": "^5.9.3",
-    "vscode-extension-tester": "^8.17.0"
+    "vscode-extension-tester": "^8.19.0"
   }
 }
