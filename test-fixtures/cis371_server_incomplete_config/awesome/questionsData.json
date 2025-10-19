@@ -1,0 +1,19 @@
+[
+  {
+    "filePath": "/Users/kurmasz/Documents/LocalResearch/QLC/qlc_workspace/cis371_server/awesome/my_http_server.py",
+    "range": {
+      "start": {
+        "line": 14,
+        "character": 0
+      },
+      "end": {
+        "line": 14,
+        "character": 66
+      }
+    },
+    "text": "Why `8534`?",
+    "highlightedCode": "PORT = 8534  # Port to listen on (non-privileged ports are > 1023)",
+    "answer": "",
+    "timestamp": "2025-05-07T18:33:43.000Z"
+  }
+]

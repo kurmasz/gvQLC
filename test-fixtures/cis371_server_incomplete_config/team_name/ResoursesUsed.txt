@@ -1,0 +1,4 @@
+https://stackoverflow.com/questions/3657157/how-do-i-get-a-files-directory-using-the-file-object
+https://www.geeksforgeeks.org/file-isdirectory-method-in-java-with-examples/
+https://stackoverflow.com/questions/3154488/how-do-i-iterate-through-the-files-in-a-directory-and-its-sub-directories-in-ja
+https://stackoverflow.com/questions/2506932/how-do-i-redirect-a-request-to-a-different-url-in-python

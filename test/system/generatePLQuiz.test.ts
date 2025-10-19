@@ -107,28 +107,65 @@ describe("generatePLQuiz.test.ts", function () {
 
     await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
 
+    // For some reason, calling logAllNotifications does something to avoid 
+    // a StaleElementReferenceError. I can't explain it --- it just works. 
     await logAllNotifications();
-    console.log('Await 1: ');
+
+    const target = `Config file created: ${configPath}`;
     await waitForNotification(
       NotificationType.Info,
-      // (message) => message === `Config file created: ${configPath}`
-      (message) => {
-        const target = `Config file created: ${configPath}`;
-        console.log(`Comparing =>${message}<= and =>${target}<=`);
-        const answer = process.platform === 'win32' ? message.toLowerCase() === target.toLowerCase()  : message === target;
-        console.log('Result: ', answer);
-        return answer;
-      }
+      (message) => process.platform === 'win32' ? message.toLowerCase() === target.toLowerCase()  : message === target
     );
 
-    console.log('Await 2');
+    // This test should also display a "Config file has not been customized" notification; but
+    // the second notifiction gets cleared before this code runs, so we'll just 
+    // check this as part of a separate test. 
+    /*
     await waitForNotification(
       NotificationType.Error,
       (message) => message === "Config file has not been customized."
     );
+    */
     expect(fs.existsSync(configPath), `Config ${configPath} should exist now.`)
       .to.be.true;
   });
+
+  /////////////////////////////////
+  //
+  // Folder with incomplete config
+  //
+  /////////////////////////////////
+  it("displays a notification when the config is incomplete", async () => {
+    // Note: Combining the test for config creation with the test for notification
+    // helps avoid false negatives by using the appearance of the notification
+    // as verification that the command is complete.
+
+    const workspaceName = "cis371_server_incomplete_config";
+    const tempWorkspaceDir = await openTempWorkspace(workspaceName);
+
+    // Make sure the fixture didn't get messed up.
+    // (1) This fixture should  have a config file. 
+    const configPath = path.join(tempWorkspaceDir, configFileName);
+    expect(fs.existsSync(configPath), `Where is ${configPath}?`).to.be.true;
+
+    // (2) This fixture *should* have a questions file. (Previously, 
+    // I had a messed-up .gitignore so the questions file didn't get 
+    // pushed, so tests passed locally, but failed in GitHub Actions.)
+    const questionsPath = path.join(tempWorkspaceDir, quizQuestionsFileName);
+    expect(fs.existsSync(questionsPath), `Where is "${questionsPath}"?`).to.be.true;
+
+    await new Workbench().executeCommand(GENERATE_PL_QUIZ_COMMAND);
+
+    // For some reason, calling logAllNotifications does something to avoid 
+    // a StaleElementReferenceError. I can't explain it --- it just works. 
+    await logAllNotifications();
+    await waitForNotification(
+      NotificationType.Error,
+      (message) => message === "Config file has not been customized."
+    );
+  });
+
+
 
   it("uses the config data when generating a custom quiz and generates a success notification", async () => {
     // Note: Combining the test for the notification with the "no create" tests
