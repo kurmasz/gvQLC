@@ -115,7 +115,7 @@ export async function waitForNotification(
   } catch (err) {
     if (err instanceof error.TimeoutError) {
       console.log("Giving waiting for notification");
-      await logAllNotifications("");
+      await logAllNotifications();
       console.log("-----");
 
       //  I don't rememer why I thought we needed this.
@@ -149,7 +149,7 @@ export function makeVerboseEqualityMatcher(target: string) {
   };
 }
 
-export async function logAllNotifications(label: string) {
+export async function logAllNotifications(label?: string) {
   const center = await new Workbench().openNotificationsCenter();
   const allTypes = [
     NotificationType.Error,
@@ -165,7 +165,9 @@ export async function logAllNotifications(label: string) {
         messages.push(`Error: ${e instanceof Error ? e.message : String(e)}`);
       }
     }
-    console.log(label);
+    if (label) {
+      console.log(label);
+    }
     console.log(notificationType);
     console.log(messages);
   }
@@ -187,7 +189,7 @@ export async function assertNumNotifications(expectedNum: number) {
     console.log(
       `logging all notifications because ${observedNotificationTotal} !== ${expectedNum}`
     );
-    await logAllNotifications("");
+    await logAllNotifications();
   }
   expect(observedNotificationTotal).to.equal(expectedNum);
 }
