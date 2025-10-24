@@ -166,7 +166,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             let color = Util.chooseQuestionColor(count, modeQuestions);
             const displayName = mapStudentName(student);
             return `
-              <tr style="background-color: ${color}">
+              <tr onclick="filterByName('${displayName}')" style="background-color: ${color}">
                   <td>${displayName}</td>
                   <td>${count}</td>
                   <td>${hasQuestions ? '✓' : '✗'}</td>
@@ -221,9 +221,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return `
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-              <td title="${question.filePath}">
-                <button onclick="openFileAt('${question.filePath}?${question.range.start.line}?${question.range.start.character}?${question.range.end.line}?${question.range.end.character}')">${shortenedFilePath}</button>
-              </td>
+              <td title="${question.filePath}"><span onclick="openFileAt(${index})" style="color: blue; text-decoration: underline;">${shortenedFilePath}</span></td>
               <td>
                   <textarea class="code-area" id="code-${index}">${highlightedCode || 'No highlighted code'}</textarea>
               </td>
@@ -809,12 +807,13 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                 vscode.window.showErrorMessage("Open a workspace folder first.");
                 return;
             }
-            const fullPath = path.join(root, message.filePath);
+            var questionDetails = reorderedQuestions.filter((item) => (item === reorderedQuestions[message.index]));
+            const fullPath = path.join(root, questionDetails[0].filePath);
             try {
                 const doc = await vscode.workspace.openTextDocument(fullPath);
                 const editor = await vscode.window.showTextDocument(doc, { preview: false });
-                const posStart = new vscode.Position(Number(message.startLine), Number(message.startChar));
-                const posEnd = new vscode.Position(Number(message.endLine), Number(message.endChar));
+                const posStart = new vscode.Position(questionDetails[0].range.start.line, questionDetails[0].range.start.character);
+                const posEnd = new vscode.Position(questionDetails[0].range.end.line, questionDetails[0].range.end.character);
                 editor.revealRange(new vscode.Range(posStart, posEnd), vscode.TextEditorRevealType.InCenter);
                 editor.selection = new vscode.Selection(posStart, posEnd);
             } catch (e) {
