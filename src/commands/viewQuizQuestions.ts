@@ -301,6 +301,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             // TODO: Implement styling for button
             // TODO: Implement formatting for exported quiz
             // TODO: Implement a try in case the file is not found or empty
+            // TODO: Implement a menu with options for export format and what to do with answer key
             // this function will be our paper test export feature
             // either exporting to .md or .pdf
             // for now, just will convert JSON to .md
@@ -318,21 +319,40 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             console.log('Exporting quiz questions:', fileData);
             //vscode.window.showInformationMessage('Exporting quiz questions:', fileData);
             interface  QuizQuestion {
+                filePath: string;
                 codeContext: string;
                 question: string;
                 answer: string;
             }
-            type StudentQuestionsMap = Record<string, QuizQuestion[]>;
+            //type StudentQuestionsMap = Record<string, QuizQuestion[]>;
             type QuestionJSON = {filePath: string, range: any, text: string, highlightedCode: string, answer: string, excludeFromQuiz: boolean};
+            let studentQuestionsMap: Record<string, QuizQuestion[]> = {};
             for(const questionIndex in fileData) {
-                console.log('-------------------');
-                console.log(questionIndex);
-                console.log(fileData[questionIndex]);
-                console.log(fileData[questionIndex].filePath);
-                // student name:
-                console.log(extractStudentName(fileData[questionIndex].filePath, submissionRoot));
-                //console.log('Question Entry:', fileData.questions[questionEntry]);
+                //console.log('-------------------');
+                //console.log(questionIndex);
+                //console.log(fileData[questionIndex]);
+                if (!fileData[questionIndex].excludeFromQuiz) {
+                    // TODO: find a way to separate file name to display on quiz
+                    // file path:
+                    //console.log(fileData[questionIndex].filePath);
+                    // student name:
+                    //console.log(extractStudentName(fileData[questionIndex].filePath, submissionRoot));
+                    const extractedName = extractStudentName(fileData[questionIndex].filePath, submissionRoot);
+                    // console.log(fileData[questionIndex].highlightedCode);
+                    // console.log(fileData[questionIndex].text);
+                    // console.log(fileData[questionIndex].answer);
+                    if (!studentQuestionsMap[extractedName]) {
+                        studentQuestionsMap[extractedName] = [];
+                    }
+                    studentQuestionsMap[extractedName].push({
+                        filePath: fileData[questionIndex].filePath,
+                        codeContext: fileData[questionIndex].highlightedCode,
+                        question: fileData[questionIndex].text,
+                        answer: fileData[questionIndex].answer
+                    });
+                }
             }
+            console.log('Student Questions Map:', studentQuestionsMap);
         }
     });
 });
