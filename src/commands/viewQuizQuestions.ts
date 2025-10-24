@@ -235,6 +235,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                   <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
                   <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
                   <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+                  <button onclick="deleteQuestion(${index})" style="background-color: #f321bbff; color: white;">Delete</button>
                   <br>
                   <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
                   <label for="exclude-${index}">Exclude from Quiz</label>
@@ -780,6 +781,15 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             // openEditQuestionPanel(message.index);
         }
 
+        if (message.type === 'deleteQuestion') {
+            var newQuestions = reorderedQuestions.filter((item) => !(item === reorderedQuestions[message.index]));
+            vscode.window.showErrorMessage(`${newQuestions.length}`);
+            state.personalizedQuestionsData = newQuestions;
+            Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            panel.dispose();
+            vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
+        }
+
         if (message.type === 'refreshView') {
             panel.dispose();
             vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
@@ -794,18 +804,17 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         }
 
         if (message.type === 'openFileAt') {
-            //vscode.window.showErrorMessage(`Opening file ${message.filepath} ${message.start_line} ${message.start_char} ${message.end_line} ${message.end_char}`);
             const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
             if (!root) {
                 vscode.window.showErrorMessage("Open a workspace folder first.");
                 return;
             }
-            const fullPath = path.join(root, message.file_path);
+            const fullPath = path.join(root, message.filePath);
             try {
                 const doc = await vscode.workspace.openTextDocument(fullPath);
                 const editor = await vscode.window.showTextDocument(doc, { preview: false });
-                const posStart = new vscode.Position(Number(message.start_line), Number(message.start_char));
-                const posEnd = new vscode.Position(Number(message.end_line), Number(message.end_char));
+                const posStart = new vscode.Position(Number(message.startLine), Number(message.startChar));
+                const posEnd = new vscode.Position(Number(message.endLine), Number(message.endChar));
                 editor.revealRange(new vscode.Range(posStart, posEnd), vscode.TextEditorRevealType.InCenter);
                 editor.selection = new vscode.Selection(posStart, posEnd);
             } catch (e) {

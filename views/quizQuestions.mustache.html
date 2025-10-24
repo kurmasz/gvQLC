@@ -455,9 +455,17 @@
             vscode.postMessage({ type: 'editQuestion', index });
         }
 
+        function deleteQuestion(index) {
+            //var values = valueString.split("?!");
+            //const code = await document.getElementById('code-' + values[1]).value;
+            //const question = await document.getElementById('question-' + values[1]).value;
+            vscode.postMessage({ type: 'deleteQuestion', index });
+            //vscode.postMessage({ type: 'deleteQuestion', filePath: values[0], startLine: values[1], startChar: values[2], endLine: values[3], endChar: values[4], question: values[5] });
+        }
+
         function openFileAt(value_string) {
             var values = value_string.split("?");
-            vscode.postMessage({ type: 'openFileAt', file_path: values[0], start_line: values[1], start_char: values[2], end_line: values[3], end_char: values[4] });
+            vscode.postMessage({ type: 'openFileAt', filePath: values[0], startLine: values[1], startChar: values[2], endLine: values[3], endChar: values[4] });
         }
 /*
         async function openFileAt(question) {
