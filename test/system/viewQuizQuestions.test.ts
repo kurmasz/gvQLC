@@ -325,6 +325,24 @@ describe('viewQuizQuestions', function () {
         });
     });
 
+    it('summary table filters to show entries for the selected student', async () => {
+        const table = await summaryContainer.findElement(By.css('table'));
+        const tbody = await table.findElement(By.css('tbody'));
+        const trs = await tbody.findElements(By.css('tr'));
+        const firstRow = trs[0];
+        await firstRow.click();
+        await verifyFilterCount(2);
+    });
+
+    it('summary table filters to show all entries after a second click on the same student row', async () => {
+        const table = await summaryContainer.findElement(By.css('table'));
+        const tbody = await table.findElement(By.css('tbody'));
+        const trs = await tbody.findElements(By.css('tr'));
+        const firstRow = trs[0];
+        await firstRow.click();
+        await verifyFilterCount(14);
+    });
+
     it('hides the summary when toggled', async () => {
         const button = await view.findWebElement(By.id('toggleSummaryBtn'));
         expect(await button.isDisplayed()).to.be.true;
@@ -358,4 +376,10 @@ describe('viewQuizQuestions', function () {
             question: "Explain the difference between `=` and `:=`",
         });
     });
+
+    async function verifyFilterCount(expectedCount: number) {
+        const element = await view.findWebElement(By.css('#filterCount'));
+        expect(await element.getText()).to.equal(`${expectedCount} matches`);
+    }
+
 });
