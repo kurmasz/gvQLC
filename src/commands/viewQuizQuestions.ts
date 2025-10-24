@@ -13,11 +13,12 @@ import path from 'path';
 import * as gvQLC from '../gvQLC';
 const state = gvQLC.state;
 
-import { extractStudentName } from '../utilities';
+import { extractStudentName, loadDataFromFile, saveDataToFile } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
 import { stringify } from 'querystring';
+import { quizQuestionsFileName } from '../sharedConstants';
 
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
@@ -292,6 +293,45 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                 editor.selection = new vscode.Selection(posStart, posEnd);
             } catch (e) {
                 vscode.window.showErrorMessage("Could not open file: " + String(e));
+            }
+        }
+        
+        if (message.type === 'exportQuiz') {
+            // TODO: Implement export functionality
+            // TODO: Implement styling for button
+            // TODO: Implement formatting for exported quiz
+            // TODO: Implement a try in case the file is not found or empty
+            // this function will be our paper test export feature
+            // either exporting to .md or .pdf
+            // for now, just will convert JSON to .md
+            // it will extract students as well as their questions
+            // from the JSON as vars in a loop so we can format it nicely
+            // Eventually, we will create a folder with date and optional
+            // quiz name, with .md folder with a separate page for each
+            // student inside, or a single .pdf with all students' quizzes,
+            // or an .md for each student in a single folder.
+            
+            //file is imported from shared constants at top of file
+            // create object of file data
+            const fileData = loadDataFromFile(quizQuestionsFileName);
+            console.log("testing export quiz button");
+            console.log('Exporting quiz questions:', fileData);
+            //vscode.window.showInformationMessage('Exporting quiz questions:', fileData);
+            interface  QuizQuestion {
+                codeContext: string;
+                question: string;
+                answer: string;
+            }
+            type StudentQuestionsMap = Record<string, QuizQuestion[]>;
+            type QuestionJSON = {filePath: string, range: any, text: string, highlightedCode: string, answer: string, excludeFromQuiz: boolean};
+            for(const questionIndex in fileData) {
+                console.log('-------------------');
+                console.log(questionIndex);
+                console.log(fileData[questionIndex]);
+                console.log(fileData[questionIndex].filePath);
+                // student name:
+                console.log(extractStudentName(fileData[questionIndex].filePath, submissionRoot));
+                //console.log('Question Entry:', fileData.questions[questionEntry]);
             }
         }
     });
