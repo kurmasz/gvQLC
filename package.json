@@ -44,10 +44,12 @@
     "compile": "tsc -p ./ && npm run lint",
     "lint": "eslint src",
     "watch": "tsc -watch -p ./",
-    "test:system:base": "extest setup-and-run './out/test/system/a*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions",
+    "test:system:base": "extest setup-and-run './out/test/system/*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions",
+    "test:system:base_all": "extest setup-and-run './out/test/system/*.test.js' --code_version max --code_settings settings.json --extensions_dir .test-extensions",
     "test:system": "VSCODE_TEST_ZK=true NODE_OPTIONS='-r source-map-support/register' npm run test:system:base",
     "test:system:run_only": "tsc -p ./ && VSCODE_TEST_ZK=true EXTENSION_DEV_PATH=$INIT_CWD extest run-tests './out/test/system/*.test.js' --code_version max --code_settings settings.json",
-    "test": "npm run test:system"
+    "test:unit": "tsc -p ./ && TEST_TYPE=unit mocha 'out/src/test/*.test.js' --ui tdd",
+    "test": "npm run test:unit && npm run test:system"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.3.1",
@@ -56,6 +58,7 @@
     "@types/mocha": "^10.0.10",
     "@types/mustache": "^4.2.6",
     "@types/node": "^24.3.1",
+    "@types/sinon": "^17.0.4",
     "@types/vscode": "^1.101.0",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "chai": "^4.4.1",
@@ -64,8 +67,9 @@
     "fs-extra": "^11.3.1",
     "mocha": "^11.7.2",
     "mustache": "^4.2.0",
+    "sinon": "^21.0.0",
     "source-map-support": "^0.5.21",
     "typescript": "^5.9.2",
-    "vscode-extension-tester": "^8.17.0"
+    "vscode-extension-tester": "^8.18.0"
   }
 }

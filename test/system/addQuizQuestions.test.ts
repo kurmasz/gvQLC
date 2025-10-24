@@ -111,6 +111,36 @@ describe("addQuizQuestions", function () {
     view = await addQuizQuestion('".html": handle_binary');
   });
 
+  // Test the "Copy and Paste Button" - Both Full Text and Selected Text
+  // Same idea as the Copy tests in viewQuizQuestions
+  // await question.sendKeys(Keys.CONTROL, "v");
+  // expect(await question.getText()).to.be.equal(something);
+  it("Copies the full code segment when no text is highlighted", async () => {
+    const questionBox = await view.findWebElement(By.css("#question"));
+    await questionBox.clear();
+
+    const buttons = await view.findWebElements(By.css("button"));
+    await buttons[0].click();
+
+    expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n".html": handle_binary\n~~~');
+  });
+
+  it.skip("Copies part of the code segment when text is highlighted", async () => {
+    // Will fail if run
+    // Issue with selectionStart and selectionEnd not actually highlighting text
+    // So it'll copy the full text instead
+    const questionBox = await view.findWebElement(By.css("#question"));
+    const questionBox1 = await view.findWebElement(By.css("#question")) as unknown as HTMLTextAreaElement;
+    await questionBox.clear();
+
+    const buttons = await view.findWebElements(By.css("button"));
+    questionBox1.selectionStart = 0;
+    questionBox1.selectionEnd = 2;
+    await buttons[0].click();
+
+    expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n"\n~~~');
+  });
+
   it("saves the question and answer when submitted", async () => {
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.clear();
