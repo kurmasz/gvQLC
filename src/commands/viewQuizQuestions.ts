@@ -197,6 +197,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                   <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
                   <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
                   <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+                  <button onclick="prompt(${index})" style="background-color: #9C27B0; color: white;">Rephrase</button>
                   <br>
                   <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
                   <label for="exclude-${index}">Exclude from Quiz</label>
