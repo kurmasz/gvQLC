@@ -212,7 +212,7 @@
             try {
                 const response = await genai.models.generateContent({
                     model: "gemini-2.5-flash",
-                    contents: `Create one short question and answer for the code: ${codeTextArea.value}.`
+                    contents: `Create one short question and answer for the code: ${codeTextArea.value}. The response should have "**Question:** " before the question and "**Answer:** " before the answer.`
                 });
                 console.log(response.text);
                 aiArea.value = response.text;
