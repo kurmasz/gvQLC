@@ -244,6 +244,33 @@ export async function saveDataToFile(filename: string, data: any, useJSON = true
   await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
 }
 
+export function generateHTMLQuizExport(studentName: string, questions: any[]): string {
+  const header = `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Export for ${studentName}</title>
+    <style>
+    </style>
+  </head>
+  <body>`;
+  const footer = `</body>
+  </html>`;
+  const quizTitle = `<h1>Quiz for ${studentName}</h1>\n`;
+  let retHTML = header + quizTitle;
+  for (let i = 0; i < questions.length; i++) {
+    const question = questions[i];
+    retHTML += `<div class="question-block">\n`;
+    retHTML += `<h2>Question ${i + 1}:</h2>\n`;
+    retHTML += `<pre><code>${question.codeContext}</code></pre>\n`;
+    retHTML += `<p>${question.question}</p>\n`;
+    retHTML += `</div>\n<hr>\n`;
+  }
+  retHTML += footer;
+  return retHTML;
+}
+
 export function chooseQuestionColor(numQuestionsForStudent: number, modeQuestionsForStudent: number) {
   if (numQuestionsForStudent === 0) {
     return ViewColors.RED;
