@@ -456,6 +456,24 @@
             vscode.postMessage({ type: 'editQuestion', index });
         }
 
+        function deleteQuestion(index) {
+            vscode.postMessage({ type: 'deleteQuestion', index });
+        }
+
+        function filterByName(displayName) {
+            if (document.getElementById('searchInput').value === displayName.toLowerCase()) {
+                document.getElementById('searchInput').value = "";
+            }
+            else {
+                document.getElementById('searchInput').value = displayName.toLowerCase();
+            }
+            filterQuestions();
+        }
+
+        function openFileAt(index) {
+            vscode.postMessage({ type: 'openFileAt', index });
+        }
+
         // Initialize the table when the page loads
         window.addEventListener('load', initializeTable);
     </script>

@@ -178,6 +178,32 @@ describe("addQuizQuestions", function () {
     expect(newQuestion.excludeFromQuiz).to.be.false;
   });
 
+  it.skip('generates AI output', async () => {
+    const aiBox = await view.findWebElement(By.css("#aiOutput"));
+    await aiBox.clear();
+    expect(await aiBox.getAttribute('value')).to.be.equal('');
+
+    const buttons = await view.findWebElements(By.css("button"));
+    await buttons[2].click();
+    // Need to delay further operation until after we get a response
+
+    expect(await aiBox.getAttribute('value')).to.be.not.equal('');
+  });
+
+  it.skip('fills in answer/question sections with AI output', async () => {
+    const questionBox = await view.findWebElement(By.css("#question"));
+    const answerBox = await view.findWebElement(By.css("#answer"));
+
+    const buttons = await view.findWebElements(By.css("button"));
+    await buttons[3].click();
+    // Need to delay further operation until after we get a response from the earlier buttons[2].click()
+
+    expect(await questionBox.getAttribute('value')).to.be.not.equal('');
+    expect(await answerBox.getAttribute('value')).to.be.not.equal('');
+    questionBox.clear();
+    answerBox.clear();
+  });
+
   it("Generates exactly one info notification upon success", async () => {
     await VSBrowser.instance.driver.switchTo().defaultContent();
     await waitForNotification(

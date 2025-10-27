@@ -8,6 +8,7 @@
  * *********************************************************************************/
 
 import * as vscode from 'vscode';
+import path from 'path';
 
 import * as gvQLC from '../gvQLC';
 const state = gvQLC.state;
@@ -16,6 +17,7 @@ import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
+import { stringify } from 'querystring';
 
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
@@ -127,7 +129,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             let color = Util.chooseQuestionColor(count, modeQuestions);
             const displayName = mapStudentName(student);
             return `
-              <tr style="background-color: ${color}">
+              <tr onclick="filterByName('${displayName}')" style="background-color: ${color}">
                   <td>${displayName}</td>
                   <td>${count}</td>
                   <td>${hasQuestions ? '✓' : '✗'}</td>
@@ -185,7 +187,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return `
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-              <td title="${question.filePath}">${shortenedFilePath}</td>
+              <td title="${question.filePath}"><span onclick="openFileAt(${index})" style="color: blue; text-decoration: underline;">${shortenedFilePath}</span></td>
               <td>
                   <textarea class="code-area" id="code-${index}">${highlightedCode || 'No highlighted code'}</textarea>
               </td>
@@ -197,6 +199,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                   <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
                   <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
                   <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+                  <button onclick="deleteQuestion(${index})" style="background-color: #f321bbff; color: white;">Delete</button>
                   <br>
                   <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
                   <label for="exclude-${index}">Exclude from Quiz</label>
@@ -225,8 +228,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     panel.webview.html = Util.renderMustache('quizQuestions.mustache.html', data);
 
     // Handle messages from the Webview
-    panel.webview.onDidReceiveMessage((message) => {
-        // Save button functionality
+    panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'saveChanges') {
             reorderedQuestions[message.index].highlightedCode = message.updatedCode;
             reorderedQuestions[message.index].text = message.updatedQuestion;
@@ -250,6 +252,15 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             // openEditQuestionPanel(message.index);
         }
 
+        if (message.type === 'deleteQuestion') {
+            var newQuestions = reorderedQuestions.filter((item) => !(item === reorderedQuestions[message.index]));
+            vscode.window.showErrorMessage(`${newQuestions.length}`);
+            state.personalizedQuestionsData = newQuestions;
+            Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            panel.dispose();
+            vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
+        }
+
         // Refresh view button functionality
         if (message.type === 'refreshView') {
             panel.dispose();
@@ -262,6 +273,26 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
         if (message.type === 'showErrorMessage') {
             vscode.window.showErrorMessage(message.message);
+        }
+
+        if (message.type === 'openFileAt') {
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            if (!root) {
+                vscode.window.showErrorMessage("Open a workspace folder first.");
+                return;
+            }
+            var questionDetails = reorderedQuestions.filter((item) => (item === reorderedQuestions[message.index]));
+            const fullPath = path.join(root, questionDetails[0].filePath);
+            try {
+                const doc = await vscode.workspace.openTextDocument(fullPath);
+                const editor = await vscode.window.showTextDocument(doc, { preview: false });
+                const posStart = new vscode.Position(questionDetails[0].range.start.line, questionDetails[0].range.start.character);
+                const posEnd = new vscode.Position(questionDetails[0].range.end.line, questionDetails[0].range.end.character);
+                editor.revealRange(new vscode.Range(posStart, posEnd), vscode.TextEditorRevealType.InCenter);
+                editor.selection = new vscode.Selection(posStart, posEnd);
+            } catch (e) {
+                vscode.window.showErrorMessage("Could not open file: " + String(e));
+            }
         }
     });
 });

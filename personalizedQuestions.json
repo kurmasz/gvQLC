@@ -1,0 +1,23 @@
+{
+  "data": [
+    {
+      "filePath": "test-fixtures\\cis371_server\\team_1\\http_socket.py",
+      "range": {
+        "start": {
+          "line": 15,
+          "character": 0
+        },
+        "end": {
+          "line": 16,
+          "character": 0
+        }
+      },
+      "text": "Why use ssl instead of __?\n\n~~~\nimport ssl\n\n~~~",
+      "highlightedCode": "import ssl\n",
+      "answer": "",
+      "excludeFromQuiz": false
+    }
+  ],
+  "timestamp": "2025-10-03T13:31:19.423Z",
+  "uniqID": 8317987346717750
+}
