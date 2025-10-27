@@ -51,9 +51,15 @@
     
     <p><strong>Add Answer (Optional):</strong></p>
     <textarea id="answer" placeholder="Type the answer to your question (optional)..." rows="4"></textarea>
+
+    <p><strong>AI Output:</strong></p>
+    <textarea id="aiOutput" placeholder="No AI Output" rows="4"></textarea>
     
     <button id="submitButton" onclick="submitPersonalizedQuestion()">Submit</button>
+    <button id="aiButton" onclick="aiSuggestQuestion()">AI Suggestion</button>
+    <button id="acceptAI" onclick="acceptOutput()">Fill from AI Output</button>
 
+    
     <script>
         const vscode = acquireVsCodeApi();
         let currentInput = '';
@@ -177,6 +183,46 @@
                 editedCode 
             });
         }
+
+        function acceptOutput() {
+            const aiArea = document.getElementById('aiOutput');
+            const questionArea = document.getElementById('question');
+            const answerArea = document.getElementById('answer');
+
+            if (aiArea.value != '') {
+                var output = aiArea.value;
+                var tokens = output.split("**Answer:** ");
+                questionArea.value = tokens[0];
+                answerArea.value = "**Answer:** " + tokens[1];
+            }
+        }
+
+    </script>
+
+    <script type="module">
+        const { GoogleGenAI } = await import('https://esm.run/@google/genai');
+        // Below is very bad, need to hide apiKey somehow
+        // Use vscode.SecretStorage and prompt user for their key instead of using mine
+        const genai = new GoogleGenAI({apiKey: "AIzaSyDJgoG2i-3zUFdYDZKIrPbwaMjM5iN-J0s"});
+
+        async function aiSuggestQuestion() {
+            const codeTextArea = document.getElementById('codeBlock');
+            const aiArea = document.getElementById('aiOutput');
+            aiArea.value = "Generating content...";
+            try {
+                const response = await genai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: `Create one short question and answer for the code: ${codeTextArea.value}.`
+                });
+                console.log(response.text);
+                aiArea.value = response.text;
+            } catch (error) {
+                console.log("Error calling Gemini API:", error);
+                questionArea.value = "Error generating content";
+            }
+        }
+        const aiButton = document.getElementById('aiButton');
+        aiButton.addEventListener('click', aiSuggestQuestion);
     </script>
 </body>
 </html>
