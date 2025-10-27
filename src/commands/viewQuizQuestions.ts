@@ -13,7 +13,7 @@ import path from 'path';
 import * as gvQLC from '../gvQLC';
 const state = gvQLC.state;
 
-import { extractStudentName, loadDataFromFile, saveDataToFile, generateHTMLQuizExport } from '../utilities';
+import { extractStudentName, loadDataFromFile, saveDataToFile, generateHTMLQuizExport, convertHTMLToMarkdown } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
@@ -569,14 +569,23 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             for (const student in studentQuestionsMap) {
                 const htmlContent = generateHTMLQuizExport(student, studentQuestionsMap[student]);
                 const safeStudentName = student.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                const fileName = `quiz_${safeStudentName}.html`;
-                saveDataToFile(fileName, htmlContent, false);
+                const fileNameHTML = `quiz_${safeStudentName}.html`;
+                //saveDataToFile(fileNameHTML, htmlContent, false);
+                // temp flag to indicate markdown option selected
+                const markdownFlag = true;
+                if (markdownFlag) {
+                    const markdownContent = convertHTMLToMarkdown(htmlContent);
+                    const fileNameMD = `quiz_${safeStudentName}.md`;
+                    saveDataToFile(fileNameMD, markdownContent, false);
+                } else {
+                    saveDataToFile(fileNameHTML, htmlContent, false);
+                }
                 //console.log(`Exported quiz for ${student} to ${fileName}`);
-            }   
+            }
             // end section to create html format
 
-            // note: research how to convert html to md
             // section to create md format
+
             // end section to create md format
             
             // note: research pdf libraries and conversion from md/html to pdf

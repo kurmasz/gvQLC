@@ -12,6 +12,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as Mustache from 'mustache';
 
+import TurndownService from 'turndown';
+
 import * as gvQLC from './gvQLC';
 import { GVQLC, ViewColors, configFileName, quizQuestionsFileName } from './sharedConstants';
 
@@ -295,6 +297,13 @@ export function generateHTMLQuizExport(studentName: string, questions: any[]): s
   }
   retHTML += footer;
   return retHTML;
+}
+
+// Function to convert HTML to Markdown
+export function convertHTMLToMarkdown(htmlContent: string): string {
+  const turndownService = new TurndownService();
+  const markdown = turndownService.turndown(htmlContent);
+  return markdown;
 }
 
 export function chooseQuestionColor(numQuestionsForStudent: number, modeQuestionsForStudent: number) {
