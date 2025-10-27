@@ -244,19 +244,20 @@ export async function saveDataToFile(filename: string, data: any, useJSON = true
   await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
 }
 
+// Function to generate HTML quiz string export for a student
 export function generateHTMLQuizExport(studentName: string, questions: any[]): string {
   const header = `<!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Export for ${studentName}</title>
-    <style>
-    </style>
-  </head>
-  <body>`;
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Export for ${studentName}</title>
+  <style>
+  </style>
+</head>
+<body>`;
   const footer = `</body>
-  </html>`;
+</html>`;
   const quizTitle = `<h1>Quiz for ${studentName}</h1>\n`;
   let retHTML = header + quizTitle;
   for (let i = 0; i < questions.length; i++) {

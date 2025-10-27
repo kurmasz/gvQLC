@@ -13,7 +13,7 @@ import path from 'path';
 import * as gvQLC from '../gvQLC';
 const state = gvQLC.state;
 
-import { extractStudentName, loadDataFromFile, saveDataToFile } from '../utilities';
+import { extractStudentName, loadDataFromFile, saveDataToFile, generateHTMLQuizExport } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
@@ -302,6 +302,8 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             // TODO: Implement formatting for exported quiz
             // TODO: Implement a try in case the file is not found or empty
             // TODO: Implement a menu with options for export format and what to do with answer key
+            // TODO: Consider output location, and if file already exists
+            // TODO: Figure out how to output to new folder for this class/assignment (prompt on export?)
             // this function will be our paper test export feature
             // either exporting to .md or .pdf
             // for now, just will convert JSON to .md
@@ -315,8 +317,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             //file is imported from shared constants at top of file
             // create object of file data
             const fileData = loadDataFromFile(quizQuestionsFileName);
-            console.log("testing export quiz button");
-            console.log('Exporting quiz questions:', fileData);
             //vscode.window.showInformationMessage('Exporting quiz questions:', fileData);
             interface  QuizQuestion {
                 filePath: string;
@@ -324,23 +324,14 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                 question: string;
                 answer: string;
             }
-            //type StudentQuestionsMap = Record<string, QuizQuestion[]>;
             type QuestionJSON = {filePath: string, range: any, text: string, highlightedCode: string, answer: string, excludeFromQuiz: boolean};
             let studentQuestionsMap: Record<string, QuizQuestion[]> = {};
             for(const questionIndex in fileData) {
-                //console.log('-------------------');
-                //console.log(questionIndex);
-                //console.log(fileData[questionIndex]);
+                // note: consider including range for line numbers (if that is what it means)
+                // section to parse from json
                 if (!fileData[questionIndex].excludeFromQuiz) {
                     // TODO: find a way to separate file name to display on quiz
-                    // file path:
-                    //console.log(fileData[questionIndex].filePath);
-                    // student name:
-                    //console.log(extractStudentName(fileData[questionIndex].filePath, submissionRoot));
                     const extractedName = extractStudentName(fileData[questionIndex].filePath, submissionRoot);
-                    // console.log(fileData[questionIndex].highlightedCode);
-                    // console.log(fileData[questionIndex].text);
-                    // console.log(fileData[questionIndex].answer);
                     if (!studentQuestionsMap[extractedName]) {
                         studentQuestionsMap[extractedName] = [];
                     }
@@ -352,7 +343,36 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                     });
                 }
             }
-            console.log('Student Questions Map:', studentQuestionsMap);
+            // end section to parse from json
+
+            let quizExport = '';
+            // note: not all formats will be created, just here for future reference
+            // section to handle export flags/options
+            // end section to handle export flags/options
+
+            // section to create html format
+            for (const student in studentQuestionsMap) {
+                const htmlContent = generateHTMLQuizExport(student, studentQuestionsMap[student]);
+                const safeStudentName = student.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const fileName = `quiz_${safeStudentName}.html`;
+                saveDataToFile(fileName, htmlContent, false);
+                //console.log(`Exported quiz for ${student} to ${fileName}`);
+            }   
+            // end section to create html format
+
+            // note: research how to convert html to md
+            // section to create md format
+            // end section to create md format
+            
+            // note: research pdf libraries and conversion from md/html to pdf
+            // section to create pdf format
+            // end section to create pdf format
+
+            // note: use flags to determine how to export
+            // note: ref utils for saving files
+            // section to output to file
+            // end section to output to file
+            //console.log('Student Questions Map:', studentQuestionsMap);
         }
     });
 });
