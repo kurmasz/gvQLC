@@ -51,6 +51,14 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
     const absolutePath = editor.document.uri.fsPath;
     const relativePath = path.relative(workspaceRoot, absolutePath);
+    var fullFileContent;
+    const uri2 = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/myAPIKey.json`);
+
+    var apiKey = "";
+    const apiBytes = await vscode.workspace.fs.readFile(uri2);
+    const apiString = Buffer.from(apiBytes).toString('utf8');
+    const apiJSON = await JSON.parse(apiString);
+    apiKey = apiJSON.data;
 
     // Get existing questions for suggestions
     let existingQuestions = [];
@@ -58,6 +66,9 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
         const fileContent = await vscode.workspace.fs.readFile(uri);
         const data = JSON.parse(fileContent.toString());
+        const specUri = vscode.Uri.file(`${absolutePath}`);
+        const specContent = await vscode.workspace.fs.readFile(specUri);
+        fullFileContent = specContent.toString();
         existingQuestions = data.data.map((item: { text: string; }) => item.text).filter(Boolean);
     } catch (error) {
         console.log('Could not load existing questions:', error);
@@ -74,7 +85,9 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     // Data passed to the mustache template
     const htmlData = {
         selectedText: selectedText,
-        existingQuestions: JSON.stringify(existingQuestions)
+        existingQuestions: JSON.stringify(existingQuestions),
+        fullFileContent: fullFileContent,
+        apiKey: apiKey
     };
     // HTML content for the Webview
     panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);

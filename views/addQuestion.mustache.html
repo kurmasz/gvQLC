@@ -54,9 +54,11 @@
 
     <p><strong>AI Output:</strong></p>
     <textarea id="aiOutput" placeholder="No AI Output" rows="4"></textarea>
+    <p id="fileContent" style="display: none;">{{fullFileContent}}</p>
+    <p id="apiKey" style="display: none;">{{apiKey}}</p>
     
     <button id="submitButton" onclick="submitPersonalizedQuestion()">Submit</button>
-    <button id="aiButton" onclick="aiSuggestQuestion()">AI Suggestion</button>
+    <button id="aiButton">AI Suggestion</button>
     <button id="acceptAI" onclick="acceptOutput()">Fill from AI Output</button>
 
     
@@ -201,20 +203,62 @@
 
     <script type="module">
         const { GoogleGenAI } = await import('https://esm.run/@google/genai');
-        // Below is very bad, need to hide apiKey somehow
-        // Use vscode.SecretStorage and prompt user for their key instead of using mine
-        const genai = new GoogleGenAI({apiKey: "AIzaSyDJgoG2i-3zUFdYDZKIrPbwaMjM5iN-J0s"});
+        
+        const apiKeyArea = document.getElementById('apiKey');
+        const aiArea = document.getElementById('aiOutput');
+        const fileContents = document.getElementById('fileContent').value;
+        const codeTextArea = document.getElementById('codeBlock');
+
+        var genai = undefined;
+        try {
+            genai = new GoogleGenAI({apiKey: apiKeyArea.innerHTML});
+        } catch (error) {
+            console.log("Error calling Gemini API:", error);
+            aiArea.value = "Invalid API Key, please use 'Set My API Key' command";
+        }
 
         async function aiSuggestQuestion() {
-            const codeTextArea = document.getElementById('codeBlock');
-            const aiArea = document.getElementById('aiOutput');
-            aiArea.value = "Generating content...";
+            if (!genai) {
+                aiArea.value = "Invalid API Key, please use 'Set My API Key' command";
+                return;
+            }
             try {
+                aiArea.value = "Generating content...";
+                /*
+                const file = await genai.files.upload({
+                    name: "contextFile",
+                    contents: fileContents,
+                    mimeType: 'text/plain'
+                });
+
+                let fileInfo = await ai.files.get({ name: uploadResponse.name });
+                while (fileInfo.state === "PROCESSING") {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    fileInfo = await ai.files.get({ name: uploadResponse.name });
+                };
+                */
+
+                var contents = 
+                `You are an expert programming flashcard generator.
+
+                Analyze the provided **CONTEXT** and **CODE**.
+                Your task is to create *one* insightful, short-form question and its correct answer that specifically tests understanding of a *key function, concept, or potential bug* within the **CODE**, considering the surrounding context.
+
+                The response **MUST** adhere to the following strict format, with bolding and prefixes exactly as shown:
+
+                **Question:** [The short, focused question]
+                **Answer:** [The concise, correct explanation or result]
+
+                **CONTEXT:**
+                ${fileContents}
+
+                **CODE:**
+                ${codeTextArea.value}`;
+
                 const response = await genai.models.generateContent({
                     model: "gemini-2.5-flash",
-                    contents: `Create one short question and answer for the code: ${codeTextArea.value}. The response should have "**Question:** " before the question and "**Answer:** " before the answer.`
+                    contents: contents
                 });
-                console.log(response.text);
                 aiArea.value = response.text;
             } catch (error) {
                 console.log("Error calling Gemini API:", error);

@@ -36,6 +36,10 @@
       {
         "command": "gvqlc.addQuizQuestion",
         "title": "gvQLC: Add Quiz Question"
+      },
+      {
+        "command": "gvqlc.setMyAPIKey",
+        "title": "gvQLC: Set API Key"
       }
     ]
   },
