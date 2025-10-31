@@ -299,6 +299,40 @@ export function generateHTMLQuizExport(studentName: string, questions: any[]): s
   return retHTML;
 }
 
+// Function to generate HTML quiz for all students in one file
+export function generateAllHTMLQuizExport(studentQuestionsMap: Record<string, any[]>): string {
+  let retHTML = "";
+  retHTML += `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Students Quiz</title>
+  <style>
+    .page-break {
+      page-break-after: always;
+    }
+  </style>
+</head>
+<body>`;
+  for (const studentName in studentQuestionsMap) {
+    const questions = studentQuestionsMap[studentName];
+    retHTML += `<h1>Quiz for ${studentName}</h1>\n`;
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i];
+      retHTML += `<div class="question-block">\n`;
+      retHTML += `<h2>Question ${i + 1}:</h2>\n`;
+      retHTML += `<pre><code>${question.codeContext}</code></pre>\n`;
+      retHTML += `<p>${question.question}</p>\n`;
+      retHTML += `</div>\n<hr>\n`;
+    }
+    retHTML += `<hr class="page-break">&nbsp;</hr>\n`;
+  }
+  retHTML += `</body>
+</html>`;
+  return retHTML;
+}
+
 // Function to convert HTML to Markdown
 export function convertHTMLToMarkdown(htmlContent: string): string {
   const turndownService = new TurndownService();

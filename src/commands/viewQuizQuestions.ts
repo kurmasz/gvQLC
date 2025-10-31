@@ -13,7 +13,7 @@ import path from 'path';
 import * as gvQLC from '../gvQLC';
 const state = gvQLC.state;
 
-import { extractStudentName, loadDataFromFile, saveDataToFile, generateHTMLQuizExport, convertHTMLToMarkdown } from '../utilities';
+import { extractStudentName, loadDataFromFile, saveDataToFile, generateHTMLQuizExport, generateAllHTMLQuizExport, convertHTMLToMarkdown } from '../utilities';
 import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
@@ -512,7 +512,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         }
         
         if (message.type === 'exportQuiz') {
-            // TODO: Implement export functionality
             // TODO: Implement styling for button
             // TODO: Implement formatting for exported quiz
             // TODO: Implement a try in case the file is not found or empty
@@ -521,7 +520,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             // TODO: Figure out how to output to new folder for this class/assignment (prompt on export?)
             // this function will be our paper test export feature
             // either exporting to .md or .pdf
-            // for now, just will convert JSON to .md
             // it will extract students as well as their questions
             // from the JSON as vars in a loop so we can format it nicely
             // Eventually, we will create a folder with date and optional
@@ -532,7 +530,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             //file is imported from shared constants at top of file
             // create object of file data
             const fileData = loadDataFromFile(quizQuestionsFileName);
-            //vscode.window.showInformationMessage('Exporting quiz questions:', fileData);
             interface  QuizQuestion {
                 filePath: string;
                 codeContext: string;
@@ -543,7 +540,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             let studentQuestionsMap: Record<string, QuizQuestion[]> = {};
             for(const questionIndex in fileData) {
                 // note: consider including range for line numbers (if that is what it means)
-                // section to parse from json
                 if (!fileData[questionIndex].excludeFromQuiz) {
                     // TODO: find a way to separate file name to display on quiz
                     const extractedName = extractStudentName(fileData[questionIndex].filePath, submissionRoot);
@@ -558,45 +554,41 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                     });
                 }
             }
-            // end section to parse from json
 
-            let quizExport = '';
-            // note: not all formats will be created, just here for future reference
-            // section to handle export flags/options
-            // end section to handle export flags/options
-
-            // section to create html format
-            for (const student in studentQuestionsMap) {
-                const htmlContent = generateHTMLQuizExport(student, studentQuestionsMap[student]);
-                const safeStudentName = student.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                const fileNameHTML = `quiz_${safeStudentName}.html`;
-                //saveDataToFile(fileNameHTML, htmlContent, false);
-                // temp flag to indicate markdown option selected
-                const markdownFlag = true;
+            const markdownFlag = true;
+            const pdfFlag = false;
+            const singlePageFlag = true;
+            if (singlePageFlag) {
+                const htmlContent = generateAllHTMLQuizExport(studentQuestionsMap);
+                const fileNameHTML = `quiz_all_students.html`;
                 if (markdownFlag) {
+                    // Haven't found a way to implement page breaks in md yet
                     const markdownContent = convertHTMLToMarkdown(htmlContent);
-                    const fileNameMD = `quiz_${safeStudentName}.md`;
+                    const fileNameMD = `quiz_all_students.md`;
                     saveDataToFile(fileNameMD, markdownContent, false);
+                } else if (pdfFlag) {
+                    // vvv placeholder for logic skeleton
+                    saveDataToFile(fileNameHTML, htmlContent, false);
                 } else {
                     saveDataToFile(fileNameHTML, htmlContent, false);
                 }
-                //console.log(`Exported quiz for ${student} to ${fileName}`);
+            } else {
+                for (const student in studentQuestionsMap) {
+                    const htmlContent = generateHTMLQuizExport(student, studentQuestionsMap[student]);
+                    const safeStudentName = student.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    const fileNameHTML = `quiz_${safeStudentName}.html`;
+                    if (markdownFlag) {
+                        const markdownContent = convertHTMLToMarkdown(htmlContent);
+                        const fileNameMD = `quiz_${safeStudentName}.md`;
+                        saveDataToFile(fileNameMD, markdownContent, false);
+                    } else if (pdfFlag) {
+                        // vvv placeholder for logic skeleton
+                        saveDataToFile(fileNameHTML, htmlContent, false);
+                    } else {
+                        saveDataToFile(fileNameHTML, htmlContent, false);
+                    }
+                }
             }
-            // end section to create html format
-
-            // section to create md format
-
-            // end section to create md format
-            
-            // note: research pdf libraries and conversion from md/html to pdf
-            // section to create pdf format
-            // end section to create pdf format
-
-            // note: use flags to determine how to export
-            // note: ref utils for saving files
-            // section to output to file
-            // end section to output to file
-            //console.log('Student Questions Map:', studentQuestionsMap);
         }
     });
 });
