@@ -218,18 +218,18 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     );
 
     const settingUri = vscode.Uri.file(`${vscode.workspace.workspaceFolders?.[0]?.uri.fsPath}/userSettings.json`);
-        try {
-            await vscode.workspace.fs.stat(settingUri);
-        } catch (error) {
-            await Util.saveUserSettingsFile('userSettings.json', 'normal', 'normal');
-        }
-        var darkMode = "";
-        var contrastMode = "";
-        const settingBytes = await vscode.workspace.fs.readFile(settingUri);
-        const settingsString = Buffer.from(settingBytes).toString('utf8');
-        const settingsJSON = await JSON.parse(settingsString);
-        darkMode = settingsJSON.darkMode;
-        contrastMode = settingsJSON.contrastMode;
+    try {
+        await vscode.workspace.fs.stat(settingUri);
+    } catch (error) {
+        await Util.saveUserSettingsFile('userSettings.json', 'normal', 'normal');
+    }
+    var darkMode = "";
+    var contrastMode = "";
+    const settingBytes = await vscode.workspace.fs.readFile(settingUri);
+    const settingsString = Buffer.from(settingBytes).toString('utf8');
+    const settingsJSON = await JSON.parse(settingsString);
+    darkMode = settingsJSON.darkMode;
+    contrastMode = settingsJSON.contrastMode;
 
     // Data passed to the mustache template
     const data = {

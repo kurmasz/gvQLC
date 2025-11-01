@@ -141,6 +141,86 @@ describe("addQuizQuestions", function () {
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n"\n~~~');
   });
 
+  it.skip('generates AI output', async () => {
+    const aiBox = await view.findWebElement(By.css("#aiOutput"));
+    await aiBox.clear();
+    expect(await aiBox.getAttribute('value')).to.be.equal('');
+
+    const buttons = await view.findWebElements(By.css("button"));
+    await buttons[2].click();
+    // Need to delay further operation until after we get a response
+
+    expect(await aiBox.getAttribute('value')).to.be.not.equal('');
+  });
+
+  it.skip('fills in answer/question sections with AI output', async () => {
+    const questionBox = await view.findWebElement(By.css("#question"));
+    const answerBox = await view.findWebElement(By.css("#answer"));
+
+    const buttons = await view.findWebElements(By.css("button"));
+    await buttons[3].click();
+    // Need to delay further operation until after we get a response from the earlier buttons[2].click()
+
+    expect(await questionBox.getAttribute('value')).to.be.not.equal('');
+    expect(await answerBox.getAttribute('value')).to.be.not.equal('');
+    questionBox.clear();
+    answerBox.clear();
+  });
+
+  it('toggles darkmode on and off', async () => {
+    var body = await view.findWebElement(By.css("#body"));
+    var currValue = await body.getAttribute("class");
+    var tokens = currValue.split(" ");
+    if (tokens[0] = "dark") {
+      console.log("Was darkMode before click\n");
+      expect(tokens[0]).to.be.equal("dark");
+    } else {
+      console.log("Was normalMode before click\n");
+      expect(tokens[0]).to.be.equal("normal");
+    }
+
+    const darkModeButton = await view.findWebElement(By.css("#darkModeButton"));
+    await darkModeButton.click();
+
+    var body = await view.findWebElement(By.css("#body"));
+    var currValue = await body.getAttribute("class");
+    var tokens = currValue.split(" ");
+    if (tokens[0] = "dark") {
+      console.log("Is now darkMode after click\n");
+      expect(tokens[0]).to.be.equal("dark");
+    } else {
+      console.log("Is now normalMode after click\n");
+      expect(tokens[0]).to.be.equal("normal");
+    }
+  })
+
+  it('toggles high contrast mode on and off', async () => {
+    var body = await view.findWebElement(By.css("#body"));
+    var currValue = await body.getAttribute("class");
+    var tokens = currValue.split(" ");
+    if (tokens[1] = "contrast") {
+      console.log("Was contrastMode before click\n");
+      expect(tokens[1]).to.be.equal("contrast");
+    } else {
+      console.log("Was normalMode before click\n");
+      expect(tokens[1]).to.be.equal("normal");
+    }
+
+    const highContrastButton = await view.findWebElement(By.css("#highContrastButton"));
+    await highContrastButton.click();
+
+    var body = await view.findWebElement(By.css("#body"));
+    var currValue = await body.getAttribute("class");
+    var tokens = currValue.split(" ");
+    if (tokens[1] = "contrast") {
+      console.log("Is now contrastMode after click\n");
+      expect(tokens[1]).to.be.equal("contrast");
+    } else {
+      console.log("Is now normalMode after click\n");
+      expect(tokens[1]).to.be.equal("normal");
+    }
+  })
+
   it("saves the question and answer when submitted", async () => {
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.clear();
@@ -176,32 +256,6 @@ describe("addQuizQuestions", function () {
     expect(newQuestion.highlightedCode).to.equal('".html": handle_binary');
     expect(newQuestion.answer).to.equal("And this is the answer.");
     expect(newQuestion.excludeFromQuiz).to.be.false;
-  });
-
-  it.skip('generates AI output', async () => {
-    const aiBox = await view.findWebElement(By.css("#aiOutput"));
-    await aiBox.clear();
-    expect(await aiBox.getAttribute('value')).to.be.equal('');
-
-    const buttons = await view.findWebElements(By.css("button"));
-    await buttons[2].click();
-    // Need to delay further operation until after we get a response
-
-    expect(await aiBox.getAttribute('value')).to.be.not.equal('');
-  });
-
-  it.skip('fills in answer/question sections with AI output', async () => {
-    const questionBox = await view.findWebElement(By.css("#question"));
-    const answerBox = await view.findWebElement(By.css("#answer"));
-
-    const buttons = await view.findWebElements(By.css("button"));
-    await buttons[3].click();
-    // Need to delay further operation until after we get a response from the earlier buttons[2].click()
-
-    expect(await questionBox.getAttribute('value')).to.be.not.equal('');
-    expect(await answerBox.getAttribute('value')).to.be.not.equal('');
-    questionBox.clear();
-    answerBox.clear();
   });
 
   it("Generates exactly one info notification upon success", async () => {

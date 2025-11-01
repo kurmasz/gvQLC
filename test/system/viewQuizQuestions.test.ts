@@ -10,13 +10,15 @@
  * (C) 2025 Zachary Kurmas
  * *********************************************************************************/
 
+
 import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
-import { By, WebElement, Key, Actions } from 'selenium-webdriver';
+import { By, WebElement, Key } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
 
 import { expect } from 'chai';
+import * as os from 'os';
 
 describe('viewQuizQuestions', function () {
     let view: WebView;
@@ -173,7 +175,6 @@ describe('viewQuizQuestions', function () {
     });
 
     it('Copies the full question when no text is highlighted', async () => {
-        // Issues getting to clipboard to confirm it did copy
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -187,9 +188,12 @@ describe('viewQuizQuestions', function () {
         await buttons[3].click();
 
         // Verifies it was copied to clipboard
+        if (getOperatingSystem() == "windows") {
+            await question.sendKeys(Key.CONTROL, "v", Key.NULL);
+        } else {
+            await question.sendKeys(Key.COMMAND, "v", Key.NULL);
+        }
 
-        await question.sendKeys(Key.CONTROL, "v", Key.NULL);
-        //await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
         await buttons[1].click();
     });
@@ -213,8 +217,12 @@ describe('viewQuizQuestions', function () {
         await buttons[3].click();
         console.log(`Before paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
 
-        await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
-        //await question1.sendKeys(Key.chord(Key.COMMAND, "v"));
+        if (getOperatingSystem() == "windows") {
+            await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
+        } else {
+            await question1.sendKeys(Key.chord(Key.COMMAND, "v"));
+        }
+
         console.log(`After paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
         expect(await question1.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`E");
         await buttons[1].click();
@@ -355,6 +363,60 @@ describe('viewQuizQuestions', function () {
         expect(await container.isDisplayed()).to.be.false;
     });
 
+    it('toggles darkmode on and off', async () => {
+        var body = await view.findWebElement(By.css("#body"));
+        var currValue = await body.getAttribute("class");
+        var tokens = currValue.split(" ");
+        if (tokens[0] = "dark") {
+        console.log("Was darkMode before click\n");
+        expect(tokens[0]).to.be.equal("dark");
+        } else {
+        console.log("Was normalMode before click\n");
+        expect(tokens[0]).to.be.equal("normal");
+        }
+
+        const darkModeButton = await view.findWebElement(By.css("#darkModeButton"));
+        await darkModeButton.click();
+
+        var body = await view.findWebElement(By.css("#body"));
+        var currValue = await body.getAttribute("class");
+        var tokens = currValue.split(" ");
+        if (tokens[0] = "dark") {
+        console.log("Is now darkMode after click\n");
+        expect(tokens[0]).to.be.equal("dark");
+        } else {
+        console.log("Is now normalMode after click\n");
+        expect(tokens[0]).to.be.equal("normal");
+        }
+    })
+
+    it('toggles high contrast mode on and off', async () => {
+        var body = await view.findWebElement(By.css("#body"));
+        var currValue = await body.getAttribute("class");
+        var tokens = currValue.split(" ");
+        if (tokens[1] = "contrast") {
+        console.log("Was contrastMode before click\n");
+        expect(tokens[1]).to.be.equal("contrast");
+        } else {
+        console.log("Was normalMode before click\n");
+        expect(tokens[1]).to.be.equal("normal");
+        }
+
+        const highContrastButton = await view.findWebElement(By.css("#highContrastButton"));
+        await highContrastButton.click();
+
+        var body = await view.findWebElement(By.css("#body"));
+        var currValue = await body.getAttribute("class");
+        var tokens = currValue.split(" ");
+        if (tokens[1] = "contrast") {
+        console.log("Is now contrastMode after click\n");
+        expect(tokens[1]).to.be.equal("contrast");
+        } else {
+        console.log("Is now normalMode after click\n");
+        expect(tokens[1]).to.be.equal("normal");
+        }
+    })
+
     it.skip('Refreshes the page', async () => {
         // Issues with the after(async function() { lines
 
@@ -363,9 +425,7 @@ describe('viewQuizQuestions', function () {
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
 
-        after(async function() {
-            await VSBrowser.instance.driver.switchTo().defaultContent();
-        });
+        await VSBrowser.instance.driver.switchTo().defaultContent();
 
         var expectedNew = `                while line := file.readline():
                     socket.send_text_line(line)`;
@@ -429,5 +489,18 @@ describe('viewQuizQuestions', function () {
     async function verifyQuestionCount(expectedCount: number) {
         const element = await view.findWebElement(By.className('total-count'));
         expect(await element.getText()).to.equal(`Total Questions: ${expectedCount}`);
+    }
+
+    function getOperatingSystem(): string {
+        switch (os.platform()) {
+            case 'darwin':
+                return 'macOS';
+            case 'win32':
+                return 'Windows';
+            case 'linux':
+                return 'Linux';
+            default:
+                return 'Unknown';
+        }
     }
 });
