@@ -39,8 +39,17 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         vscode.window.showErrorMessage('gvQLC: No code selected. (You must have a code snippet selected to add a quiz question.)');
         return;
     }
-    const range = new vscode.Range(selection.start, selection.end);
+    const startLine = selection.start.line;
+    const newStart = new vscode.Position(startLine, 0);
+    const range = new vscode.Range(newStart, selection.end);
     let selectedText = editor.document.getText(range);
+
+    const numTrim = selectedText.length - selectedText.trimStart().length;
+    const tokens = selectedText.split("\n");
+    tokens.forEach((element, index) => {
+        tokens[index] = element.slice(numTrim);
+    });
+    const trimmedText = tokens.join("\n");
 
     // Get workspace root and calculate relative path
     const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -99,7 +108,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
     // Data passed to the mustache template
     const htmlData = {
-        selectedText: selectedText,
+        selectedText: trimmedText,
         existingQuestions: JSON.stringify(existingQuestions),
         fullFileContent: fullFileContent,
         apiKey: apiKey,
