@@ -244,6 +244,57 @@ export async function saveDataToFile(filename: string, data: any, useJSON = true
   await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
 }
 
+export async function saveUserSettingsFile(filename: string, darkMode: any, contrastMode: any, useJSON = true) {
+  
+  // timestamp and uniqID are used so the automated tests can be confident that the 
+  // previous operation has completed (e.g., detect when the file being read is an old 
+  // version).
+  const toWrite = {
+    darkMode: darkMode,
+    contrastMode: contrastMode,
+    timestamp: new Date().toISOString(),
+    uniqID: Math.floor(Math.random() * Number.MAX_SAFE_INTEGER)
+  };
+  
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+  if (!workspaceFolders) {
+    vscode.window.showErrorMessage('No workspace folder is open.');
+    return;
+  }
+
+  const output = useJSON ? JSON.stringify(toWrite, null, 2) : JSON.stringify({darkMode: darkMode, contrastMode: contrastMode});
+  const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
+  await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
+}
+
+// Function to generate HTML quiz string export for a student
+export function generateHTMLQuizExport(studentName: string, questions: any[]): string {
+  const header = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Export for ${studentName}</title>
+  <style>
+  </style>
+</head>
+<body>`;
+  const footer = `</body>
+</html>`;
+  const quizTitle = `<h1>Quiz for ${studentName}</h1>\n`;
+  let retHTML = header + quizTitle;
+  for (let i = 0; i < questions.length; i++) {
+    const question = questions[i];
+    retHTML += `<div class="question-block">\n`;
+    retHTML += `<h2>Question ${i + 1}:</h2>\n`;
+    retHTML += `<pre><code>${question.codeContext}</code></pre>\n`;
+    retHTML += `<p>${question.question}</p>\n`;
+    retHTML += `</div>\n<hr>\n`;
+  }
+  retHTML += footer;
+  return retHTML;
+}
+
 export function chooseQuestionColor(numQuestionsForStudent: number, modeQuestionsForStudent: number) {
   if (numQuestionsForStudent === 0) {
     return ViewColors.RED;

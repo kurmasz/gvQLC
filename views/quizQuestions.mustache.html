@@ -165,12 +165,36 @@
             border-radius: 4px;
             border: 1px solid #ddd;
         }
+        .contrast {
+            background-color: yellow;
+            color: blue;
+        }
+        .contrast p, .contrast h1, .contrast textarea, .contrast div .contrast input, .contrast label, .contrast td {
+            background-color: yellow;
+            color: blue;
+        }
+        .dark {
+            background-color: black;
+            color: white;
+        }
+        .dark p, .dark h1, .dark textarea, .dark div, .dark input, .dark label, .dark td {
+            background-color: black;
+            color: white;
+        }
+        .dark td:first-child {
+            color: black;
+        }
     </style>
 </head>
-<body>
+<body id="body">
     <div class="header-container">
         <h1>All Quiz Questions</h1>
         <div class="total-count">Total Questions: {{totalQuestions}}</div>
+        <div>
+            <button onclick="toggleDark()">Dark Mode</button>
+            <button onclick="toggleContrast()">High Contrast</button>
+        </div>
+        <p id="displayMode" style="display: none;">{{darkMode}} {{contrastMode}}</p>
     </div>
 
     <div class="controls-container">
@@ -180,6 +204,7 @@
             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
             <span id="filterCount"></span>
         </div>
+        <button id="exportBtn" onclick="exportQuiz()">Export Quiz</button>
     </div>
 
     {{{summaryTable}}}
@@ -474,8 +499,57 @@
             vscode.postMessage({ type: 'openFileAt', index });
         }
 
+        function exportQuiz() {
+            vscode.postMessage({ type: 'exportQuiz' });
+        }
+
         // Initialize the table when the page loads
         window.addEventListener('load', initializeTable);
+    </script>
+    <script>
+        var currStyle = document.getElementById('body');
+        var darkMode = document.getElementById('displayMode');
+        var tokens = darkMode.innerHTML.split(" ");
+        if (tokens[0] == 'dark') {
+            currStyle.className = 'dark';
+        } else {
+            currStyle.className = 'normal';
+        }
+        if (tokens[1] == 'contrast') {
+            currStyle.className = `${currStyle.className} contrast`;
+        } else {
+            currStyle.className = `${currStyle.className} normal`;
+        }
+
+        function toggleDark() {
+            var currStyle = document.getElementById('body');
+            var displayMode = document.getElementById('displayMode');
+            var tokens = displayMode.innerHTML.split(" ");
+            if (tokens[0] == 'dark') {
+                currStyle.className = `normal ${tokens[1]}`;
+                displayMode.innerHTML = `normal ${tokens[1]}`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: "normal", contrastMode: tokens[1]});
+            } else {
+                currStyle.className = `dark ${tokens[1]}`;
+                displayMode.innerHTML = `dark ${tokens[1]}`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: 'dark', contrastMode: tokens[1]});
+            }
+        }
+
+        function toggleContrast() {
+            var currStyle = document.getElementById('body');
+            var displayMode = document.getElementById('displayMode');
+            var tokens = displayMode.innerHTML.split(" ");
+            if (tokens[1] == 'contrast') {
+                currStyle.className = `${tokens[0]} normal`;
+                displayMode.innerHTML = `${tokens[0]} normal`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: tokens[0], contrastMode: 'normal'});
+            } else {
+                currStyle.className = `${tokens[0]} contrast`;
+                displayMode.innerHTML = `${tokens[0]} contrast`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: tokens[0], contrastMode: 'contrast'});
+            }
+        }
     </script>
 </body>
 </html>
