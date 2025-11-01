@@ -191,8 +191,8 @@
         <h1>All Quiz Questions</h1>
         <div class="total-count">Total Questions: {{totalQuestions}}</div>
         <div>
-            <button onclick="toggleDark()">Dark Mode</button>
-            <button onclick="toggleContrast()">High Contrast</button>
+            <button id="darkModeButton" onclick="toggleDark()">Dark Mode</button>
+            <button id="contrastModeButton" onclick="toggleContrast()">High Contrast</button>
         </div>
         <p id="displayMode" style="display: none;">{{darkMode}} {{contrastMode}}</p>
     </div>
