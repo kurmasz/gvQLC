@@ -217,13 +217,29 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         { enableScripts: true }
     );
 
+    const settingUri = vscode.Uri.file(`${vscode.workspace.workspaceFolders?.[0]?.uri.fsPath}/userSettings.json`);
+        try {
+            await vscode.workspace.fs.stat(settingUri);
+        } catch (error) {
+            await Util.saveUserSettingsFile('userSettings.json', 'normal', 'normal');
+        }
+        var darkMode = "";
+        var contrastMode = "";
+        const settingBytes = await vscode.workspace.fs.readFile(settingUri);
+        const settingsString = Buffer.from(settingBytes).toString('utf8');
+        const settingsJSON = await JSON.parse(settingsString);
+        darkMode = settingsJSON.darkMode;
+        contrastMode = settingsJSON.contrastMode;
+
     // Data passed to the mustache template
     const data = {
         totalQuestions: reorderedQuestions.length,
         summaryTable: buildSummaryTable(await allStudentsPromise),
         questionsTable: questionsTable,
         originalData: JSON.stringify(reorderedQuestions),
-        questionLabels: JSON.stringify(questionLabels)
+        questionLabels: JSON.stringify(questionLabels),
+        darkMode: darkMode,
+        contrastMode: contrastMode
 
     };
     panel.webview.html = Util.renderMustache('quizQuestions.mustache.html', data);
@@ -294,6 +310,10 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             } catch (e) {
                 vscode.window.showErrorMessage("Could not open file: " + String(e));
             }
+        }
+
+        if (message.type === 'alterUserSettings') {
+            await Util.saveUserSettingsFile('userSettings.json', message.darkMode, message.contrastMode);
         }
         
         if (message.type === 'exportQuiz') {

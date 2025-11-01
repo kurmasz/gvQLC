@@ -39,7 +39,7 @@
       },
       {
         "command": "gvqlc.setMyAPIKey",
-        "title": "gvQLC: Set API Key"
+        "title": "gvQLC: Set My API Key"
       }
     ]
   },

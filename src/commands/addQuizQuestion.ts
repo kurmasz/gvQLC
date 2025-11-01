@@ -52,13 +52,27 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const absolutePath = editor.document.uri.fsPath;
     const relativePath = path.relative(workspaceRoot, absolutePath);
     var fullFileContent;
-    const uri2 = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/myAPIKey.json`);
-
+    
+    const apiUri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/myAPIKey.json`);
     var apiKey = "";
-    const apiBytes = await vscode.workspace.fs.readFile(uri2);
+    const apiBytes = await vscode.workspace.fs.readFile(apiUri);
     const apiString = Buffer.from(apiBytes).toString('utf8');
     const apiJSON = await JSON.parse(apiString);
     apiKey = apiJSON.data;
+
+    const settingUri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/userSettings.json`);
+    try {
+        await vscode.workspace.fs.stat(settingUri);
+    } catch (error) {
+        await Util.saveUserSettingsFile('userSettings.json', 'normal', 'normal');
+    }
+    var darkMode = "";
+    var contrastMode = "";
+    const settingBytes = await vscode.workspace.fs.readFile(settingUri);
+    const settingsString = Buffer.from(settingBytes).toString('utf8');
+    const settingsJSON = await JSON.parse(settingsString);
+    darkMode = settingsJSON.darkMode;
+    contrastMode = settingsJSON.contrastMode;
 
     // Get existing questions for suggestions
     let existingQuestions = [];
@@ -66,10 +80,11 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
         const fileContent = await vscode.workspace.fs.readFile(uri);
         const data = JSON.parse(fileContent.toString());
+        existingQuestions = data.data.map((item: { text: string; }) => item.text).filter(Boolean);
+
         const specUri = vscode.Uri.file(`${absolutePath}`);
         const specContent = await vscode.workspace.fs.readFile(specUri);
         fullFileContent = specContent.toString();
-        existingQuestions = data.data.map((item: { text: string; }) => item.text).filter(Boolean);
     } catch (error) {
         console.log('Could not load existing questions:', error);
     }
@@ -87,7 +102,9 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         selectedText: selectedText,
         existingQuestions: JSON.stringify(existingQuestions),
         fullFileContent: fullFileContent,
-        apiKey: apiKey
+        apiKey: apiKey,
+        darkMode: darkMode,
+        contrastMode: contrastMode
     };
     // HTML content for the Webview
     panel.webview.html = Util.renderMustache('addQuestion.mustache.html', htmlData);
@@ -113,6 +130,9 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
             vscode.window.showInformationMessage('Question added successfully.');
             panel.dispose();
+        }
+        if (message.type === 'alterUserSettings') {
+            await Util.saveUserSettingsFile('userSettings.json', message.darkMode, message.contrastMode);
         }
     });
 });

@@ -34,9 +34,27 @@
         #question-container {
             position: relative;
         }
+        .contrast {
+            background-color: yellow;
+            color: blue;
+        }
+        .contrast p, .contrast h1, .contrast textarea, .contrast div {
+            background-color: yellow;
+            color: blue;
+        }
+        .dark {
+            background-color: black;
+            color: white;
+        }
+        .dark p, .dark h1, .dark textarea, .dark div {
+            background-color: black;
+            color: white;
+        }
     </style>
 </head>
-<body>
+<body id="body">
+    <button onclick="toggleDark()">Dark Mode</button>
+    <button onclick="toggleContrast()">High Contrast</button>
     <h1 id='addQuizQuestionTitle'>Add a Quiz Question</h1>
 
     <p><strong>Edit Highlighted Code:</strong></p>
@@ -56,11 +74,11 @@
     <textarea id="aiOutput" placeholder="No AI Output" rows="4"></textarea>
     <p id="fileContent" style="display: none;">{{fullFileContent}}</p>
     <p id="apiKey" style="display: none;">{{apiKey}}</p>
-    
+    <p id="displayMode" style="display: none;">{{darkMode}} {{contrastMode}}</p>
+
     <button id="submitButton" onclick="submitPersonalizedQuestion()">Submit</button>
     <button id="aiButton">AI Suggestion</button>
     <button id="acceptAI" onclick="acceptOutput()">Fill from AI Output</button>
-
     
     <script>
         const vscode = acquireVsCodeApi();
@@ -267,6 +285,51 @@
         }
         const aiButton = document.getElementById('aiButton');
         aiButton.addEventListener('click', aiSuggestQuestion);
+    </script>
+    <script>
+        var currStyle = document.getElementById('body');
+        var darkMode = document.getElementById('displayMode');
+        var tokens = darkMode.innerHTML.split(" ");
+        if (tokens[0] == 'dark') {
+            currStyle.className = 'dark';
+        } else {
+            currStyle.className = 'normal';
+        }
+        if (tokens[1] == 'contrast') {
+            currStyle.className = `${currStyle.className} contrast`;
+        } else {
+            currStyle.className = `${currStyle.className} normal`;
+        }
+
+        function toggleDark() {
+            var currStyle = document.getElementById('body');
+            var displayMode = document.getElementById('displayMode');
+            var tokens = displayMode.innerHTML.split(" ");
+            if (tokens[0] == 'dark') {
+                currStyle.className = `normal ${tokens[1]}`;
+                displayMode.innerHTML = `normal ${tokens[1]}`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: "normal", contrastMode: tokens[1]});
+            } else {
+                currStyle.className = `dark ${tokens[1]}`;
+                displayMode.innerHTML = `dark ${tokens[1]}`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: 'dark', contrastMode: tokens[1]});
+            }
+        }
+
+        function toggleContrast() {
+            var currStyle = document.getElementById('body');
+            var displayMode = document.getElementById('displayMode');
+            var tokens = displayMode.innerHTML.split(" ");
+            if (tokens[1] == 'contrast') {
+                currStyle.className = `${tokens[0]} normal`;
+                displayMode.innerHTML = `${tokens[0]} normal`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: tokens[0], contrastMode: 'normal'});
+            } else {
+                currStyle.className = `${tokens[0]} contrast`;
+                displayMode.innerHTML = `${tokens[0]} contrast`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: tokens[0], contrastMode: 'contrast'});
+            }
+        }
     </script>
 </body>
 </html>
