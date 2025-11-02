@@ -188,7 +188,8 @@ describe('viewQuizQuestions', function () {
         await buttons[3].click();
 
         // Verifies it was copied to clipboard
-        if (getOperatingSystem() == "windows") {
+        var operatingSystem = getOperatingSystem();
+        if (operatingSystem == "windows") {
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         } else {
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
@@ -217,7 +218,8 @@ describe('viewQuizQuestions', function () {
         await buttons[3].click();
         console.log(`Before paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
 
-        if (getOperatingSystem() == "windows") {
+        var operatingSystem = getOperatingSystem();
+        if (operatingSystem == "windows") {
             await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
         } else {
             await question1.sendKeys(Key.chord(Key.COMMAND, "v"));
