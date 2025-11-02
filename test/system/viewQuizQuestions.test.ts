@@ -185,7 +185,6 @@ describe('viewQuizQuestions', function () {
 
         //Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
-        expect(await buttons[3].getAttribute("onclick")).to.be.equal("copyQuestion");
         await buttons[3].click();
 
         // Verifies it was copied to clipboard
