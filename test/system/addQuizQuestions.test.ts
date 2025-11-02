@@ -141,6 +141,11 @@ describe("addQuizQuestions", function () {
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n"\n~~~');
   });
 
+  it('checks for invalid API Key', async() => {
+    const aiBox = await view.findWebElement(By.css("#aiOutput"));
+    expect(await aiBox.getAttribute("innerHTML")).to.be.equal("Invalid API Key, please use 'Set My API Key' command");
+  })
+
   it.skip('generates AI output', async () => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     await aiBox.clear();
@@ -317,7 +322,7 @@ describe("addQuizQuestions", function () {
     await new Promise((res) => setTimeout(res, 1000));
 
     const tab = await driver.wait(
-      until.elementLocated(By.css('#body')),
+      until.elementLocated(By.css('[aria-label="Add Quiz Question"]')),
       15_000
     );
     await driver.wait(until.elementIsVisible(tab), 5_000);

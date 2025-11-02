@@ -226,13 +226,17 @@
         const aiArea = document.getElementById('aiOutput');
         const fileContents = document.getElementById('fileContent').value;
         const codeTextArea = document.getElementById('codeBlock');
-
         var genai = undefined;
         try {
             genai = new GoogleGenAI({apiKey: apiKeyArea.innerHTML});
+            const testKey = await genai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: ''
+            });
         } catch (error) {
             console.log("Error calling Gemini API:", error);
-            aiArea.value = "Invalid API Key, please use 'Set My API Key' command";
+            aiArea.innerHTML = "Invalid API Key, please use 'Set My API Key' command";
+            genai = undefined;
         }
 
         async function aiSuggestQuestion() {

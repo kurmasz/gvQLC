@@ -63,6 +63,11 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     var fullFileContent;
     
     const apiUri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/myAPIKey.json`);
+    try {
+        await vscode.workspace.fs.stat(apiUri);
+    } catch (error) {
+        await Util.saveDataToFile('myAPIKey.json', '');
+    }
     var apiKey = "";
     const apiBytes = await vscode.workspace.fs.readFile(apiUri);
     const apiString = Buffer.from(apiBytes).toString('utf8');
