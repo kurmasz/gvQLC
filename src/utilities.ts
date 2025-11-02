@@ -273,6 +273,7 @@ export async function saveUserSettingsFile(filename: string, darkMode: any, cont
 
 // Function to generate HTML quiz string export for a student
 export function generateHTMLQuizExport(studentName: string, questions: any[]): string {
+  let retHTML = "";
   const header = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -280,21 +281,84 @@ export function generateHTMLQuizExport(studentName: string, questions: any[]): s
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quiz Export for ${studentName}</title>
   <style>
+    .global-body {
+      font-family: "Times New Roman", Times, serif;
+      margin: 0px;
+      padding: 0px;
+    }
+    .quiz-info {
+      margin: 0 20px;
+      .quiz-title {
+        text-align: center;
+        margin: 0;
+      }
+    }
+    .quiz-body {
+      margin: 0 20px;
+      padding: 0;
+      .quiz-question {
+
+        .quiz-number {
+          margin: 0;
+          font-weight: bold;
+        }
+        .quiz-text {
+          margin: 10px 20px;
+        }
+        .quiz-code {
+          margin: 0 40px;
+        }
+        .quiz-answer {
+          margin: 100px 20px 10px 20px;
+          font-weight: bold;
+        }
+      }
+    }
   </style>
 </head>
-<body>`;
+<body class="global-body">`;
+
   const footer = `</body>
 </html>`;
-  const quizTitle = `<h1>Quiz for ${studentName}</h1>\n`;
-  let retHTML = header + quizTitle;
+
+  retHTML += header;
+  
+  // Info section
+  // TODO: add more info (date, instructor, course, etc.)
+  let infoSection = `<div class="quiz-info">`;
+  infoSection += `<h1 class="quiz-title">Quiz for ${studentName}</h1><hr>\n`;
+  const dueDateFlag = true;
+  const tempDueDate = "Due Date: ____________";
+  if (dueDateFlag) {
+    infoSection += `<p>${tempDueDate}</p>`;
+  }
+  const descFlag = true;
+  const tempDesc = "Please answer the following questions based on your code submissions. Write your answers in the space provided.";
+  if (descFlag) {
+    infoSection += `<p>${tempDesc}</p>`;
+  }
+  infoSection += `</div>`
+  retHTML += infoSection;
+
+  // Questions section
+  let quizBody = `<div class="quiz-body">`;
   for (let i = 0; i < questions.length; i++) {
     const question = questions[i];
-    retHTML += `<div class="question-block">\n`;
-    retHTML += `<h2>Question ${i + 1}:</h2>\n`;
-    retHTML += `<pre><code>${question.codeContext}</code></pre>\n`;
-    retHTML += `<p>${question.question}</p>\n`;
-    retHTML += `</div>\n<hr>\n`;
+    let questionBlock = `<div class="quiz-question">`;
+    const sampleFileName = "File: " + "test.py";
+    const sampleLineRange = "Lines: " + "1-10";
+    const sampleColRange = "Columns: " + "1-20";
+    //questionBlock += `<p class="quiz-number">${i + 1}. <span>${sampleFileName} ${sampleLineRange}</span></p>`;
+    questionBlock += `<p class="quiz-number">${i + 1}. ${sampleFileName} ${sampleLineRange}</p>`;
+    questionBlock += `<p class="quiz-text">${question.question}</p>`;
+    questionBlock += `<pre class="quiz-code"><code>${question.codeContext}</code></pre>`;
+    questionBlock += `\n\n\n`;
+    questionBlock += `<p class="quiz-answer">Answer: ${question.answer}</p>`;
+    questionBlock += `</div>`;
+    quizBody += questionBlock;
   }
+  quizBody += `</div>`;
+  retHTML += quizBody;
   retHTML += footer;
   return retHTML;
 }
@@ -326,7 +390,7 @@ export function generateAllHTMLQuizExport(studentQuestionsMap: Record<string, an
       retHTML += `<p>${question.question}</p>\n`;
       retHTML += `</div>\n<hr>\n`;
     }
-    retHTML += `<hr class="page-break">&nbsp;</hr>\n`;
+    retHTML += `<div class="page-break">&nbsp;</div>\n`;
   }
   retHTML += `</body>
 </html>`;

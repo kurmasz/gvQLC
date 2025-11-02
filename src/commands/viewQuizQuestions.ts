@@ -555,9 +555,9 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                 }
             }
 
-            const markdownFlag = true;
+            const markdownFlag = false;
             const pdfFlag = false;
-            const singlePageFlag = true;
+            const singlePageFlag = false;
             if (singlePageFlag) {
                 const htmlContent = generateAllHTMLQuizExport(studentQuestionsMap);
                 const fileNameHTML = `quiz_all_students.html`;
