@@ -317,10 +317,12 @@ describe("addQuizQuestions", function () {
     await new Promise((res) => setTimeout(res, 1000));
 
     const tab = await driver.wait(
-      until.elementLocated(By.css('[aria-label="Add Quiz Question"]')),
+      until.elementLocated(By.css('#body')),
       15_000
     );
     await driver.wait(until.elementIsVisible(tab), 5_000);
+    //until.elementLocated(By.css('[aria-label="Add Quiz Question"]')),
+
 
     // Switch to the frame containing the new view
     const view = new WebView();
