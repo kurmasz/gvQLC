@@ -189,12 +189,10 @@ describe('viewQuizQuestions', function () {
 
         // Verifies it was copied to clipboard
         var operatingSystem = getOperatingSystem();
-        if (operatingSystem == "windows") {
-            console.log("Windows system");
-            await question.sendKeys(Key.CONTROL, "v", Key.NULL);
-        } else {
-            console.log("Not windows");
+        if (operatingSystem == "macOS") {
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
+        } else {
+            await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
 
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
