@@ -185,13 +185,16 @@ describe('viewQuizQuestions', function () {
 
         //Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
+        expect(await buttons[3].getAttribute("onclick")).to.be.equal("copyQuestion");
         await buttons[3].click();
 
         // Verifies it was copied to clipboard
         var operatingSystem = getOperatingSystem();
         if (operatingSystem == "windows") {
+            console.log("Windows system");
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         } else {
+            console.log("Not windows");
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         }
 
