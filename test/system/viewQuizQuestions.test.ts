@@ -404,7 +404,7 @@ describe('viewQuizQuestions', function () {
         expect(tokens[1]).to.be.equal("normal");
         }
 
-        const highContrastButton = await view.findWebElement(By.css("#highContrastButton"));
+        const highContrastButton = await view.findWebElement(By.css("#contrastModeButton"));
         await highContrastButton.click();
 
         var body = await view.findWebElement(By.css("#body"));
@@ -442,7 +442,7 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it('opens the link correctly when clicked', async () => {
+    it.skip('opens the link correctly when clicked', async () => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));

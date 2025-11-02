@@ -119,8 +119,8 @@ describe("addQuizQuestions", function () {
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.clear();
 
-    const buttons = await view.findWebElements(By.css("button"));
-    await buttons[0].click();
+    const copyButton = await view.findWebElement(By.css("#copyButton"));
+    await copyButton.click();
 
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n".html": handle_binary\n~~~');
   });
@@ -326,8 +326,6 @@ describe("addQuizQuestions", function () {
       15_000
     );
     await driver.wait(until.elementIsVisible(tab), 5_000);
-    //until.elementLocated(By.css('[aria-label="Add Quiz Question"]')),
-
 
     // Switch to the frame containing the new view
     const view = new WebView();
