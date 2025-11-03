@@ -83,6 +83,9 @@
     "test:unit": "tsc -p ./ && TEST_TYPE=unit mocha 'out/src/test/*.test.js' --ui tdd",
     "test": "npm run test:unit && npm run test:system"
   },
+  "dependencies": {
+    "openai": "^4.77.3"
+  },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.4.0",
     "@types/chai": "^4.3.16",

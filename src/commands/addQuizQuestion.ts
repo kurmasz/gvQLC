@@ -9,11 +9,50 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as fs from 'fs/promises';
 
-import { state, config } from '../gvQLC';
+import { state, config, context } from '../gvQLC';
 import { quizQuestionsFileName } from '../sharedConstants';
 
 import * as Util from '../utilities';
+import { OpenAICompatibleProvider, LLMConfig } from '../llm/promptLLM';
+
+/**
+ * Generates a quiz question from code using the LLM
+ */
+async function generateQuestionFromCode(code: string): Promise<string> {
+    try {
+        // Load the prompt template from the extension's source directory
+        const promptPath = path.join(context().extensionPath, 'src', 'llm', 'prompts', 'generateQuestion.json');
+        const promptContent = await fs.readFile(promptPath, 'utf-8');
+        const promptTemplate = JSON.parse(promptContent);
+
+        // Replace the code placeholder in the user prompt
+        const userPrompt = promptTemplate.user.replace('{{code}}', code);
+
+        // Get LLM configuration from VS Code settings or use defaults
+        // TODO: Add proper configuration loading from settings
+        const llmConfig: LLMConfig = {
+            provider: 'openai', // This should come from config
+            apiKey: process.env.OPENAI_API_KEY || '', // Should be stored in SecretStorage
+            model: 'gpt-4'
+        };
+
+        // Create the LLM provider
+        const provider = new OpenAICompatibleProvider(llmConfig);
+
+        // Generate the completion
+        const response = await provider.generateCompletion([
+            { role: 'system', content: promptTemplate.system },
+            { role: 'user', content: userPrompt }
+        ]);
+
+        return response.content;
+    } catch (error) {
+        console.error('Error generating question from code:', error);
+        throw new Error(`Failed to generate question: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
 
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
@@ -100,6 +139,25 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
             vscode.window.showInformationMessage('Question added successfully.');
             panel.dispose();
+        } else if (message.type === 'generateQuestion') {
+            try {
+                // Use the LLM to generate a question from the code
+                const generatedContent = await generateQuestionFromCode(message.code);
+                
+                // Send the response back to the webview
+                panel.webview.postMessage({
+                    type: 'aiResponse',
+                    content: generatedContent
+                });
+            } catch (error) {
+                console.error('Error generating question:', error);
+                
+                // Send error back to the webview
+                panel.webview.postMessage({
+                    type: 'aiError',
+                    error: error instanceof Error ? error.message : 'Unknown error occurred'
+                });
+            }
         }
     });
 });

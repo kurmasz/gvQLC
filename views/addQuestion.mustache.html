@@ -197,32 +197,35 @@
             }
         }
 
-    </script>
-
-    <script type="module">
-        const { GoogleGenAI } = await import('https://esm.run/@google/genai');
-        // Below is very bad, need to hide apiKey somehow
-        // Use vscode.SecretStorage and prompt user for their key instead of using mine
-        const genai = new GoogleGenAI({apiKey: "AIzaSyDJgoG2i-3zUFdYDZKIrPbwaMjM5iN-J0s"});
-
-        async function aiSuggestQuestion() {
+        // AI Suggestion function - sends request to backend
+        function aiSuggestQuestion() {
             const codeTextArea = document.getElementById('codeBlock');
             const aiArea = document.getElementById('aiOutput');
             aiArea.value = "Generating content...";
+            
             try {
-                const response = await genai.models.generateContent({
-                    model: "gemini-2.5-flash",
-                    contents: `Create one short question and answer for the code: ${codeTextArea.value}. The response should have "**Question:** " before the question and "**Answer:** " before the answer.`
+                vscode.postMessage({ 
+                    type: 'generateQuestion', 
+                    code: codeTextArea.value 
                 });
-                console.log(response.text);
-                aiArea.value = response.text;
             } catch (error) {
-                console.log("Error calling Gemini API:", error);
-                questionArea.value = "Error generating content";
+                console.error("Error requesting AI generation:", error);
+                aiArea.value = "Error generating content";
             }
         }
-        const aiButton = document.getElementById('aiButton');
-        aiButton.addEventListener('click', aiSuggestQuestion);
+        
+        // Listen for AI response from extension backend
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.type === 'aiResponse') {
+                const aiArea = document.getElementById('aiOutput');
+                aiArea.value = message.content;
+            } else if (message.type === 'aiError') {
+                const aiArea = document.getElementById('aiOutput');
+                aiArea.value = "Error: " + message.error;
+            }
+        });
+
     </script>
 </body>
 </html>

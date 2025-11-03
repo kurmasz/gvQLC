@@ -14,3 +14,12 @@ export const llmDefaults = {
     frequencyPenalty: 0,
     presencePenalty: 0,
 };
+
+export const geminiDefaults = {
+    model: 'gemini-1.5-pro',
+    maxTokens: 4096,
+    temperature: 0.7,
+    topP: 0.9,
+    frequencyPenalty: 0,
+    presencePenalty: 0,
+};
