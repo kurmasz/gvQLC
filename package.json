@@ -37,7 +37,39 @@
         "command": "gvqlc.addQuizQuestion",
         "title": "gvQLC: Add Quiz Question"
       }
-    ]
+    ],
+    "configuration": {
+    "title": "gvQLC",
+    "properties": {
+      "gvqlc.llm.provider": {
+        "type": "string",
+        "enum": ["openai", "azure", "anthropic", "ollama"],
+        "default": "openai",
+        "description": "LLM provider for question rephrasing",
+        "enumDescriptions": [
+          "OpenAI (GPT-4, GPT-3.5)",
+          "Azure OpenAI Service",
+          "Anthropic (Claude)",
+          "Ollama (local models)"
+        ]
+      },
+      "gvqlc.llm.apiKey": {
+        "type": "string",
+        "description": "API key for the selected LLM provider",
+        "markdownDescription": "LLM Provider API key, not required for some Azure or Ollama setups."
+      },
+      "gvqlc.llm.baseURL": {
+        "type": "string",
+        "description": "Custom API endpoint (optional)",
+        "markdownDescription": "Override default endpoint. Ex:\n- Azure: `https://YOUR-RESOURCE.openai.azure.com/`\n- Ollama: `http://localhost:11434/v1`."
+      },
+      "gvqlc.llm.model": {
+        "type": "string",
+        "description": "Model name (optional)",
+        "markdownDescription": "Specifies model, small models recommended. Ex:\n- OpenAI: `gpt-5-nano-2025-08-07`, `claude-haiku-4-5-20251001`\n- Ollama: `llama3.1`, `codellama`."
+      }
+    }
+  }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
