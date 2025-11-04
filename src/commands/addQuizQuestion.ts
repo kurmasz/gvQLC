@@ -15,7 +15,7 @@ import { state, config, context } from '../gvQLC';
 import { quizQuestionsFileName } from '../sharedConstants';
 
 import * as Util from '../utilities';
-import { OpenAICompatibleProvider, LLMConfig } from '../llm/promptLLM';
+import { getLLMProvider } from '../llm/llmConfig';
 
 /**
  * Generates a quiz question from code using the LLM
@@ -30,16 +30,8 @@ async function generateQuestionFromCode(code: string): Promise<string> {
         // Replace the code placeholder in the user prompt
         const userPrompt = promptTemplate.user.replace('{{code}}', code);
 
-        // Get LLM configuration from VS Code settings or use defaults
-        // TODO: Add proper configuration loading from settings
-        const llmConfig: LLMConfig = {
-            provider: 'openai', // This should come from config
-            apiKey: process.env.OPENAI_API_KEY || '', // Should be stored in SecretStorage
-            model: 'gpt-4'
-        };
-
-        // Create the LLM provider
-        const provider = new OpenAICompatibleProvider(llmConfig);
+        // Get the appropriate LLM provider based on configuration
+        const provider = await getLLMProvider(context());
 
         // Generate the completion
         const response = await provider.generateCompletion([

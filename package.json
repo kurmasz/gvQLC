@@ -36,6 +36,10 @@
       {
         "command": "gvqlc.addQuizQuestion",
         "title": "gvQLC: Add Quiz Question"
+      },
+      {
+        "command": "gvqlc.setLLMApiKey",
+        "title": "gvQLC: Set LLM API Key"
       }
     ],
     "configuration": {
@@ -43,20 +47,20 @@
     "properties": {
       "gvqlc.llm.provider": {
         "type": "string",
-        "enum": ["openai", "azure", "anthropic", "ollama"],
-        "default": "openai",
-        "description": "LLM provider for question rephrasing",
+        "enum": ["openai", "azure", "anthropic", "ollama", "gemini"],
+        "default": "gemini",
+        "description": "LLM provider for question generation",
         "enumDescriptions": [
           "OpenAI (GPT-4, GPT-3.5)",
           "Azure OpenAI Service",
           "Anthropic (Claude)",
-          "Ollama (local models)"
+          "Ollama (local models)",
+          "Google Gemini"
         ]
       },
-      "gvqlc.llm.apiKey": {
-        "type": "string",
-        "description": "API key for the selected LLM provider",
-        "markdownDescription": "LLM Provider API key, not required for some Azure or Ollama setups."
+      "gvqlc.llm.apiKeyInfo": {
+        "type": "null",
+        "markdownDescription": "**API Key Required**: **[Set API Key](command:gvqlc.setLLMApiKey)** to securely store your key.\n\nAPI keys are stored in your system keychain, not in settings. Please ignore the settings.json link below."
       },
       "gvqlc.llm.baseURL": {
         "type": "string",
@@ -66,7 +70,7 @@
       "gvqlc.llm.model": {
         "type": "string",
         "description": "Model name (optional)",
-        "markdownDescription": "Specifies model, small models recommended. Ex:\n- OpenAI: `gpt-5-nano-2025-08-07`, `claude-haiku-4-5-20251001`\n- Ollama: `llama3.1`, `codellama`."
+        "markdownDescription": "Specifies model, small models recommended. Ex:\n- OpenAI: `gpt-4`, `gpt-3.5-turbo`\n- Anthropic: `claude-3-5-sonnet-20241022`\n- Gemini: `gemini-2.0-flash-exp`, `gemini-1.5-pro`\n- Ollama: `llama3.1`, `codellama`."
       }
     }
   }
@@ -84,7 +88,8 @@
     "test": "npm run test:unit && npm run test:system"
   },
   "dependencies": {
-    "openai": "^4.77.3"
+    "openai": "^4.77.3",
+    "@google/generative-ai": "^0.21.0"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.4.0",

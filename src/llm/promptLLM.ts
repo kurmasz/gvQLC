@@ -9,12 +9,12 @@
  * (C) 2025 Elijah Morgan & Zachary Kurmas
  * *********************************************************************************/
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 //TODO Implement cofidence testing
-//TODO Add Gemini support
 
 export interface LLMConfig {
-  provider: 'openai' | 'azure' | 'anthropic' | 'ollama';
+  provider: 'openai' | 'azure' | 'anthropic' | 'ollama' | 'gemini';
   apiKey?: string;
   baseURL?: string;
   model?: string;
@@ -64,10 +64,10 @@ export class OpenAICompatibleProvider implements LLMProvider {
     });
 
     const defaultModels: Record<string, string> = {
-      openai: 'gpt-4',
-      azure: 'gpt-4',
-      anthropic: 'claude-3-5-sonnet-20241022',
-      ollama: 'llama3.1'
+      openai: 'gpt-5-nano-2025-08-07',
+      azure: 'gpt-5-nano-2025-08-07',
+      anthropic: 'claude-sonnet-4-20250514',
+      ollama: 'llama3'
     };
 
     this.model = config.model || defaultModels[config.provider];
@@ -88,6 +88,55 @@ export class OpenAICompatibleProvider implements LLMProvider {
         promptTokens: response.usage?.prompt_tokens || 0,
         completionTokens: response.usage?.completion_tokens || 0,
         totalTokens: response.usage?.total_tokens || 0
+      }
+    };
+  }
+}
+
+export class GeminiProvider implements LLMProvider {
+  private client: GoogleGenerativeAI;
+  private model: string;
+
+  constructor(config: LLMConfig) {
+    if (!config.apiKey) {
+      throw new Error('Gemini API key is required');
+    }
+
+    this.client = new GoogleGenerativeAI(config.apiKey);
+    this.model = config.model || 'gemini-2.0-flash-exp';
+  }
+
+  async generateCompletion(messages: LLMMessage[]): Promise<LLMResponse> {
+    // Separate system message from user/assistant messages
+    const systemMessage = messages.find(m => m.role === 'system');
+    const conversationMessages = messages.filter(m => m.role !== 'system');
+
+    // Get the generative model with system instruction
+    const model = this.client.getGenerativeModel({
+      model: this.model,
+      systemInstruction: systemMessage?.content
+    });
+
+    // Convert messages to Gemini format
+    const contents = conversationMessages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+
+    // Generate content
+    const result = await model.generateContent({
+      contents: contents
+    });
+
+    const response = result.response;
+    const text = response.text();
+
+    return {
+      content: text,
+      usage: {
+        promptTokens: response.usageMetadata?.promptTokenCount || 0,
+        completionTokens: response.usageMetadata?.candidatesTokenCount || 0,
+        totalTokens: response.usageMetadata?.totalTokenCount || 0
       }
     };
   }
