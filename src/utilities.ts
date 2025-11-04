@@ -337,7 +337,7 @@ export function generateHTMLQuizExport(studentName: string, questions: any[]): s
   if (descFlag) {
     infoSection += `<p>${tempDesc}</p>`;
   }
-  infoSection += `</div>`
+  infoSection += `</div>`;
   retHTML += infoSection;
 
   // Questions section

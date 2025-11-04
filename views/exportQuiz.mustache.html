@@ -12,6 +12,7 @@
                 justify-content: center;
                 display: flex;
                 position: relative;
+                color: rgb(0, 0, 0);
             }
             .options {
                 background-color: rgba(180, 180, 180, 0.649);
@@ -36,8 +37,14 @@
             <p>Export Location:</p>
             <input type="text" id="exportLocation" placeholder="Enter export path">
             <br><br>
-            <button id="exportBtn">Export Quiz</button>
+            <button id="exportBtn" onclick="exportQuiz()">Export Quiz</button>
             <p></p>
         </div>
     </body>
+    <script>
+        const vscode = acquireVsCodeApi();
+        function exportQuiz() {
+            vscode.postMessage({ type: 'exportQuiz' });
+        }
+    </script>
 </html>

@@ -40,6 +40,10 @@
       {
         "command": "gvqlc.setLLMApiKey",
         "title": "gvQLC: Set LLM API Key"
+      },
+      {
+        "command": "gvqlc.exportQuiz",
+        "title": "gvQLC: Export Quiz"
       }
     ],
     "configuration": {
