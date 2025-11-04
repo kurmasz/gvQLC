@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Export Quiz</title>
+        <style>
+            .body {
+                font-family: Times, "Times New Roman", serif;
+                background-color: rgba(0, 0, 0, 0);
+                text-align: center;
+                justify-content: center;
+                display: flex;
+                position: relative;
+            }
+            .options {
+                background-color: rgba(180, 180, 180, 0.649);
+            }
+        </style>
+    </head>
+    <body class="body">
+        <div class="options">
+            <h1>Export Quiz</h1>
+            <p>File Type:</p>
+            <label><input type="radio" name="fileType" value="html" checked> HTML</label>
+            <label><input type="radio" name="fileType" value="markdown"> Markdown</label>
+            <label><input type="radio" name="fileType" value="pdf"> PDF</label>
+            <br>
+            <p>Advanced Options:</p>
+            <label><input type="checkbox" id="singlePage" checked> Single Page Export</label>
+            <label><input type="checkbox" id="includeAnswers"> Include Answers</label>
+            <br>
+            <p>File Name:</p>
+            <input type="text" id="fileName" value="quiz_export">
+            <br>
+            <p>Export Location:</p>
+            <input type="text" id="exportLocation" placeholder="Enter export path">
+            <br><br>
+            <button id="exportBtn">Export Quiz</button>
+            <p></p>
+        </div>
+    </body>
+</html>
