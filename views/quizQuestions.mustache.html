@@ -165,13 +165,24 @@
             border-radius: 4px;
             border: 1px solid #ddd;
         }
-        .contrast {
-            background-color: yellow;
+        .filepath {
             color: blue;
+            text-decoration: underline;
         }
-        .contrast p, .contrast h1, .contrast textarea, .contrast div .contrast input, .contrast label, .contrast td {
-            background-color: yellow;
-            color: blue;
+        .contrast {
+            background-color: black;
+            color: lightblue;
+        }
+        .contrast p, .contrast h1, .contrast textarea, .contrast div .contrast input, .contrast label, .contrast td, .contrast .total-count {
+            background-color: black;
+            color: lightblue;
+        }
+        .contrast td:first-child {
+            color: black;
+        }
+        .contrast .filepath {
+            color: white;
+            text-decoration: underline;
         }
         .dark {
             background-color: black;
@@ -183,6 +194,25 @@
         }
         .dark td:first-child {
             color: black;
+        }
+        .dark .filepath {
+            color: white;
+            text-decoration: underline;
+        }
+        .dark.contrast {
+            background-color: black;
+            color: lightblue;
+        }
+        .dark.contrast p, .dark.contrast h1, .dark.contrast textarea, .dark.contrast div .dark.contrast input, .dark.contrast label, .dark.contrast td, .dark.contrast .total-count {
+            background-color: black;
+            color: lightblue;
+        }
+        .dark.contrast td:first-child {
+            color: black;
+        }
+        .dark.contrast .filepath {
+            color: white;
+            text-decoration: underline;
         }
     </style>
 </head>
