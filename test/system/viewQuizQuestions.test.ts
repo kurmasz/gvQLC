@@ -191,6 +191,8 @@ describe('viewQuizQuestions', function () {
         var operatingSystem = getOperatingSystem();
         if (operatingSystem == "macOS") {
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
+        } else if (operatingSystem == "Linux") {
+            await question.sendKeys(Key.CONTROL, Key.SHIFT, "v", Key.NULL);
         } else {
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
