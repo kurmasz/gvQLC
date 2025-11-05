@@ -18,7 +18,7 @@ import {
   NotificationType,
   TextEditor,
 } from "vscode-extension-tester";
-import { By, until } from "selenium-webdriver";
+import { By, until, Key } from "selenium-webdriver";
 import {
   pause,
   logAllNotifications,
@@ -125,28 +125,23 @@ describe("addQuizQuestions", function () {
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n".html": handle_binary\n~~~');
   });
 
-  it.skip("Copies part of the code segment when text is highlighted", async () => {
-    // Will fail if run
-    // Issue with selectionStart and selectionEnd not actually highlighting text
-    // So it'll copy the full text instead
+  it("Copies part of the code segment when text is highlighted", async () => {
     const questionBox = await view.findWebElement(By.css("#question"));
-    const questionBox1 = await view.findWebElement(By.css("#question")) as unknown as HTMLTextAreaElement;
-    await questionBox.clear();
+    await questionBox.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
+    
 
     const buttons = await view.findWebElements(By.css("button"));
-    questionBox1.selectionStart = 0;
-    questionBox1.selectionEnd = 2;
     await buttons[0].click();
 
-    expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n"\n~~~');
+    expect(await questionBox.getAttribute("value")).to.be.equal('~~~\nhandle_binary\n~~~');
   });
 
-  it('checks for invalid API Key', async() => {
+  it('checks for an invalid API Key', async() => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     expect(await aiBox.getAttribute("innerHTML")).to.be.equal("Invalid API Key, please use 'Set My API Key' command");
-  })
+  });
 
-  it.skip('generates AI output', async () => {
+  it.skip('Generates AI output', async () => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     await aiBox.clear();
     expect(await aiBox.getAttribute('value')).to.be.equal('');

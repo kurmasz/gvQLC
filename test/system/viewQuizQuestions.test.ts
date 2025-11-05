@@ -190,10 +190,13 @@ describe('viewQuizQuestions', function () {
         // Verifies it was copied to clipboard
         var operatingSystem = getOperatingSystem();
         if (operatingSystem == "macOS") {
+            console.log("macOS");
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         } else if (operatingSystem == "Linux") {
+            console.log("Linux");
             await question.sendKeys(Key.CONTROL, Key.SHIFT, "v", Key.NULL);
         } else {
+            console.log("Windows");
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
 
@@ -201,34 +204,34 @@ describe('viewQuizQuestions', function () {
         await buttons[1].click();
     });
 
-    it.skip('Copies part of the question when text is highlighted', async () => {
-        // Will fail if run
-        // Issue with selectionStart and selectionEnd not actually highlighting text
-        // So it'll copy the full text instead
+    it('Copies part of the question when text is highlighted', async () => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
         // Find question text and highlight an area
-        var question = await tds[3].findElement(By.id('question-0')) as unknown as HTMLTextAreaElement;
-        var question1 = await tds[3].findElement(By.id('question-0'));
-        question.selectionStart = 0;
-        question.selectionEnd = 2;
+        var question = await tds[3].findElement(By.id('question-0'));
+        await question.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
 
         // Click the copy button
         var buttons = await tds[4].findElements(By.css('button'));
         await buttons[3].click();
-        console.log(`Before paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
+
+        await question.sendKeys(Key.ARROW_LEFT, Key.ARROW_LEFT, Key.NULL);
 
         var operatingSystem = getOperatingSystem();
-        if (operatingSystem == "windows") {
-            await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
+        if (operatingSystem == "macOS") {
+            console.log("macOS");
+            await question.sendKeys(Key.COMMAND, "v", Key.NULL);
+        } else if (operatingSystem == "Linux") {
+            console.log("Linux");
+            await question.sendKeys(Key.CONTROL, Key.SHIFT, "v", Key.NULL);
         } else {
-            await question1.sendKeys(Key.chord(Key.COMMAND, "v"));
+            console.log("Windows");
+            await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
 
-        console.log(`After paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
-        expect(await question1.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`E");
+        expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=``:=`");
         await buttons[1].click();
     });
 
