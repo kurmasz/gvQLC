@@ -22,8 +22,19 @@ import { getLLMProvider } from '../llm/llmConfig';
  */
 async function generateQuestionFromCode(code: string): Promise<string> {
     try {
-        // Load the prompt template from the extension's source directory
-        const promptPath = path.join(context().extensionPath, 'src', 'llm', 'prompts', 'generateQuestion.json');
+        // Load the prompt template from the extension's directory
+        // In development: extensionPath/src/llm/prompts/generateQuestion.json
+        // In production: extensionPath/out/src/llm/prompts/generateQuestion.json
+        const ctx = context();
+        let promptPath = path.join(ctx.extensionPath, 'out', 'src', 'llm', 'prompts', 'generateQuestion.json');
+        
+        // Fallback to src/ for development/debugging
+        try {
+            await fs.access(promptPath);
+        } catch {
+            promptPath = path.join(ctx.extensionPath, 'src', 'llm', 'prompts', 'generateQuestion.json');
+        }
+        
         const promptContent = await fs.readFile(promptPath, 'utf-8');
         const promptTemplate = JSON.parse(promptContent);
 
