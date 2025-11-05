@@ -111,10 +111,6 @@ describe("addQuizQuestions", function () {
     view = await addQuizQuestion('".html": handle_binary');
   });
 
-  // Test the "Copy and Paste Button" - Both Full Text and Selected Text
-  // Same idea as the Copy tests in viewQuizQuestions
-  // await question.sendKeys(Keys.CONTROL, "v");
-  // expect(await question.getText()).to.be.equal(something);
   it("Copies the full code segment when no text is highlighted", async () => {
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.clear();
@@ -125,13 +121,14 @@ describe("addQuizQuestions", function () {
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n".html": handle_binary\n~~~');
   });
 
-  it("Copies part of the code segment when text is highlighted", async () => {
+  it("Copies part of the code segment when part of the code is highlighted", async () => {
+    // Trouble highlighting only part of the code
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
     
-
     const buttons = await view.findWebElements(By.css("button"));
     await buttons[0].click();
+    console.log(await questionBox.getAttribute("value"));
 
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\nhandle_binary\n~~~');
   });
@@ -141,7 +138,7 @@ describe("addQuizQuestions", function () {
     expect(await aiBox.getAttribute("innerHTML")).to.be.equal("Invalid API Key, please use 'Set My API Key' command");
   });
 
-  it.skip('Generates AI output', async () => {
+  it.skip('generates AI output', async () => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     await aiBox.clear();
     expect(await aiBox.getAttribute('value')).to.be.equal('');

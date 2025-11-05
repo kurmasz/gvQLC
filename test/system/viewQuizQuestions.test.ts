@@ -199,12 +199,14 @@ describe('viewQuizQuestions', function () {
             console.log("Windows");
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
+        console.log(await question.getAttribute("value"));
 
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
         await buttons[1].click();
     });
 
     it('Copies part of the question when text is highlighted', async () => {
+        // Trouble highlighting only part of the text
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -225,11 +227,12 @@ describe('viewQuizQuestions', function () {
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         } else if (operatingSystem == "Linux") {
             console.log("Linux");
-            await question.sendKeys(Key.CONTROL, Key.SHIFT, "v", Key.NULL);
+            await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         } else {
             console.log("Windows");
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
+        console.log(await question.getAttribute("value"));
 
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=``:=`");
         await buttons[1].click();
