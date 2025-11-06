@@ -89,11 +89,10 @@
     <p><strong>AI Output:</strong></p>
     <textarea id="aiOutput" placeholder="No AI Output" rows="4"></textarea>
     <p id="fileContent" style="display: none;">{{fullFileContent}}</p>
-    <p id="apiKey" style="display: none;">{{apiKey}}</p>
     <p id="displayMode" style="display: none;">{{darkMode}} {{contrastMode}}</p>
 
     <button id="submitButton" onclick="submitPersonalizedQuestion()">Submit</button>
-    <button id="aiButton">AI Generate</button>
+    <button id="aiButton"onclick="aiSuggestQuestion()">AI Generate</button>
     <button id="acceptAI" onclick="acceptOutput()">Use AI Output</button>
     
     <script>
@@ -233,74 +232,80 @@
             }
         }
 
-    </script>
-
-    <script type="module">
-        const { GoogleGenAI } = await import('https://esm.run/@google/genai');
-        
-        const apiKeyArea = document.getElementById('apiKey');
-        const aiArea = document.getElementById('aiOutput');
-        const fileContents = document.getElementById('fileContent').value;
-        const codeTextArea = document.getElementById('codeBlock');
-
-        var genai = undefined;
-        try {
-            genai = new GoogleGenAI({apiKey: apiKeyArea.innerHTML});
-        } catch (error) {
-            console.log("Error calling Gemini API:", error);
-            aiArea.value = "Invalid API Key, please use 'Set My API Key' command";
-        }
-
-        async function aiSuggestQuestion() {
-            if (!genai) {
-                aiArea.value = "Invalid API Key, please use 'Set My API Key' command";
-                return;
-            }
+        // AI Suggestion function - sends request to backend
+        function aiSuggestQuestion() {
+            const codeTextArea = document.getElementById('codeBlock');
+            const aiArea = document.getElementById('aiOutput');
+            aiArea.value = "Generating content...";
+            
             try {
-                aiArea.value = "Generating content...";
-                /*
-                const file = await genai.files.upload({
-                    name: "contextFile",
-                    contents: fileContents,
-                    mimeType: 'text/plain'
+                vscode.postMessage({ 
+                    type: 'generateQuestion', 
+                    code: codeTextArea.value 
                 });
-
-                let fileInfo = await ai.files.get({ name: uploadResponse.name });
-                while (fileInfo.state === "PROCESSING") {
-                    await new Promise((resolve) => setTimeout(resolve, 1000));
-                    fileInfo = await ai.files.get({ name: uploadResponse.name });
-                };
-                */
-
-                var contents = 
-                `You are an expert programming flashcard generator.
-
-                Analyze the provided **CONTEXT** and **CODE**.
-                Your task is to create *one* insightful, short-form question and its correct answer that specifically tests understanding of a *key function, concept, or potential bug* within the **CODE**, considering the surrounding context.
-
-                The response **MUST** adhere to the following strict format, with bolding and prefixes exactly as shown:
-
-                **Question:** [The short, focused question]
-                **Answer:** [The concise, correct explanation or result]
-
-                **CONTEXT:**
-                ${fileContents}
-
-                **CODE:**
-                ${codeTextArea.value}`;
-
-                const response = await genai.models.generateContent({
-                    model: "gemini-2.5-flash",
-                    contents: contents
-                });
-                aiArea.value = response.text;
             } catch (error) {
-                console.log("Error calling Gemini API:", error);
-                questionArea.value = "Error generating content";
+                console.error("Error requesting AI generation:", error);
+                aiArea.value = "Error generating content";
             }
         }
-        const aiButton = document.getElementById('aiButton');
-        aiButton.addEventListener('click', aiSuggestQuestion);
+        
+        // Listen for AI response from extension backend
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.type === 'aiResponse') {
+                const aiArea = document.getElementById('aiOutput');
+                aiArea.value = message.content;
+            } else if (message.type === 'aiError') {
+                const aiArea = document.getElementById('aiOutput');
+                aiArea.value = "Error: " + message.error;
+            }
+        });
+
+    </script>
+    <script>
+        var currStyle = document.getElementById('body');
+        var darkMode = document.getElementById('displayMode');
+        var tokens = darkMode.innerHTML.split(" ");
+        if (tokens[0] == 'dark') {
+            currStyle.className = 'dark';
+        } else {
+            currStyle.className = 'normal';
+        }
+        if (tokens[1] == 'contrast') {
+            currStyle.className = `${currStyle.className} contrast`;
+        } else {
+            currStyle.className = `${currStyle.className} normal`;
+        }
+
+        function toggleDark() {
+            var currStyle = document.getElementById('body');
+            var displayMode = document.getElementById('displayMode');
+            var tokens = displayMode.innerHTML.split(" ");
+            if (tokens[0] == 'dark') {
+                currStyle.className = `normal ${tokens[1]}`;
+                displayMode.innerHTML = `normal ${tokens[1]}`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: "normal", contrastMode: tokens[1]});
+            } else {
+                currStyle.className = `dark ${tokens[1]}`;
+                displayMode.innerHTML = `dark ${tokens[1]}`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: 'dark', contrastMode: tokens[1]});
+            }
+        }
+
+        function toggleContrast() {
+            var currStyle = document.getElementById('body');
+            var displayMode = document.getElementById('displayMode');
+            var tokens = displayMode.innerHTML.split(" ");
+            if (tokens[1] == 'contrast') {
+                currStyle.className = `${tokens[0]} normal`;
+                displayMode.innerHTML = `${tokens[0]} normal`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: tokens[0], contrastMode: 'normal'});
+            } else {
+                currStyle.className = `${tokens[0]} contrast`;
+                displayMode.innerHTML = `${tokens[0]} contrast`;
+                vscode.postMessage({type: "alterUserSettings", darkMode: tokens[0], contrastMode: 'contrast'});
+            }
+        }
     </script>
     <script>
         var currStyle = document.getElementById('body');

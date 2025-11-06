@@ -187,7 +187,9 @@ describe('viewQuizQuestions', function () {
         await buttons[3].click();
 
         // Verifies it was copied to clipboard
+
         await question.sendKeys(Key.CONTROL, "v", Key.NULL);
+        //await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
         await buttons[1].click();
     });
@@ -212,6 +214,7 @@ describe('viewQuizQuestions', function () {
         console.log(`Before paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
 
         await question1.sendKeys(Key.chord(Key.CONTROL, "v"));
+        //await question1.sendKeys(Key.chord(Key.COMMAND, "v"));
         console.log(`After paste - getAttribute("value"): ${await question1.getAttribute("value")}`);
         expect(await question1.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`E");
         await buttons[1].click();
@@ -334,13 +337,13 @@ describe('viewQuizQuestions', function () {
         await verifyFilterCount(2);
     });
 
-    it('summary table filters to show all entries after a second click on the same student row', async () => {
+    it('summary table stops filtering after a second click on the same row', async () => {
         const table = await summaryContainer.findElement(By.css('table'));
         const tbody = await table.findElement(By.css('tbody'));
         const trs = await tbody.findElements(By.css('tr'));
         const firstRow = trs[0];
         await firstRow.click();
-        await verifyFilterCount(14);
+        await verifyNoFilter();
     });
 
     it('hides the summary when toggled', async () => {
@@ -377,9 +380,54 @@ describe('viewQuizQuestions', function () {
         });
     });
 
+    it('opens the link correctly when clicked', async () => {
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+        var filePath = tds[1];
+        await filePath.click();
+        await VSBrowser.instance.driver.close();
+        await VSBrowser.instance.driver.switchTo().defaultContent();
+
+        const expected = `                while line := file.readline():
+                    socket.send_text_line(line)`;
+
+        await verifyQuestionDisplayed(view, {
+            rowIndex: 0,
+            rowLabel: '1a',
+            color: ViewColors.GREEN,
+            file: 'antonio/my_http_server.py',
+            code: expected,
+            question: "Explain the difference between `=` and `:=`",
+        });
+    });
+
+    it.skip('deletes the entry when clicked', async () => {
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+        var buttons = await tds[4].findElements(By.css('button'));
+        expect(await buttons[4].isDisplayed()).to.be.true;
+
+        //Need to find a way to correctly undo the delete after it's clicked
+        //await buttons[4].click();
+        //await verifyQuestionCount(13);
+        //Somehow restore JSON to normal
+        //await verifyQuestionCount(14);
+    });
+
     async function verifyFilterCount(expectedCount: number) {
         const element = await view.findWebElement(By.css('#filterCount'));
         expect(await element.getText()).to.equal(`${expectedCount} matches`);
     }
 
+    async function verifyNoFilter() {
+        const element = await view.findWebElement(By.css('#filterCount'));
+        expect(await element.getText()).to.equal('');
+    }
+
+    async function verifyQuestionCount(expectedCount: number) {
+        const element = await view.findWebElement(By.className('total-count'));
+        expect(await element.getText()).to.equal(`Total Questions: ${expectedCount}`);
+    }
 });

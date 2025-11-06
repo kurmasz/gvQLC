@@ -5,7 +5,7 @@ import { setContext } from './gvQLC';
 
 import { viewQuizQuestionsCommand } from './commands/viewQuizQuestions';
 import { addQuizQuestionCommand } from './commands/addQuizQuestion';
-import { setMyAPIKey } from './commands/setMyAPIKey';
+import { setLLMApiKeyCommand } from './commands/setLLMApiKey';
 
 
 // This method is called when your extension is activated
@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		viewQuizQuestionsCommand,
 		addQuizQuestionCommand,
-		setMyAPIKey
+		setLLMApiKeyCommand
 	);
 }
 
