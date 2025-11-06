@@ -188,14 +188,16 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         return `
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
-              <td title="${question.filePath}"><span class="filepath" onclick="openFileAt(${index})">${shortenedFilePath}</span></td>
               <td>
+                  <span class="filepath" onclick="openFileAt(${index})">${shortenedFilePath}</span>
+                  <br>
                   <textarea class="code-area" id="code-${index}">${highlightedCode || 'No highlighted code'}</textarea>
               </td>
               <td>
+                  <br>
                   <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
               </td>
-              <td>
+              <td title="${question.filePath}">
                   <button onclick="saveChanges(${index})">Save</button>
                   <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
                   <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>

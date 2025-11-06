@@ -102,7 +102,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const panel = vscode.window.createWebviewPanel(
         'addPersonalizedQuestion',
         'Add Quiz Question',
-        vscode.ViewColumn.Beside,
+        vscode.ViewColumn.One,
         { enableScripts: true }
     );
 

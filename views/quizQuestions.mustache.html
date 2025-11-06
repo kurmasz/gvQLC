@@ -177,12 +177,24 @@
             background-color: black;
             color: lightblue;
         }
+        .contrast #search-container {
+            background-color: white;
+        }
         .contrast td:first-child {
             color: black;
         }
         .contrast .filepath {
             color: white;
             text-decoration: underline;
+        }
+        .contrast th, .contrast td {
+            border: 1px solid white;
+            padding: 12px;
+            text-align: left;
+        }
+        .contrast #summaryTableContainer td{
+            background-color: initial;
+            color: black;
         }
         .dark {
             background-color: black;
@@ -192,12 +204,24 @@
             background-color: black;
             color: white;
         }
+        .dark #search-container {
+            background-color: initial;
+        }
         .dark td:first-child {
             color: black;
         }
         .dark .filepath {
             color: white;
             text-decoration: underline;
+        }
+        .dark th, .dark td {
+            border: 1px solid white;
+            padding: 12px;
+            text-align: left;
+        }
+        .dark #summaryTableContainer td{
+            background-color: initial;
+            color: black;
         }
         .dark.contrast {
             background-color: black;
@@ -206,6 +230,9 @@
         .dark.contrast p, .dark.contrast h1, .dark.contrast textarea, .dark.contrast div .dark.contrast input, .dark.contrast label, .dark.contrast td, .dark.contrast .total-count {
             background-color: black;
             color: lightblue;
+        }
+        .dark.contrast #search-container {
+            background-color: initial;
         }
         .dark.contrast td:first-child {
             color: black;
@@ -243,10 +270,9 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>File</th>
-                <th>Highlighted Code</th>
-                <th>Question</th>
-                <th>Actions</th>
+                <th style="width: 40%;">Highlighted Code</th>
+                <th style="width: 40%;">Question</th>
+                <th style="width: 20%;">File & Actions</th>
             </tr>
         </thead>
         <tbody id="questionsTableBody">
