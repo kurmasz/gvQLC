@@ -60,10 +60,23 @@ export function setWorkspaceRoot(root: vscode.WorkspaceFolder) {
 
 //
 // Config
-//
+// 
 let configData = null as ConfigData | null;
 export async function config() : Promise<ConfigData> {
+    // Problem:
+    //          - config can never be updated without a full vscode window reload
+    //          - as it only is loaded in to memory the first time config is called for from a command
+    //          - for the period of time in which the extension is using resources
+    //          - no big deal for us devs, but a user should be able to change config without a full reload
+    // Solution:
+    //          - we save to config in export command
+    //          - 
+
+
+    //  honestly, should just load from file every time, no access to configData outside of this file
+    // and it needs to be updated by export command, will test this theory.
     if (!configData) {
+        console.log("nodata");
         return configData = await loadConfigData();
     } else {
         return configData;

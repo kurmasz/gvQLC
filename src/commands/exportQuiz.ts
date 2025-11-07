@@ -12,7 +12,7 @@ import * as Util from '../utilities';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
 import { stringify } from 'querystring';
-import { quizQuestionsFileName } from '../sharedConstants';
+import { quizQuestionsFileName, configFileName } from '../sharedConstants';
 
 export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQuiz', async () => {
     if (!Util.loadPersistedData()) {
@@ -28,6 +28,11 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
     const config = await gvQLC.config();
     const submissionRoot = config.submissionRoot;
 
+    //config bug may be because no config is created at curr loc it looks for
+    //config empty
+    console.log(config);
+
+
     const panel: vscode.WebviewPanel = vscode.window.createWebviewPanel(
         'exportMenu',
         'Export Menu',
@@ -37,7 +42,7 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
 
     // put relevant config in here
     const data = {
-        
+        configData: config
     };
     panel.webview.html = Util.renderMustache('exportQuiz.mustache.html', data);
     
@@ -89,18 +94,18 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                 }
             }
 
-            const markdownFlag = false;
-            const pdfFlag = false;
-            const singlePageFlag = false;
-            if (singlePageFlag) {
+            // const markdownFlag = false;
+            // const pdfFlag = false;
+            // const singlePageFlag = false;
+            if (config.singlePageFlag) {
                 const htmlContent = generateAllHTMLQuizExport(studentQuestionsMap);
                 const fileNameHTML = `quiz_all_students.html`;
-                if (markdownFlag) {
+                if (config.markdownFlag) {
                     // Haven't found a way to implement page breaks in md yet
                     const markdownContent = convertHTMLToMarkdown(htmlContent);
                     const fileNameMD = `quiz_all_students.md`;
                     saveDataToFile(fileNameMD, markdownContent, false);
-                } else if (pdfFlag) {
+                } else if (config.pdfFlag) {
                     // vvv placeholder for logic skeleton
                     saveDataToFile(fileNameHTML, htmlContent, false);
                 } else {
@@ -111,11 +116,11 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                     const htmlContent = generateHTMLQuizExport(student, studentQuestionsMap[student]);
                     const safeStudentName = student.replace(/[^a-z0-9]/gi, '_').toLowerCase();
                     const fileNameHTML = `quiz_${safeStudentName}.html`;
-                    if (markdownFlag) {
+                    if (config.markdownFlag) {
                         const markdownContent = convertHTMLToMarkdown(htmlContent);
                         const fileNameMD = `quiz_${safeStudentName}.md`;
                         saveDataToFile(fileNameMD, markdownContent, false);
-                    } else if (pdfFlag) {
+                    } else if (config.pdfFlag) {
                         // vvv placeholder for logic skeleton
                         saveDataToFile(fileNameHTML, htmlContent, false);
                     } else {
@@ -123,6 +128,55 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                     }
                 }
             }
+        }
+
+        if (message.type === 'enableMarkdown') {
+            config.pdfFlag = false;
+            config.markdownFlag = true;
+            console.log("enable md");
+            // save to file in all of these here
+            saveDataToFile(configFileName, config);
+        }
+        // if (message.type === 'disableMarkdown') {
+        //     config.markdownFlag = false;
+        // }
+        if (message.type === 'enablePdf') {
+            config.markdownFlag = false;
+            config.pdfFlag = true;
+            console.log("enable pdf");
+            saveDataToFile(configFileName, config);
+        }
+        // if (message.type === 'disablePdf') {
+        //     config.pdfFlag = false;
+        // }
+        if (message.type === 'enableHtml') {
+            config.markdownFlag = false;
+            config.pdfFlag = false;
+            console.log("enable html");
+            saveDataToFile(configFileName, config);
+        }
+        // if (message.type === 'disableHtml') {
+        //     // N/A
+        // }
+        if (message.type === 'enableSinglePage') {
+            config.singlePageFlag = true;
+            console.log("enable single page");
+            saveDataToFile(configFileName, config);
+        }
+        if (message.type === 'disableSinglePage') {
+            config.singlePageFlag = false;
+            console.log("disable single page");
+            saveDataToFile(configFileName, config);
+        }
+        if (message.type === 'enableIncludeAnswers') {
+            config.includeAnswersFlag = true;
+            console.log("enable include answers");
+            saveDataToFile(configFileName, config);
+        }
+        if (message.type === 'disableIncludeAnswers') {
+            config.includeAnswersFlag = false;
+            console.log("disable include answers");
+            saveDataToFile(configFileName, config);
         }
     });
 });

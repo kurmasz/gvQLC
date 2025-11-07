@@ -21,4 +21,8 @@ export type PersonalizedQuestionsData = {
 export interface ConfigData {
   submissionRoot: string | null;
   studentNameMapping: null | Record<string, string>;
+  markdownFlag?: boolean | null;
+  pdfFlag?: boolean | null;
+  singlePageFlag?: boolean | null;
+  includeAnswersFlag?: boolean | null;
 }

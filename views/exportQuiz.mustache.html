@@ -23,12 +23,12 @@
         <div class="options">
             <h1>Export Quiz</h1>
             <p>File Type:</p>
-            <label><input type="radio" name="fileType" value="html" checked> HTML</label>
-            <label><input type="radio" name="fileType" value="markdown"> Markdown</label>
-            <label><input type="radio" name="fileType" value="pdf"> PDF</label>
+            <label><input type="radio" name="fileType" id="htmlType" value="html" checked> HTML</label>
+            <label><input type="radio" name="fileType" id="markdownType" value="markdown"> Markdown</label>
+            <label><input type="radio" name="fileType" id="pdfType" value="pdf"> PDF</label>
             <br>
             <p>Advanced Options:</p>
-            <label><input type="checkbox" id="singlePage" checked> Single Page Export</label>
+            <label><input type="checkbox" id="singlePage"> Single Page Export</label>
             <label><input type="checkbox" id="includeAnswers"> Include Answers</label>
             <br>
             <p>File Name:</p>
@@ -43,8 +43,76 @@
     </body>
     <script>
         const vscode = acquireVsCodeApi();
+        // state of inputs should reflect existing config
+        // const config = {{{configData}}};
+        // if (config.pdfFlag) {
+        //     document.getElementById("pdfType").checked = 'true';
+        // } else if (config.markdownFlag) {
+        //     document.getElementById("markdownType").checked = 'true';
+        // } else {
+        //     document.getElementById("htmlType").checked = 'true';
+        // }
+        // if (config.singlePageFlag) {
+        //     document.getElementById("singlePage").checked = 'true';
+        // }
+        // if (config.includeAnswersFlag) {
+        //     document.getElementById("includeAnswers").checked = 'true';
+        // }
         function exportQuiz() {
+            // also our submit button
+            //const fileType = document.getElementByName('fileType');
+            const fileType = document.querySelector('input[name="fileType"]:checked')?.value || null;
+            if (fileType === "pdf") {
+                enablePdf();
+            } else if (fileType === "markdown") {
+                enableMarkdown();
+            } else {
+                enableHtml();
+            }
+            //const singlePage = document.getElementById("singlePage");
+            if (document.querySelector('input[id="singlePage"]:checked')) {
+                vscode.postMessage({ type: 'enableSinglePage' });
+            } else {
+                vscode.postMessage({ type: 'disableSinglePage' });
+            }
+
+            if (document.querySelector('input[id="includeAnswers"]:checked')) {
+                vscode.postMessage({ type: 'enableIncludeAnswers' });
+            } else {
+                vscode.postMessage({ type: 'disableIncludeAnswers' });
+            }
+
             vscode.postMessage({ type: 'exportQuiz' });
+        }
+        function enableMarkdown() {
+            vscode.postMessage({ type: 'enableMarkdown' });
+        }
+        // function disableMarkdown() {
+        //     vscode.postMessage({ type: 'disableMarkdown' });
+        // }
+        function enablePdf() {
+            vscode.postMessage({ type: 'enablePdf' });
+        }
+        // function disablePdf() {
+        //     vscode.postMessage({ type: 'disablePdf' });
+        // }
+        function enableHtml() {
+            vscode.postMessage({ type: 'enableHtml' });
+        }
+        // function disableHtml() {
+        //     vscode.postMessage({ type: 'disableHtml' });
+        // }
+        function enableSinglePage() {
+            vscode.postMessage({ type: 'enableSinglePage' });
+        }
+        function disableSinglePage() {
+            vscode.postMessage({ type: 'disableSinglePage' });
+        }
+        function enableIncludeAnswers() {
+            vscode.postMessage({ type: 'enableIncludeAnswers' });
+        }
+        function disableIncludeAnswers() {
+            vscode.postMessage({ type: 'disableIncludeAnswers' });
         }
     </script>
 </html>

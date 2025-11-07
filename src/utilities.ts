@@ -85,10 +85,23 @@ export async function loadConfigData(): Promise<ConfigData> {
   try {
     let configFileUri = null;
     try {
+      console.log("1");
       const fileUri = vscode.Uri.joinPath(gvQLC.workspaceRoot().uri, configFileName);
+      console.log("2");
+      console.log("fileUri: ", fileUri);
+      // vvv err on below line every time, causing view no config bug,
+      //      func only triggered once per instance, always fails,
+      //      thus causing bug.
+      //      TODO: find out what it needs and why it isn't getting it
+      //            - there is no file at the path
+      //            - it is never created, and the err does nothing, so no config perpetually
+      //      Fix:
+      //            - generate new default config @ fileUri if none exist
       await vscode.workspace.fs.stat(fileUri);
+      console.log("3");
       configFileUri = fileUri;
-    } catch (err) { }
+      console.log(configFileUri);
+    } catch (err) {console.log("missing err"); }
 
     if (configFileUri) {
       const fileData = await vscode.workspace.fs.readFile(configFileUri);
@@ -97,6 +110,11 @@ export async function loadConfigData(): Promise<ConfigData> {
       return config;
     } else {
       // TODO: Test me
+
+      // TODO: implement config creation here, as none exists if triggered
+      // if err is due to something else, this will overwrite the existing config, be aware.
+      saveDataToFile(configFileName, defaultConfig);
+      console.log("err expected");
       vscode.window.showErrorMessage(
         'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
         { modal: true }
@@ -207,8 +225,10 @@ export async function getAllStudentNames(config: ConfigData) {
   const allStudents = new Set<string>();
   let submissionDirectory = gvQLC.workspaceRoot().uri;
   if (config.submissionRoot) {
+    console.log("subDir config exists");
     submissionDirectory = vscode.Uri.joinPath(submissionDirectory, config.submissionRoot);
   }
+  console.log("after");
   const files = await vscode.workspace.fs.readDirectory(submissionDirectory);
   for (const [name, type] of files) {
     if (type === vscode.FileType.Directory && !name.startsWith('.')) {
