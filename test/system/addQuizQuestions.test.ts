@@ -121,7 +121,7 @@ describe("addQuizQuestions", function () {
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\n".html": handle_binary\n~~~');
   });
 
-  it.skip("Copies part of the code segment when part of the code is highlighted", async () => {
+  it("Copies part of the code segment when part of the code is highlighted", async () => {
     // Trouble highlighting only part of the code
     const codeBox = await view.findWebElement(By.css("#codeBlock"));
     await codeBox.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
@@ -129,7 +129,6 @@ describe("addQuizQuestions", function () {
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.clear();
 
-    
     const copyButton = await view.findWebElement(By.css("#copyButton"));
     await copyButton.click();
 
