@@ -143,7 +143,7 @@ describe("addQuizQuestions", function () {
     const aiButton = await view.findWebElement(By.css("#aiButton"));
     await aiButton.click();
 
-    expect(await aiBox.getAttribute('value')).to.include.('Error:');
+    expect(await aiBox.getAttribute('value')).to.include('Error:');
   })
 
   it.skip('generates AI output', async () => {
