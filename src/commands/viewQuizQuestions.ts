@@ -313,7 +313,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
               <td>
-                  <span class="filepath" onclick="openFileAt(${index})">${shortenedFilePath}</span>
+                  <span id="filepath-${index}" onclick="openFileAt(${index})">${shortenedFilePath}</span>
                   <br>
                   <textarea class="code-area" id="code-${index}">${highlightedCode || 'No highlighted code'}</textarea>
               </td>
@@ -323,14 +323,14 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                   <textarea class="question-area" id="ai-${index}" style="display: none;">'No question'</textarea>
               </td>
               <td title="${question.filePath}">
-                  <button onclick="saveChanges(${index})">Save</button>
-                  <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
-                  <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
-                  <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
-                  <button onclick="deleteQuestion(${index})" style="background-color: #f321bbff; color: white;">Delete</button>
-                  <button onclick="aiSuggestQuestion(${index})" style="background-color: grey; color: white;">Generate</button>
-                  <button onclick="aiRephraseQuestion(${index})" style="background-color: #9b0974ff; color: white;">Rephrase</button>
-                  <button id="acceptAI" onclick="acceptOutput(${index})" style="background-color: #092b9bff; color: white;">Accept AI</button>
+                  <button id="save-${index}" onclick="saveChanges(${index})">Save</button>
+                  <button id="revert-${index}" onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
+                  <button id="edit-${index}" onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
+                  <button id="copy-${index}" onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+                  <button id="delete-${index}" onclick="deleteQuestion(${index})" style="background-color: #f321bbff; color: white;">Delete</button>
+                  <button id="suggestAI-${index}" onclick="aiSuggestQuestion(${index})" style="background-color: grey; color: white;">Generate</button>
+                  <button id="rephraseAI-${index}" onclick="aiRephraseQuestion(${index})" style="background-color: #9b0974ff; color: white;">Rephrase</button>
+                  <button id="acceptAI-${index}" onclick="acceptOutput(${index})" style="background-color: #092b9bff; color: white;">Accept AI</button>
                   <br>
                   <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
                   <label for="exclude-${index}">Exclude from Quiz</label>

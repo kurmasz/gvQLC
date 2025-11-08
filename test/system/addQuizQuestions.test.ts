@@ -126,8 +126,8 @@ describe("addQuizQuestions", function () {
     const questionBox = await view.findWebElement(By.css("#question"));
     await questionBox.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
     
-    const buttons = await view.findWebElements(By.css("button"));
-    await buttons[0].click();
+    const copyButton = await view.findWebElement(By.css("#copyButton"));
+    await copyButton.click();
     console.log(await questionBox.getAttribute("value"));
 
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\nhandle_binary\n~~~');
@@ -143,8 +143,8 @@ describe("addQuizQuestions", function () {
     await aiBox.clear();
     expect(await aiBox.getAttribute('value')).to.be.equal('');
 
-    const buttons = await view.findWebElements(By.css("button"));
-    await buttons[2].click();
+    const aiButton = await view.findWebElement(By.css("#aiButton"));
+    await aiButton.click();
     // Need to delay further operation until after we get a response
 
     expect(await aiBox.getAttribute('value')).to.be.not.equal('');
@@ -154,9 +154,9 @@ describe("addQuizQuestions", function () {
     const questionBox = await view.findWebElement(By.css("#question"));
     const answerBox = await view.findWebElement(By.css("#answer"));
 
-    const buttons = await view.findWebElements(By.css("button"));
-    await buttons[3].click();
-    // Need to delay further operation until after we get a response from the earlier buttons[2].click()
+    const acceptButton = await view.findWebElement(By.css("#acceptAI"));
+    await acceptButton.click();
+    // Need to delay further operation until after we get a response from the earlier button click
 
     expect(await questionBox.getAttribute('value')).to.be.not.equal('');
     expect(await answerBox.getAttribute('value')).to.be.not.equal('');

@@ -146,8 +146,8 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
-        var buttons = await tds[4].findElements(By.css('button'));
-        await buttons[0].click();
+        const saveButton = await view.findWebElement(By.css("#save-0"));
+        await saveButton.click();
 
         // Confirms the change
         expect(await question.getAttribute("value")).to.be.equal(questionText);
@@ -166,8 +166,8 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
-        var buttons = await tds[4].findElements(By.css('button'));
-        await buttons[1].click();
+        const revertButton = await view.findWebElement(By.css("#revert-0"));
+        await revertButton.click();
 
         // Expects question text to revert to original
         var question = await view.findWebElement(By.id('question-0'));
@@ -180,12 +180,12 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         // Find question text
-        var question = await tds[3].findElement(By.id('question-0'));
+        var question = await tds[2].findElement(By.id('question-0'));
         expect(await question.getText()).to.be.equal("Explain the difference between `=` and `:=`");
 
         //Click the copy button
-        var buttons = await tds[4].findElements(By.css('button'));
-        await buttons[3].click();
+        const copyButton = await view.findWebElement(By.css("#copy-0"));
+        await copyButton.click();
 
         // Verifies it was copied to clipboard
         var operatingSystem = getOperatingSystem();
@@ -202,7 +202,8 @@ describe('viewQuizQuestions', function () {
         console.log(await question.getAttribute("value"));
 
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
-        await buttons[1].click();
+        const revertButton = await view.findWebElement(By.css("#revert-0"));
+        await revertButton.click();
     });
 
     it('Copies part of the question when text is highlighted', async () => {
@@ -212,12 +213,12 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         // Find question text and highlight an area
-        var question = await tds[3].findElement(By.id('question-0'));
+        var question = await tds[2].findElement(By.id('question-0'));
         await question.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
 
         // Click the copy button
-        var buttons = await tds[4].findElements(By.css('button'));
-        await buttons[3].click();
+        const copyButton = await view.findWebElement(By.css("#copy-0"));
+        await copyButton.click();
 
         await question.sendKeys(Key.ARROW_LEFT, Key.ARROW_LEFT, Key.NULL);
 
@@ -235,8 +236,25 @@ describe('viewQuizQuestions', function () {
         console.log(await question.getAttribute("value"));
 
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=``:=`");
-        await buttons[1].click();
+        const revertButton = await view.findWebElement(By.css("#revert-0"));
+        await revertButton.click();
     });
+
+    it('suggests a question using AI', async() => {
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+
+        // Find question text and highlight an area
+        var aiBox = await tds[2].findElement(By.id('ai-0'));
+        const suggestButton = await view.findWebElement(By.css("#suggestAI-0"));
+        await suggestButton.click();
+    })
+
+    it('rephrases a question using AI', async() => {
+        const rephraseAI = await view.findWebElement(By.css("#rephraseAI-0"));
+        await rephraseAI.click();
+    })
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
         var checkbox = await view.findWebElement(By.id('exclude-0'));
@@ -454,8 +472,9 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
-        var filePath = tds[1];
+        var filePath = await tds[1].findElement(By.css('#filepath-0'));
         await filePath.click();
+        await VSBrowser.instance.driver.switchTo().defaultContent();
         await VSBrowser.instance.driver.close();
         await VSBrowser.instance.driver.switchTo().defaultContent();
 
@@ -476,11 +495,11 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
-        var buttons = await tds[4].findElements(By.css('button'));
-        expect(await buttons[4].isDisplayed()).to.be.true;
+        var deleteButton = await tds[4].findElement(By.css('#delete-0'));
+        expect(await deleteButton.isDisplayed()).to.be.true;
 
         //Need to find a way to correctly undo the delete after it's clicked
-        //await buttons[4].click();
+        //await deleteButton.click();
         //await verifyQuestionCount(13);
         //Somehow restore JSON to normal
         //await verifyQuestionCount(14);
