@@ -64,9 +64,11 @@ export async function verifyQuestionDisplayed(view: WebView, questionData: Quest
     expect(await cells[0].getText()).to.equal(questionData.rowLabel);
     expect(await cells[0].getCssValue('background-color')).to.equal(questionData.color);
 
-    expect(await cells[1].getText()).to.equal(questionData.file);
+    const filepath = cells[1].findElement(By.id(`filepath-${questionData.rowIndex}`))
 
-    const codeArea = await cells[2].findElement(By.css('textarea'));
+    expect(await filepath.getText()).to.equal(questionData.file);
+
+    const codeArea = await cells[1].findElement(By.css('textarea'));
     const actualText = await codeArea.getText();
     if (actualText !== questionData.code) {
         console.log("Expected");
@@ -76,7 +78,7 @@ export async function verifyQuestionDisplayed(view: WebView, questionData: Quest
     }
     expect(actualText).to.equal(questionData.code);
 
-    const questionArea = await cells[3].findElement(By.css('textArea'));
+    const questionArea = await cells[2].findElement(By.id(`question-${questionData.rowIndex}`));
     expect(await questionArea.getText()).to.equal(questionData.question);
 }
 

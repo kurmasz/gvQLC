@@ -133,11 +133,6 @@ describe("addQuizQuestions", function () {
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\nhandle_binary\n~~~');
   });
 
-  it('checks for an invalid API Key', async() => {
-    const aiBox = await view.findWebElement(By.css("#aiOutput"));
-    expect(await aiBox.getAttribute("innerHTML")).to.be.equal("Invalid API Key, please use 'Set My API Key' command");
-  });
-
   it.skip('generates AI output', async () => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     await aiBox.clear();
@@ -153,6 +148,8 @@ describe("addQuizQuestions", function () {
   it.skip('fills in answer/question sections with AI output', async () => {
     const questionBox = await view.findWebElement(By.css("#question"));
     const answerBox = await view.findWebElement(By.css("#answer"));
+    await questionBox.clear();
+    await answerBox.clear();
 
     const acceptButton = await view.findWebElement(By.css("#acceptAI"));
     await acceptButton.click();

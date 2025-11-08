@@ -245,15 +245,38 @@ describe('viewQuizQuestions', function () {
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
-        // Find question text and highlight an area
         var aiBox = await tds[2].findElement(By.id('ai-0'));
         const suggestButton = await view.findWebElement(By.css("#suggestAI-0"));
         await suggestButton.click();
+
+        expect(await aiBox.getAttribute("value")).to.be.not.equal("");
     })
 
     it('rephrases a question using AI', async() => {
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+
+        var aiBox = await tds[2].findElement(By.id('ai-0'));
         const rephraseAI = await view.findWebElement(By.css("#rephraseAI-0"));
         await rephraseAI.click();
+
+        expect(await aiBox.getAttribute("value")).to.be.not.equal("");
+    })
+
+    it('accepts AI output', async () => {
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+
+        var aiBox = await tds[2].findElement(By.id('ai-0'));
+        var question = await tds[2].findElement(By.id('question-0'));
+        const acceptAI = await view.findWebElement(By.css("#acceptAI-0"));
+        await acceptAI.click();
+
+        expect(await question.getAttribute("value")).to.be.equal(await aiBox.getAttribute("value"));
+        const revertButton = await view.findWebElement(By.css("#revert-0"));
+        await revertButton.click();
     })
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
