@@ -19,7 +19,111 @@ import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
 import { stringify } from 'querystring';
 import { quizQuestionsFileName } from '../sharedConstants';
+import { getLLMProvider } from '../llm/llmConfig';
+import * as fs from 'fs/promises';
+import { readFileSync, readdirSync } from 'fs';
 
+
+/**
+ * Generates a quiz question from code using the LLM
+ */
+async function generateQuestionFromCode(code: string): Promise<string> {
+    try {
+        // Load the prompt template from the extension's directory
+        // In development: extensionPath/src/llm/prompts/generateQuestion.json
+        // In production: extensionPath/out/src/llm/prompts/generateQuestion.json
+        const ctx = gvQLC.context();
+        let promptPath = path.join(ctx.extensionPath, 'out', 'src', 'llm', 'prompts', 'generateQuestion.json');
+        
+        // Fallback to src/ for development/debugging
+        try {
+            await fs.access(promptPath);
+        } catch {
+            promptPath = path.join(ctx.extensionPath, 'src', 'llm', 'prompts', 'generateQuestion.json');
+        }
+        
+        const promptContent = await fs.readFile(promptPath, 'utf-8');
+        const promptTemplate = JSON.parse(promptContent);
+
+        // Replace the code placeholder in the user prompt
+        const userPrompt = promptTemplate.user.replace('{{code}}', code);
+
+        // Get the appropriate LLM provider based on configuration
+        const provider = await getLLMProvider(gvQLC.context());
+
+        // Generate the completion
+        const response = await provider.generateCompletion([
+            { role: 'system', content: promptTemplate.system },
+            { role: 'user', content: userPrompt }
+        ]);
+
+        return response.content;
+    } catch (error) {
+        console.error('Error generating question from code:', error);
+        throw new Error(`Failed to generate question: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+async function rephraseQuestionFromCode(code: string, question: string): Promise<string> {
+    try {
+        // Load the prompt template from the extension's directory
+        // In development: extensionPath/src/llm/prompts/rephraseQuestion.json
+        // In production: extensionPath/out/src/llm/prompts/rephraseQuestion.json
+        const ctx = gvQLC.context();
+        let promptPath = path.join(ctx.extensionPath, 'out', 'src', 'llm', 'prompts', 'rephraseQuestion.json');
+        
+        // Fallback to src/ for development/debugging
+        try {
+            await fs.access(promptPath);
+        } catch {
+            promptPath = path.join(ctx.extensionPath, 'src', 'llm', 'prompts', 'rephraseQuestion.json');
+        }
+        
+        const promptContent = await fs.readFile(promptPath, 'utf-8');
+        const promptTemplate = JSON.parse(promptContent);
+
+        // Replace the code placeholder in the user prompt
+        var userPrompt = promptTemplate.user.replace('{{code}}', code).replace('{{originalQuestion}}', question);
+
+        // Get the appropriate LLM provider based on configuration
+        const provider = await getLLMProvider(gvQLC.context());
+
+        // Generate the completion
+        const response = await provider.generateCompletion([
+            { role: 'system', content: promptTemplate.system },
+            { role: 'user', content: userPrompt }
+        ]);
+
+        return response.content;
+    } catch (error) {
+        console.error('Error generating question from code:', error);
+        throw new Error(`Failed to generate question: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+async function getfiles() {
+    // Get all file paths to student files
+    // Assume Root Directory --> Student Folders --> Student Code Files
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    let contents = new Array;
+    if (workspaceFolders) {
+        const folders = await fs.readdir(workspaceFolders[0].uri.fsPath);
+        var subfolders = new Array;
+        var count = 0;
+        const ignoreList = ['.gitignore', '.vscode', 'backup_personalizedQuestions.json', 'code-review.csv', 'gvQLC.config.json', 'gvQLC.quizQuestions.json', 'personalizedQuestions.json', 'personalizedQuestions.json.new', 'personalizedQuestions.json.safe', 'userSettings.json'];
+        folders.forEach(async folder => {
+            if (!(ignoreList.includes(folder))) {
+                subfolders.push(folder);
+                const subcontents = readdirSync(`${workspaceFolders[0].uri.fsPath}\\${folder}`);
+                const filtered = subcontents.filter(element => !ignoreList.includes(element));
+                filtered.forEach(element => {
+                    contents.push(`${workspaceFolders[0].uri.fsPath}\\${folder}\\${element}`);
+                });
+            };
+        });
+    };
+    return contents;
+}
 
 export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.viewQuizQuestions', async () => {
 
@@ -85,6 +189,26 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
     console.log(`Max questions assigned to any student: ${maxQuestions}`);
     console.log(`Most common number of questions (mode): ${modeQuestions}`);
+    
+    /*const allFiles = await getfiles();
+    console.log(allFiles);
+
+    const allContents = new Map<string, string>();
+    allFiles.forEach(async element => {
+        const stats = await fs.stat(element);
+        if (stats.isFile()) {
+            const buffer = readFileSync(element);
+            const contents = Buffer.from(buffer).toString('utf8');
+            allContents.set(element, contents);
+        };
+    });
+    */
+    /* Remaining Tasks
+    Prompt AI with file, code to find, question to add
+    Response should have start line and char, end line and char
+    Make JSON from responses akin to addQuizQuestion but saved to different file
+    Make way to view said JSON
+    */
 
     // Create labels for each student's questions (e.g., 1a, 1b, 2a, etc.)
     const questionLabels: Record<string, string> = {};
@@ -196,6 +320,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
               <td>
                   <br>
                   <textarea class="question-area" id="question-${index}">${question.text || 'No question'}</textarea>
+                  <textarea class="question-area" id="ai-${index}" style="display: none;">'No question'</textarea>
               </td>
               <td title="${question.filePath}">
                   <button onclick="saveChanges(${index})">Save</button>
@@ -203,6 +328,9 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                   <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
                   <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
                   <button onclick="deleteQuestion(${index})" style="background-color: #f321bbff; color: white;">Delete</button>
+                  <button onclick="aiSuggestQuestion(${index})" style="background-color: grey; color: white;">Generate</button>
+                  <button onclick="aiRephraseQuestion(${index})" style="background-color: #9b0974ff; color: white;">Rephrase</button>
+                  <button id="acceptAI" onclick="acceptOutput(${index})" style="background-color: #092b9bff; color: white;">Accept AI</button>
                   <br>
                   <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
                   <label for="exclude-${index}">Exclude from Quiz</label>
@@ -311,6 +439,52 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
                 editor.selection = new vscode.Selection(posStart, posEnd);
             } catch (e) {
                 vscode.window.showErrorMessage("Could not open file: " + String(e));
+            }
+        }
+
+        if (message.type === 'generateQuestion') {
+            try {
+                // Use the LLM to generate a question from the code
+                const generatedContent = await generateQuestionFromCode(message.code);
+                
+                // Send the response back to the webview
+                panel.webview.postMessage({
+                    type: 'aiResponse',
+                    content: generatedContent,
+                    index: message.index
+                });
+            } catch (error) {
+                console.error('Error generating question:', error);
+                
+                // Send error back to the webview
+                panel.webview.postMessage({
+                    type: 'aiError',
+                    error: error instanceof Error ? error.message : 'Unknown error occurred',
+                    index: message.index
+                });
+            }
+        }
+
+        if (message.type === 'rephraseQuestion') {
+            try {
+                // Use the LLM to generate a question from the code
+                const generatedContent = await rephraseQuestionFromCode(message.code, message.question);
+                
+                // Send the response back to the webview
+                panel.webview.postMessage({
+                    type: 'aiResponse',
+                    content: generatedContent,
+                    index: message.index
+                });
+            } catch (error) {
+                console.error('Error rephrasing question:', error);
+                
+                // Send error back to the webview
+                panel.webview.postMessage({
+                    type: 'aiError',
+                    error: error instanceof Error ? error.message : 'Unknown error occurred',
+                    index: message.index
+                });
             }
         }
 

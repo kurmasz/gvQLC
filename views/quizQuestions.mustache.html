@@ -559,6 +559,74 @@
             vscode.postMessage({ type: 'exportQuiz' });
         }
 
+        function acceptOutput(index) {
+            const aiArea = document.getElementById(`ai-${index}`);
+            const questionArea = document.getElementById(`question-${index}`);
+            //const answerArea = document.getElementById(`ai-${index}`);
+
+            if (aiArea.value != '') {
+                var output = aiArea.value;
+                var tokens = output.split("**Answer:** ");
+                questionArea.value = tokens[0];
+                //answerArea.value = "**Answer:** " + tokens[1];
+            }
+        }
+
+        function aiSuggestQuestion(index) {
+            const codeTextArea = document.getElementById(`code-${index}`);
+            const questionArea = document.getElementById(`question-${index}`);
+            const aiArea = document.getElementById(`ai-${index}`);
+            console.log(codeTextArea.value);
+            aiArea.value = "Generating content...";
+            aiArea.style = "display: block;";
+            
+            try {
+                vscode.postMessage({ 
+                    type: 'generateQuestion', 
+                    code: codeTextArea.value,
+                    index: index
+                });
+            } catch (error) {
+                console.error("Error requesting AI generation:", error);
+                aiArea.value = "Error generating content";
+            }
+        }
+
+        function aiRephraseQuestion(index) {
+            const codeTextArea = document.getElementById(`code-${index}`);
+            const questionArea = document.getElementById(`question-${index}`);
+            const aiArea = document.getElementById(`ai-${index}`);
+            console.log(codeTextArea.value);
+            aiArea.value = "Rephrasing question...";
+            aiArea.style = "display: block;";
+            
+            try {
+                vscode.postMessage({ 
+                    type: 'rephraseQuestion', 
+                    code: codeTextArea.value,
+                    question: questionArea.value,
+                    index: index
+                });
+            } catch (error) {
+                console.error("Error requesting AI generation:", error);
+                aiArea.value = "Error generating content";
+            }
+        }
+        
+        // Listen for AI response from extension backend
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.type === 'aiResponse') {
+                const aiArea = document.getElementById(`ai-${message.index}`);
+                aiArea.style = "display: block;";
+                aiArea.value = message.content;
+            } else if (message.type === 'aiError') {
+                const aiArea = document.getElementById(`ai-${message.index}`);
+                aiArea.style = "display: block;";
+                aiArea.value = "Error: " + message.error;
+            }
+        });
+
         // Initialize the table when the page loads
         window.addEventListener('load', initializeTable);
     </script>

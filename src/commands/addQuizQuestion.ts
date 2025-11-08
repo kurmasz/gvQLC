@@ -193,6 +193,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
                 });
             }
         }
+
         if (message.type === 'alterUserSettings') {
             await Util.saveUserSettingsFile('userSettings.json', message.darkMode, message.contrastMode);
         }
