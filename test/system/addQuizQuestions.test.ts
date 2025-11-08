@@ -132,6 +132,7 @@ describe("addQuizQuestions", function () {
     const copyButton = await view.findWebElement(By.css("#copyButton"));
     await copyButton.click();
 
+    console.log(questionBox.getAttribute("value"));
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\nhandle_binary\n~~~');
   });
 
