@@ -9,11 +9,53 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as fs from 'fs/promises';
 
-import { state, config } from '../gvQLC';
+import { state, config, context } from '../gvQLC';
 import { quizQuestionsFileName } from '../sharedConstants';
 
 import * as Util from '../utilities';
+import { getLLMProvider } from '../llm/llmConfig';
+
+/**
+ * Generates a quiz question from code using the LLM
+ */
+async function generateQuestionFromCode(code: string): Promise<string> {
+    try {
+        // Load the prompt template from the extension's directory
+        // In development: extensionPath/src/llm/prompts/generateQuestion.json
+        // In production: extensionPath/out/src/llm/prompts/generateQuestion.json
+        const ctx = context();
+        let promptPath = path.join(ctx.extensionPath, 'out', 'src', 'llm', 'prompts', 'generateQuestion.json');
+        
+        // Fallback to src/ for development/debugging
+        try {
+            await fs.access(promptPath);
+        } catch {
+            promptPath = path.join(ctx.extensionPath, 'src', 'llm', 'prompts', 'generateQuestion.json');
+        }
+        
+        const promptContent = await fs.readFile(promptPath, 'utf-8');
+        const promptTemplate = JSON.parse(promptContent);
+
+        // Replace the code placeholder in the user prompt
+        const userPrompt = promptTemplate.user.replace('{{code}}', code);
+
+        // Get the appropriate LLM provider based on configuration
+        const provider = await getLLMProvider(context());
+
+        // Generate the completion
+        const response = await provider.generateCompletion([
+            { role: 'system', content: promptTemplate.system },
+            { role: 'user', content: userPrompt }
+        ]);
+
+        return response.content;
+    } catch (error) {
+        console.error('Error generating question from code:', error);
+        throw new Error(`Failed to generate question: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
 
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
@@ -61,18 +103,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const absolutePath = editor.document.uri.fsPath;
     const relativePath = path.relative(workspaceRoot, absolutePath);
     var fullFileContent;
-    
-    const apiUri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/myAPIKey.json`);
-    try {
-        await vscode.workspace.fs.stat(apiUri);
-    } catch (error) {
-        await Util.saveDataToFile('myAPIKey.json', '');
-    }
-    var apiKey = "";
-    const apiBytes = await vscode.workspace.fs.readFile(apiUri);
-    const apiString = Buffer.from(apiBytes).toString('utf8');
-    const apiJSON = await JSON.parse(apiString);
-    apiKey = apiJSON.data;
 
     const settingUri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/userSettings.json`);
     try {
@@ -116,7 +146,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         selectedText: trimmedText,
         existingQuestions: JSON.stringify(existingQuestions),
         fullFileContent: fullFileContent,
-        apiKey: apiKey,
         darkMode: darkMode,
         contrastMode: contrastMode
     };
@@ -144,7 +173,27 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
             vscode.window.showInformationMessage('Question added successfully.');
             panel.dispose();
+        } else if (message.type === 'generateQuestion') {
+            try {
+                // Use the LLM to generate a question from the code
+                const generatedContent = await generateQuestionFromCode(message.code);
+                
+                // Send the response back to the webview
+                panel.webview.postMessage({
+                    type: 'aiResponse',
+                    content: generatedContent
+                });
+            } catch (error) {
+                console.error('Error generating question:', error);
+                
+                // Send error back to the webview
+                panel.webview.postMessage({
+                    type: 'aiError',
+                    error: error instanceof Error ? error.message : 'Unknown error occurred'
+                });
+            }
         }
+
         if (message.type === 'alterUserSettings') {
             await Util.saveUserSettingsFile('userSettings.json', message.darkMode, message.contrastMode);
         }

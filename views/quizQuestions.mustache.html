@@ -165,13 +165,36 @@
             border-radius: 4px;
             border: 1px solid #ddd;
         }
-        .contrast {
-            background-color: yellow;
+        .filepath {
             color: blue;
+            text-decoration: underline;
         }
-        .contrast p, .contrast h1, .contrast textarea, .contrast div .contrast input, .contrast label, .contrast td {
-            background-color: yellow;
-            color: blue;
+        .contrast {
+            background-color: black;
+            color: lightblue;
+        }
+        .contrast p, .contrast h1, .contrast textarea, .contrast div .contrast input, .contrast label, .contrast td, .contrast .total-count {
+            background-color: black;
+            color: lightblue;
+        }
+        .contrast #search-container {
+            background-color: white;
+        }
+        .contrast td:first-child {
+            color: black;
+        }
+        .contrast .filepath {
+            color: white;
+            text-decoration: underline;
+        }
+        .contrast th, .contrast td {
+            border: 1px solid white;
+            padding: 12px;
+            text-align: left;
+        }
+        .contrast #summaryTableContainer td{
+            background-color: initial;
+            color: black;
         }
         .dark {
             background-color: black;
@@ -181,8 +204,42 @@
             background-color: black;
             color: white;
         }
+        .dark #search-container {
+            background-color: initial;
+        }
         .dark td:first-child {
             color: black;
+        }
+        .dark .filepath {
+            color: white;
+            text-decoration: underline;
+        }
+        .dark th, .dark td {
+            border: 1px solid white;
+            padding: 12px;
+            text-align: left;
+        }
+        .dark #summaryTableContainer td{
+            background-color: initial;
+            color: black;
+        }
+        .dark.contrast {
+            background-color: black;
+            color: lightblue;
+        }
+        .dark.contrast p, .dark.contrast h1, .dark.contrast textarea, .dark.contrast div .dark.contrast input, .dark.contrast label, .dark.contrast td, .dark.contrast .total-count {
+            background-color: black;
+            color: lightblue;
+        }
+        .dark.contrast #search-container {
+            background-color: initial;
+        }
+        .dark.contrast td:first-child {
+            color: black;
+        }
+        .dark.contrast .filepath {
+            color: white;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -213,10 +270,9 @@
         <thead>
             <tr>
                 <th>#</th>
-                <th>File</th>
-                <th>Highlighted Code</th>
-                <th>Question</th>
-                <th>Actions</th>
+                <th style="width: 40%;">Highlighted Code</th>
+                <th style="width: 40%;">Question</th>
+                <th style="width: 20%;">File & Actions</th>
             </tr>
         </thead>
         <tbody id="questionsTableBody">
@@ -502,6 +558,74 @@
         function exportQuiz() {
             vscode.postMessage({ type: 'exportQuiz' });
         }
+
+        function acceptOutput(index) {
+            const aiArea = document.getElementById(`ai-${index}`);
+            const questionArea = document.getElementById(`question-${index}`);
+            //const answerArea = document.getElementById(`ai-${index}`);
+
+            if (aiArea.value != '') {
+                var output = aiArea.value;
+                var tokens = output.split("**Answer:** ");
+                questionArea.value = tokens[0];
+                //answerArea.value = "**Answer:** " + tokens[1];
+            }
+        }
+
+        function aiSuggestQuestion(index) {
+            const codeTextArea = document.getElementById(`code-${index}`);
+            const questionArea = document.getElementById(`question-${index}`);
+            const aiArea = document.getElementById(`ai-${index}`);
+            console.log(codeTextArea.value);
+            aiArea.value = "Generating content...";
+            aiArea.style = "display: block;";
+            
+            try {
+                vscode.postMessage({ 
+                    type: 'generateQuestion', 
+                    code: codeTextArea.value,
+                    index: index
+                });
+            } catch (error) {
+                console.error("Error requesting AI generation:", error);
+                aiArea.value = "Error generating content";
+            }
+        }
+
+        function aiRephraseQuestion(index) {
+            const codeTextArea = document.getElementById(`code-${index}`);
+            const questionArea = document.getElementById(`question-${index}`);
+            const aiArea = document.getElementById(`ai-${index}`);
+            console.log(codeTextArea.value);
+            aiArea.value = "Rephrasing question...";
+            aiArea.style = "display: block;";
+            
+            try {
+                vscode.postMessage({ 
+                    type: 'rephraseQuestion', 
+                    code: codeTextArea.value,
+                    question: questionArea.value,
+                    index: index
+                });
+            } catch (error) {
+                console.error("Error requesting AI generation:", error);
+                aiArea.value = "Error generating content";
+            }
+        }
+        
+        // Listen for AI response from extension backend
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.type === 'aiResponse') {
+                const aiArea = document.getElementById(`ai-${message.index}`);
+                aiArea.style = "display: block;";
+                aiArea.value = message.content;
+            } else if (message.type === 'aiError') {
+                const aiArea = document.getElementById(`ai-${message.index}`);
+                aiArea.style = "display: block;";
+                aiArea.value = "Error: " + message.error;
+            }
+        });
 
         // Initialize the table when the page loads
         window.addEventListener('load', initializeTable);
