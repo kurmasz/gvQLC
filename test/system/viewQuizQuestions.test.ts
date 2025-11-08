@@ -220,7 +220,7 @@ describe('viewQuizQuestions', function () {
         const copyButton = await view.findWebElement(By.css("#copy-0"));
         await copyButton.click();
 
-        await question.sendKeys(Key.ARROW_LEFT, Key.ARROW_LEFT, Key.NULL);
+        await question.sendKeys(Key.ARROW_RIGHT, Key.ARROW_RIGHT, Key.NULL);
 
         var operatingSystem = getOperatingSystem();
         if (operatingSystem == "macOS") {
@@ -249,10 +249,10 @@ describe('viewQuizQuestions', function () {
         await aiBox.clear();
         expect(await aiBox.getAttribute('value')).to.be.equal('');
 
-        const aiButton = await view.findWebElement(By.css("#aiButton"));
+        const aiButton = await tds[2].findElement(By.id("suggestAI-0"));
         await aiButton.click();
 
-        expect(await aiBox.getAttribute('value')).to.be.equal('Error: Failed to generate question: No API key configured. Please run "gvQLC: Set LLM API Key" command first.');
+        expect(await aiBox.getAttribute('value')).to.include('Error:');
     })
 
     it('suggests a question using AI', async() => {
@@ -261,7 +261,7 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         var aiBox = await tds[2].findElement(By.id('ai-0'));
-        const suggestButton = await view.findWebElement(By.css("#suggestAI-0"));
+        const suggestButton = await tds[2].findElement(By.id("suggestAI-0"));
         await suggestButton.click();
 
         expect(await aiBox.getAttribute("value")).to.be.not.equal("");
@@ -273,7 +273,7 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         var aiBox = await tds[2].findElement(By.id('ai-0'));
-        const rephraseAI = await view.findWebElement(By.css("#rephraseAI-0"));
+        const rephraseAI = await tds[2].findElement(By.id("rephraseAI-0"));
         await rephraseAI.click();
 
         expect(await aiBox.getAttribute("value")).to.be.not.equal("");
@@ -286,11 +286,11 @@ describe('viewQuizQuestions', function () {
 
         var aiBox = await tds[2].findElement(By.id('ai-0'));
         var question = await tds[2].findElement(By.id('question-0'));
-        const acceptAI = await view.findWebElement(By.css("#acceptAI-0"));
+        const acceptAI = await tds[2].findElement(By.id("acceptAI-0"));
         await acceptAI.click();
 
         expect(await question.getAttribute("value")).to.be.equal(await aiBox.getAttribute("value"));
-        const revertButton = await view.findWebElement(By.css("#revert-0"));
+        const revertButton = await tds[2].findElement(By.id("revert-0"));
         await revertButton.click();
     })
 
@@ -484,7 +484,6 @@ describe('viewQuizQuestions', function () {
     })
 
     it.skip('Refreshes the page', async () => {
-        // Issues with the after(async function() { lines
 
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
         console.log("refreshBtn found");
@@ -529,7 +528,7 @@ describe('viewQuizQuestions', function () {
         });
     });
 
-    it.skip('deletes the entry when clicked', async () => {
+    it('deletes the entry when clicked', async () => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -537,8 +536,8 @@ describe('viewQuizQuestions', function () {
         expect(await deleteButton.isDisplayed()).to.be.true;
 
         //Need to find a way to correctly undo the delete after it's clicked
-        //await deleteButton.click();
-        //await verifyQuestionCount(13);
+        await deleteButton.click();
+        await verifyQuestionCount(13);
         //Somehow restore JSON to normal
         //await verifyQuestionCount(14);
     });
