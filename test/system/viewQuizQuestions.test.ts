@@ -13,7 +13,7 @@
 
 import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
 import { By, WebElement, Key } from 'selenium-webdriver';
-import { logAllNotifications, openWorkspace, waitForNotification } from '../helpers/systemHelpers';
+import { logAllNotifications, openWorkspace, waitForNotification, pause } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
 
@@ -49,6 +49,7 @@ describe('viewQuizQuestions', function () {
     ///////////////////////// 
     it('opens the folder, runs the command and shows the title and total questions', async () => {      
         ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
+        await pause(5); // Should fix element not interactable errors
     });
 
     it('displays the first queston', async () => {
