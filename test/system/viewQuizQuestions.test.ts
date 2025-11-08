@@ -249,9 +249,10 @@ describe('viewQuizQuestions', function () {
         await aiBox.clear();
         expect(await aiBox.getAttribute('value')).to.be.equal('');
 
-        const aiButton = await tds[2].findElement(By.id("suggestAI-0"));
+        const aiButton = await tds[3].findElement(By.id("suggestAI-0"));
         await aiButton.click();
 
+        console.log(await aiBox.getAttribute('value'));
         expect(await aiBox.getAttribute('value')).to.include('Error:');
     })
 
@@ -261,7 +262,8 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         var aiBox = await tds[2].findElement(By.id('ai-0'));
-        const suggestButton = await tds[2].findElement(By.id("suggestAI-0"));
+
+        const suggestButton = await tds[3].findElement(By.id("suggestAI-0"));
         await suggestButton.click();
 
         expect(await aiBox.getAttribute("value")).to.be.not.equal("");
@@ -273,7 +275,8 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         var aiBox = await tds[2].findElement(By.id('ai-0'));
-        const rephraseAI = await tds[2].findElement(By.id("rephraseAI-0"));
+
+        const rephraseAI = await tds[3].findElement(By.id("rephraseAI-0"));
         await rephraseAI.click();
 
         expect(await aiBox.getAttribute("value")).to.be.not.equal("");
@@ -286,7 +289,8 @@ describe('viewQuizQuestions', function () {
 
         var aiBox = await tds[2].findElement(By.id('ai-0'));
         var question = await tds[2].findElement(By.id('question-0'));
-        const acceptAI = await tds[2].findElement(By.id("acceptAI-0"));
+
+        const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
         await acceptAI.click();
 
         expect(await question.getAttribute("value")).to.be.equal(await aiBox.getAttribute("value"));
@@ -532,7 +536,7 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
-        var deleteButton = await tds[4].findElement(By.css('#delete-0'));
+        var deleteButton = await tds[3].findElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
         //Need to find a way to correctly undo the delete after it's clicked
