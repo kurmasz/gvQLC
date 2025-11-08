@@ -240,6 +240,21 @@ describe('viewQuizQuestions', function () {
         await revertButton.click();
     });
 
+    it('notifies of API key error', async() => {
+        var tbody = await view.findWebElement(By.id('questionsTableBody'));
+        var trow = await tbody.findElement(By.id('row-0'));
+        var tds = await trow.findElements(By.css('td'));
+
+        var aiBox = await tds[2].findElement(By.id('ai-0'));
+        await aiBox.clear();
+        expect(await aiBox.getAttribute('value')).to.be.equal('');
+
+        const aiButton = await view.findWebElement(By.css("#aiButton"));
+        await aiButton.click();
+
+        expect(await aiBox.getAttribute('value')).to.be.equal('Error: Failed to generate question: No API key configured. Please run "gvQLC: Set LLM API Key" command first.');
+    })
+
     it('suggests a question using AI', async() => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));

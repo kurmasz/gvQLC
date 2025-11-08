@@ -133,6 +133,18 @@ describe("addQuizQuestions", function () {
     expect(await questionBox.getAttribute("value")).to.be.equal('~~~\nhandle_binary\n~~~');
   });
 
+  it('notifies of API key error', async() => {
+    const aiBox = await view.findWebElement(By.css("#aiOutput"));
+    await aiBox.clear();
+    expect(await aiBox.getAttribute('value')).to.be.equal('');
+
+    const aiButton = await view.findWebElement(By.css("#aiButton"));
+    await aiButton.click();
+    // Need to delay further operation until after we get a response
+
+    expect(await aiBox.getAttribute('value')).to.be.equal('Error: Failed to generate question: No API key configured. Please run "gvQLC: Set LLM API Key" command first.');
+  })
+
   it.skip('generates AI output', async () => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     await aiBox.clear();
