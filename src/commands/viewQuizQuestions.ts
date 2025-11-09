@@ -27,7 +27,7 @@ import { readFileSync, readdirSync } from 'fs';
 /**
  * Generates a quiz question from code using the LLM
  */
-async function generateQuestionFromCode(code: string): Promise<string> {
+async function generateQuestionFromCode(code: string, fullCode: string): Promise<string> {
     try {
         // Load the prompt template from the extension's directory
         // In development: extensionPath/src/llm/prompts/generateQuestion.json
@@ -46,7 +46,7 @@ async function generateQuestionFromCode(code: string): Promise<string> {
         const promptTemplate = JSON.parse(promptContent);
 
         // Replace the code placeholder in the user prompt
-        const userPrompt = promptTemplate.user.replace('{{code}}', code);
+        const userPrompt = promptTemplate.user.replace('{{code}}', code).replace('{{fullCode}}', fullCode);
 
         // Get the appropriate LLM provider based on configuration
         const provider = await getLLMProvider(gvQLC.context());
@@ -64,7 +64,7 @@ async function generateQuestionFromCode(code: string): Promise<string> {
     }
 }
 
-async function rephraseQuestionFromCode(code: string, question: string): Promise<string> {
+async function rephraseQuestionFromCode(code: string, question: string, fullCode: string): Promise<string> {
     try {
         // Load the prompt template from the extension's directory
         // In development: extensionPath/src/llm/prompts/rephraseQuestion.json
@@ -83,7 +83,7 @@ async function rephraseQuestionFromCode(code: string, question: string): Promise
         const promptTemplate = JSON.parse(promptContent);
 
         // Replace the code placeholder in the user prompt
-        var userPrompt = promptTemplate.user.replace('{{code}}', code).replace('{{originalQuestion}}', question);
+        var userPrompt = promptTemplate.user.replace('{{code}}', code).replace('{{fullCode}}', fullCode).replace('{{originalQuestion}}', question);
 
         // Get the appropriate LLM provider based on configuration
         const provider = await getLLMProvider(gvQLC.context());
@@ -315,7 +315,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
           <tr id="row-${index}" data-index="${index}" data-label="${questionLabels[index]}" data-file="${shortenedFilePath}" data-code="${highlightedCode || 'No highlighted code'}" data-question="${question.text || 'No question'}">
               <td style="background-color: ${labelColor}">${questionLabels[index]}</td>
               <td>
-                  <span class="filepath" onclick="openFileAt(${index})">${shortenedFilePath}</span>
+                  <span class="filepath" id="filepath-${index}" onclick="openFileAt(${index})">${shortenedFilePath}</span>
                   <br>
                   <textarea class="code-area" id="code-${index}">${highlightedCode || 'No highlighted code'}</textarea>
               </td>
@@ -372,7 +372,6 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         questionLabels: JSON.stringify(questionLabels),
         darkMode: darkMode,
         contrastMode: contrastMode
-
     };
     panel.webview.html = Util.renderMustache('quizQuestions.mustache.html', data);
 
@@ -455,9 +454,13 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         }
 
         if (message.type === 'generateQuestion') {
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const uri = vscode.Uri.file(`${root}/${message.filepath}`);
+            const fileContent = await vscode.workspace.fs.readFile(uri);
+            const parsedContent = fileContent.toString();
             try {
                 // Use the LLM to generate a question from the code
-                const generatedContent = await generateQuestionFromCode(message.code);
+                const generatedContent = await generateQuestionFromCode(message.code, parsedContent);
                 
                 // Send the response back to the webview
                 panel.webview.postMessage({
@@ -478,9 +481,13 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         }
 
         if (message.type === 'rephraseQuestion') {
+            const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+            const uri = vscode.Uri.file(`${root}/${message.filepath}`);
+            const fileContent = await vscode.workspace.fs.readFile(uri);
+            const parsedContent = fileContent.toString();
             try {
                 // Use the LLM to generate a question from the code
-                const generatedContent = await rephraseQuestionFromCode(message.code, message.question);
+                const generatedContent = await rephraseQuestionFromCode(message.code, message.question, parsedContent);
                 
                 // Send the response back to the webview
                 panel.webview.postMessage({
