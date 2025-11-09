@@ -512,7 +512,7 @@ describe('viewQuizQuestions', function () {
         }
     })
 
-    it.skip('Refreshes the page', async () => {
+    it('Refreshes the page', async () => {
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#refreshBtin')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
