@@ -16,7 +16,7 @@ export const llmDefaults = {
 };
 
 export const geminiDefaults = {
-    model: 'gemini-1.5-pro',
+    model: 'gemini-2.5-flash-lite',
     maxTokens: 4096,
     temperature: 0.7,
     topP: 0.9,
