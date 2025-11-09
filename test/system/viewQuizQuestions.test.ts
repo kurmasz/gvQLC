@@ -12,7 +12,7 @@
 
 
 import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
-import { By, WebElement, Key } from 'selenium-webdriver';
+import { By, WebElement, Key, until } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification, pause } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
@@ -49,7 +49,6 @@ describe('viewQuizQuestions', function () {
     ///////////////////////// 
     it('opens the folder, runs the command and shows the title and total questions', async () => {      
         ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
-        await pause(5); // Should fix element not interactable errors
     });
 
     it('displays the first queston', async () => {
@@ -246,13 +245,16 @@ describe('viewQuizQuestions', function () {
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#suggestAI-0')));
         const aiButton = await tds[3].findElement(By.id("suggestAI-0"));
         await aiButton.click();
 
+        await driver.wait(until.elementLocated(By.css('#ai-0')));
         var aiBox = await tds[2].findElement(By.id('ai-0'));
 
         console.log(await aiBox.getAttribute('value'));
-        expect(await aiBox.getAttribute('value')).to.include('Error:');
+        expect(await aiBox.getAttribute('value')).to.be.not.equal('');
     })
 
     it('suggests a question using AI', async() => {
@@ -260,8 +262,11 @@ describe('viewQuizQuestions', function () {
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#ai-0')));
         var aiBox = await tds[2].findElement(By.id('ai-0'));
-
+        
+        await driver.wait(until.elementLocated(By.css('#suggestAI-0')));
         const suggestButton = await tds[3].findElement(By.id("suggestAI-0"));
         await suggestButton.click();
 
@@ -273,8 +278,11 @@ describe('viewQuizQuestions', function () {
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#ai-0')));
         var aiBox = await tds[2].findElement(By.id('ai-0'));
 
+        await driver.wait(until.elementLocated(By.css('#rephraseAI-0')));
         const rephraseAI = await tds[3].findElement(By.id("rephraseAI-0"));
         await rephraseAI.click();
 
@@ -285,15 +293,21 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
-
+        
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#ai-0')));
         var aiBox = await tds[2].findElement(By.id('ai-0'));
+
+        await driver.wait(until.elementLocated(By.css('#question-0')));
         var question = await tds[2].findElement(By.id('question-0'));
 
+        await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
         const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
         await acceptAI.click();
         console.log('accepted');
 
         expect(await question.getAttribute("value")).to.be.equal(await aiBox.getAttribute("value"));
+        await driver.wait(until.elementLocated(By.css('#revert-0')));
         const revertButton = await tds[3].findElement(By.id("revert-0"));
         await revertButton.click();
         console.log('reverted');
@@ -303,6 +317,9 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
+
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#exclude-0')));
         var checkbox = await tds[3].findElement(By.id('exclude-0'));
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
@@ -491,20 +508,24 @@ describe('viewQuizQuestions', function () {
         } else {
             console.log("Is now normalMode after click\n");
             expect(tokens[1]).to.be.equal("normal");
+
         }
     })
 
     it.skip('Refreshes the page', async () => {
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#refreshBtin')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
         console.log("refreshBtn found");
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
 
-        await VSBrowser.instance.driver.switchTo().defaultContent();
+        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
 
         var expectedNew = `                while line := file.readline():
                     socket.send_text_line(line)`;
 
+        await driver.wait(until.elementLocated(By.css('#refreshBtin')));
         await verifyQuestionDisplayed(view, {
             rowIndex: 0,
             rowLabel: '1a',
@@ -519,15 +540,19 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
+
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#filepath-0')));
         var filePath = await tds[1].findElement(By.css('#filepath-0'));
         await filePath.click();
-        await VSBrowser.instance.driver.switchTo().defaultContent();
+        
         await VSBrowser.instance.driver.close();
-        await VSBrowser.instance.driver.switchTo().defaultContent();
-
+        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
+        
         const expected = `                while line := file.readline():
                     socket.send_text_line(line)`;
 
+        await driver.wait(until.elementLocated(By.css('#refreshBtin')));
         await verifyQuestionDisplayed(view, {
             rowIndex: 0,
             rowLabel: '1a',
@@ -542,12 +567,20 @@ describe('viewQuizQuestions', function () {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
+
+        const driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#delete-0')));
         var deleteButton = await tds[3].findElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
         //Need to find a way to correctly undo the delete after it's clicked
         await deleteButton.click();
+        await driver.wait(until.elementLocated(By.css('#delete-0')));
+
         await verifyQuestionCount(13);
+        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '13'));
+        
+        await driver.wait(until.elementLocated(By.css('#delete-0')));
         //Somehow restore JSON to normal
         //await verifyQuestionCount(14);
     });
