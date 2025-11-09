@@ -131,6 +131,8 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     if (!Util.loadPersistedData()) {
         console.log('Could not load data');
         return false;
+    } else {
+        console.log('Loaded persisted');
     }
 
     if (state.personalizedQuestionsData.length === 0) {
@@ -381,7 +383,8 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             reorderedQuestions[message.index].text = message.updatedQuestion;
             logToFile('Re-assigning personalizedQuestonsData with reordered questions from saveChanges');
             state.personalizedQuestionsData = reorderedQuestions;
-            Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            await Util.saveDataToFile('gvQLC.quizQuestions.json', state.personalizedQuestionsData);
+            await Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
             vscode.window.showInformationMessage('Changes saved successfully!');
         }
 
@@ -390,7 +393,8 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
             logToFile('Re-assigning personalizedQuestonsData with reordered questions from toggleExclude');
             state.personalizedQuestionsData = reorderedQuestions;
-            Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            await Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            await Util.saveDataToFile('gvQLC.quizQuestions.json', state.personalizedQuestionsData);
         }
 
         // Edit button functionality
@@ -401,15 +405,23 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
 
         if (message.type === 'deleteQuestion') {
             var newQuestions = reorderedQuestions.filter((item) => !(item === reorderedQuestions[message.index]));
-            vscode.window.showErrorMessage(`${newQuestions.length}`);
-            state.personalizedQuestionsData = newQuestions;
-            Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            await Util.saveDataToFile('personalizedQuestions.json', newQuestions);
+            await Util.saveDataToFile('gvQLC.quizQuestions.json', newQuestions);
+            state.personalizedQuestionsData = [];
+            state.commentsData = [];
+            state.questionsData = [];
+            state.dataLoaded = false;
+            console.log(newQuestions);
             panel.dispose();
             vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
         }
 
         // Refresh view button functionality
         if (message.type === 'refreshView') {
+            state.personalizedQuestionsData = [];
+            state.commentsData = [];
+            state.questionsData = [];
+            state.dataLoaded = false;
             panel.dispose();
             vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
         }
