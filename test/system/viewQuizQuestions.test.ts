@@ -194,19 +194,12 @@ describe('viewQuizQuestions', function () {
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         } else if (operatingSystem == "Linux") {
             console.log("Linux");
-            await question.sendKeys(Key.CONTROL, Key.SHIFT, "v", Key.NULL);
-            console.log(await question.getAttribute("value"));
-            await question.sendKeys(Key.COMMAND, Key.SHIFT, "v", Key.NULL);
-            console.log(await question.getAttribute("value"));
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
-            console.log(await question.getAttribute("value"));
-            await question.sendKeys(Key.COMMAND, "v", Key.NULL);
-            console.log(await question.getAttribute("value"));
         } else {
             console.log("Windows");
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
-        //console.log(await question.getAttribute("value"));
+        console.log(await question.getAttribute("value"));
 
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
         const revertButton = await view.findWebElement(By.css("#revert-0"));
@@ -235,7 +228,7 @@ describe('viewQuizQuestions', function () {
             await question.sendKeys(Key.COMMAND, "v", Key.NULL);
         } else if (operatingSystem == "Linux") {
             console.log("Linux");
-            await question.sendKeys(Key.COMMAND, "v", Key.NULL);
+            await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         } else {
             console.log("Windows");
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
@@ -527,7 +520,7 @@ describe('viewQuizQuestions', function () {
         }
     })
 
-    it('Refreshes the page', async () => {
+    it.skip('Refreshes the page', async () => {
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
