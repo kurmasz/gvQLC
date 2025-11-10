@@ -261,7 +261,7 @@
             <input type="text" id="searchInput" placeholder="Search questions..." oninput="filterQuestions()">
             <span id="filterCount"></span>
         </div>
-        <button id="exportBtn" onclick="exportQuiz()">Export Quiz</button>
+        <!-- <button id="exportBtn" onclick="exportQuiz()">Export Quiz</button> -->
     </div>
 
     {{{summaryTable}}}
@@ -555,9 +555,9 @@
             vscode.postMessage({ type: 'openFileAt', index });
         }
 
-        function exportQuiz() {
-            vscode.postMessage({ type: 'exportQuiz' });
-        }
+        // function exportQuiz() {
+        //     vscode.postMessage({ type: 'exportQuiz' });
+        // }
 
         function acceptOutput(index) {
             const aiArea = document.getElementById(`ai-${index}`);
