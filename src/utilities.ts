@@ -82,6 +82,12 @@ export function loadDataFromFile(fileName: string) {
 
 export async function loadConfigData(): Promise<ConfigData> {
   let defaultConfig = {} as ConfigData;
+  defaultConfig.submissionRoot = null;
+  defaultConfig.studentNameMapping = null;
+  defaultConfig.markdownFlag = false;
+  defaultConfig.pdfFlag = false;
+  defaultConfig.singlePageFlag = false;
+  defaultConfig.includeAnswersFlag = false;
   try {
     let configFileUri = null;
     try {
@@ -104,6 +110,7 @@ export async function loadConfigData(): Promise<ConfigData> {
     } catch (err) {console.log("missing err"); }
 
     if (configFileUri) {
+      console.log("config exists");
       const fileData = await vscode.workspace.fs.readFile(configFileUri);
       const config = JSON.parse(fileData.toString()) as ConfigData;
       gvQLC.state.studentNameMapping = config.studentNameMapping || {};
@@ -113,7 +120,9 @@ export async function loadConfigData(): Promise<ConfigData> {
 
       // TODO: implement config creation here, as none exists if triggered
       // if err is due to something else, this will overwrite the existing config, be aware.
-      saveDataToFile(configFileName, defaultConfig);
+
+      //can remove err, as we are creating a new config file here
+      await saveDataToFile(configFileName, JSON.stringify(defaultConfig, null, 2), false);
       console.log("err expected");
       vscode.window.showErrorMessage(
         'No config file found. Press Command + Shift + P and select "Create Sample Config File".',

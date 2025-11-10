@@ -135,7 +135,7 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
             config.markdownFlag = true;
             console.log("enable md");
             // save to file in all of these here
-            saveDataToFile(configFileName, config);
+            await saveDataToFile(configFileName, JSON.stringify(config, null, 2), false);
         }
         // if (message.type === 'disableMarkdown') {
         //     config.markdownFlag = false;
@@ -144,7 +144,7 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
             config.markdownFlag = false;
             config.pdfFlag = true;
             console.log("enable pdf");
-            saveDataToFile(configFileName, config);
+            await saveDataToFile(configFileName, JSON.stringify(config, null, 2), false);
         }
         // if (message.type === 'disablePdf') {
         //     config.pdfFlag = false;
@@ -153,7 +153,7 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
             config.markdownFlag = false;
             config.pdfFlag = false;
             console.log("enable html");
-            saveDataToFile(configFileName, config);
+            await saveDataToFile(configFileName, JSON.stringify(config, null, 2), false);
         }
         // if (message.type === 'disableHtml') {
         //     // N/A
@@ -161,22 +161,22 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
         if (message.type === 'enableSinglePage') {
             config.singlePageFlag = true;
             console.log("enable single page");
-            saveDataToFile(configFileName, config);
+            await saveDataToFile(configFileName, JSON.stringify(config, null, 2), false);
         }
         if (message.type === 'disableSinglePage') {
             config.singlePageFlag = false;
             console.log("disable single page");
-            saveDataToFile(configFileName, config);
+            await saveDataToFile(configFileName, JSON.stringify(config, null, 2), false);
         }
         if (message.type === 'enableIncludeAnswers') {
             config.includeAnswersFlag = true;
             console.log("enable include answers");
-            saveDataToFile(configFileName, config);
+            await saveDataToFile(configFileName, JSON.stringify(config, null, 2), false);
         }
         if (message.type === 'disableIncludeAnswers') {
             config.includeAnswersFlag = false;
             console.log("disable include answers");
-            saveDataToFile(configFileName, config);
+            await saveDataToFile(configFileName, JSON.stringify(config, null, 2), false);
         }
     });
 });
