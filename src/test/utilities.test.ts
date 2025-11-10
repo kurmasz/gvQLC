@@ -395,20 +395,20 @@ suite('Utilities Test Suite', () => {
             expect(gvQLC.state.dataLoaded).to.be.false;
         });
 
-        test('should return true without reloading if data already loaded', () => {
+        test('should return true without reloading if data already loaded', async () => {
             gvQLC.state.dataLoaded = true;
             
-            const result = utilities.loadPersistedData();
+            const result = await utilities.loadPersistedData();
             
             expect(result).to.be.true;
             expect(verifyAndSetWorkspaceRootStub.called).to.be.false;
             expect(loadDataFromFileStub.called).to.be.false;
         });
 
-        test('should handle empty data files', () => {
+        test('should handle empty data files', async () => {
             loadDataFromFileStub.returns([]);
             
-            const result = utilities.loadPersistedData();
+            const result = await utilities.loadPersistedData();
             
             expect(result).to.be.true;
             expect(gvQLC.state.commentsData).to.be.empty;
@@ -655,7 +655,7 @@ suite('Utilities Test Suite', () => {
     });
 
     suite('integration tests', () => {
-        test('should work with complete data loading workflow', () => {
+        test('should work with complete data loading workflow', async () => {
             // Stub the internal verifyAndSetWorkspaceRoot function
             const verifyAndSetWorkspaceRootStub = sandbox.stub().returns(true);
             (utilities as any).verifyAndSetWorkspaceRoot = verifyAndSetWorkspaceRootStub;
@@ -675,7 +675,7 @@ suite('Utilities Test Suite', () => {
             readFileSyncStub.withArgs(path.join('/test/workspace', '.gitignore'), 'utf-8')
                 .returns(`${quizQuestionsFileName}\n`);
             
-            const result = utilities.loadPersistedData();
+            const result = await utilities.loadPersistedData();
             
             expect(result).to.be.true;
             expect(gvQLC.state.dataLoaded).to.be.true;
