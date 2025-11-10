@@ -14,6 +14,15 @@ import { logToFile } from '../fileLogger';
 import { stringify } from 'querystring';
 import { quizQuestionsFileName, configFileName } from '../sharedConstants';
 
+import html_to_pdf from "html-pdf-node";
+
+async function convertHTMLToPdf(htmlContent: string): Promise<any> {
+    const options = { format: 'A4' };
+    const file = { content: htmlContent };
+    return html_to_pdf.generatePdf(file, options);
+}
+
+
 export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQuiz', async () => {
     if (!Util.loadPersistedData()) {
         console.log('Could not load data');
@@ -107,6 +116,10 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                     saveDataToFile(fileNameMD, markdownContent, false);
                 } else if (config.pdfFlag) {
                     // vvv placeholder for logic skeleton
+                    const pdfContent = await convertHTMLToPdf(htmlContent);
+                    const fileNamePDF = `quiz_all_students.pdf`;
+                    await saveDataToFile(fileNamePDF, pdfContent, false);
+                    //
                     saveDataToFile(fileNameHTML, htmlContent, false);
                 } else {
                     saveDataToFile(fileNameHTML, htmlContent, false);
@@ -122,6 +135,10 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                         saveDataToFile(fileNameMD, markdownContent, false);
                     } else if (config.pdfFlag) {
                         // vvv placeholder for logic skeleton
+                        const pdfContent = await convertHTMLToPdf(htmlContent);
+                        const fileNamePDF = `quiz_${safeStudentName}.pdf`;
+                        await saveDataToFile(fileNamePDF, pdfContent, false);
+                        //
                         saveDataToFile(fileNameHTML, htmlContent, false);
                     } else {
                         saveDataToFile(fileNameHTML, htmlContent, false);
