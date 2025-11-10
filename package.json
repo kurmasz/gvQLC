@@ -51,10 +51,10 @@
         "default": "gemini",
         "description": "LLM provider for question generation",
         "enumDescriptions": [
-          "OpenAI (GPT-4, GPT-3.5)",
+          "OpenAI (GPT-5, GPT-5-nano)",
           "Azure OpenAI Service",
           "Anthropic (Claude)",
-          "Ollama (local models)",
+          "Ollama (local models: WIP!)",
           "Google Gemini"
         ]
       },
@@ -70,7 +70,7 @@
       "gvqlc.llm.model": {
         "type": "string",
         "description": "Model name (optional)",
-        "markdownDescription": "Specifies model, small models recommended. Ex:\n- OpenAI: `gpt-4`, `gpt-3.5-turbo`\n- Anthropic: `claude-3-5-sonnet-20241022`\n- Gemini: `gemini-2.0-flash-exp`, `gemini-1.5-pro`\n- Ollama: `llama3.1`, `codellama`."
+        "markdownDescription": "Specifies model, small models recommended. Ex:\n- OpenAI: `gpt-5-nano`\n- Anthropic: `claude-haiku-4-5`\n- Gemini: `gemini-2.5-flash`\n- Ollama: `llama3.1`, `codellama`."
       }
     }
   }

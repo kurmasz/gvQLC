@@ -8,17 +8,17 @@
  * *********************************************************************************/
 export const llmDefaults = {
     model: 'gpt-5-nano-2025-08-07',
-    maxTokens: 2048,
-    temperature: 0.7,
+    maxTokens: 4096,
+    temperature: 2.0,
     topP: 0.9,
     frequencyPenalty: 0,
     presencePenalty: 0,
 };
 
 export const geminiDefaults = {
-    model: 'gemini-1.5-pro',
+    model: 'gemini-2.5-flash-lite',
     maxTokens: 4096,
-    temperature: 0.7,
+    temperature: 2.0,
     topP: 0.9,
     frequencyPenalty: 0,
     presencePenalty: 0,
