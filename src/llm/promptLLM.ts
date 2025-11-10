@@ -127,7 +127,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
     const defaultModels: Record<string, string> = {
       openai: 'gpt-5-nano-2025-08-07',
       azure: 'gpt-5-nano-2025-08-07',
-      anthropic: 'claude-sonnet-4-20250514',
+      anthropic: 'claude-haiku-4-5-20251001',
       ollama: 'llama3'
     };
 
@@ -194,7 +194,7 @@ export class GeminiProvider implements LLMProvider {
     }
 
     this.client = new GoogleGenerativeAI(config.apiKey);
-    this.model = config.model || 'gemini-2.0-flash-exp';
+    this.model = config.model || 'gemini-2.5-flash';
   }
 
   async generateCompletion(messages: LLMMessage[]): Promise<LLMResponse> {

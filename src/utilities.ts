@@ -180,12 +180,14 @@ async function extractStudentNameOld(filePath: string, submissionRoot: string) {
   return studentName;
 }
 
-export function loadPersistedData() {
+export async function loadPersistedData() {
   const state = gvQLC.state;
   if (state.dataLoaded) {
+    console.log("Data Loaded");
     return true;
   }
   if (verifyAndSetWorkspaceRoot()) {
+    console.log("Get from files", quizQuestionsFileName);
     logToFile(`(Re)Loading personalized Questoins data from ${quizQuestionsFileName}`);
     state.commentsData.push(...loadDataFromFile('commentsData.json'));
     state.questionsData.push(...loadDataFromFile('questionsData.json'));

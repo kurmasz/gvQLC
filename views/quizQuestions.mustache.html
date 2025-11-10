@@ -575,6 +575,7 @@
         function aiSuggestQuestion(index) {
             const codeTextArea = document.getElementById(`code-${index}`);
             const questionArea = document.getElementById(`question-${index}`);
+            const filepath = document.getElementById(`filepath-${index}`);
             const aiArea = document.getElementById(`ai-${index}`);
             console.log(codeTextArea.value);
             aiArea.value = "Generating content...";
@@ -584,6 +585,7 @@
                 vscode.postMessage({ 
                     type: 'generateQuestion', 
                     code: codeTextArea.value,
+                    filepath: filepath.textContent, 
                     index: index
                 });
             } catch (error) {
@@ -595,6 +597,7 @@
         function aiRephraseQuestion(index) {
             const codeTextArea = document.getElementById(`code-${index}`);
             const questionArea = document.getElementById(`question-${index}`);
+            const filepath = document.getElementById(`filepath-${index}`);
             const aiArea = document.getElementById(`ai-${index}`);
             console.log(codeTextArea.value);
             aiArea.value = "Rephrasing question...";
@@ -605,6 +608,7 @@
                     type: 'rephraseQuestion', 
                     code: codeTextArea.value,
                     question: questionArea.value,
+                    filepath: filepath.textContent,
                     index: index
                 });
             } catch (error) {

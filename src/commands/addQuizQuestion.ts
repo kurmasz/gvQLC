@@ -20,7 +20,7 @@ import { getLLMProvider } from '../llm/llmConfig';
 /**
  * Generates a quiz question from code using the LLM
  */
-async function generateQuestionFromCode(code: string): Promise<string> {
+async function generateQuestionFromCode(code: string, fullCode: string): Promise<string> {
     try {
         // Load the prompt template from the extension's directory
         // In development: extensionPath/src/llm/prompts/generateQuestion.json
@@ -39,7 +39,7 @@ async function generateQuestionFromCode(code: string): Promise<string> {
         const promptTemplate = JSON.parse(promptContent);
 
         // Replace the code placeholder in the user prompt
-        const userPrompt = promptTemplate.user.replace('{{code}}', code);
+        const userPrompt = promptTemplate.user.replace('{{code}}', code).replace('{{fullCode}}', fullCode);
 
         // Get the appropriate LLM provider based on configuration
         const provider = await getLLMProvider(context());
@@ -102,8 +102,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const workspaceRoot = workspaceFolders[0].uri.fsPath;
     const absolutePath = editor.document.uri.fsPath;
     const relativePath = path.relative(workspaceRoot, absolutePath);
-    var fullFileContent;
-
+    
     const settingUri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/userSettings.json`);
     try {
         await vscode.workspace.fs.stat(settingUri);
@@ -120,6 +119,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
     // Get existing questions for suggestions
     let existingQuestions = [];
+    var fullFileContent: string;
     try {
         const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
         const fileContent = await vscode.workspace.fs.readFile(uri);
@@ -145,7 +145,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     const htmlData = {
         selectedText: trimmedText,
         existingQuestions: JSON.stringify(existingQuestions),
-        fullFileContent: fullFileContent,
         darkMode: darkMode,
         contrastMode: contrastMode
     };
@@ -176,7 +175,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         } else if (message.type === 'generateQuestion') {
             try {
                 // Use the LLM to generate a question from the code
-                const generatedContent = await generateQuestionFromCode(message.code);
+                const generatedContent = await generateQuestionFromCode(message.code, fullFileContent);
                 
                 // Send the response back to the webview
                 panel.webview.postMessage({
