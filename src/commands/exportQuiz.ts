@@ -8,6 +8,18 @@ import * as gvQLC from '../gvQLC';
 const state = gvQLC.state;
 
 import TurndownService from 'turndown';
+//const puppeteer = require('puppeteer');
+//import puppeteer from 'puppeteer';
+// err read only file system? 
+// ^^^ because of vscode env..., can't extract chromium binaries
+//import wkhtmltopdf from 'wkhtmltopdf';
+//var wkhtmltopdf = require('wkhtmltopdf');
+// ^^^ requires binaries...
+//var html_to_pdf = require('html-pdf-node');
+//import * as html_to_pdf from 'html-pdf-node';
+//var pdf = require('html-pdf');
+import * as pdf from 'html-pdf';
+
 
 //import { extractStudentName, loadDataFromFile, saveDataToFile, generateHTMLQuizExport, generateAllHTMLQuizExport, convertHTMLToMarkdown } from '../utilities';
 import { extractStudentName, loadDataFromFile, saveDataToFile } from '../utilities';
@@ -17,7 +29,7 @@ import { logToFile } from '../fileLogger';
 import { stringify } from 'querystring';
 import { quizQuestionsFileName, configFileName } from '../sharedConstants';
 
-import html_to_pdf from "html-pdf-node";
+//import html_to_pdf from "html-pdf-node";
 
 // Function to generate HTML quiz string export for a student
 async function generateHTMLQuizExport(studentName: string, questions: any[]): Promise<string> {
@@ -105,7 +117,7 @@ async function generateHTMLQuizExport(studentName: string, questions: any[]): Pr
         questionBlock += `<p class="quiz-number">${i + 1}. ${fileName}, ${lineRange}, ${colRange}</p>`;
         questionBlock += `<p class="quiz-text">${question.question}</p>`;
         questionBlock += `<pre class="quiz-code"><code>${question.codeContext}</code></pre>`;
-        questionBlock += `\n\n\n`;
+        questionBlock += `<br>`;
         // Include answer if flag is set
         if (config.includeAnswersFlag) {
             questionBlock += `<p class="quiz-answer">Answer: ${question.answer}</p>`;
@@ -210,7 +222,7 @@ async function generateAllHTMLQuizExport(studentQuestionsMap: Record<string, any
             questionBlock += `<p class="quiz-number">${i + 1}. ${fileName}, ${lineRange}, ${colRange}</p>`;
             questionBlock += `<p class="quiz-text">${question.question}</p>`;
             questionBlock += `<pre class="quiz-code"><code>${question.codeContext}</code></pre>`;
-            questionBlock += `\n\n\n`;
+            questionBlock += `<br>`;
             // Include answer if flag is set
             if (config.includeAnswersFlag) {
                 questionBlock += `<p class="quiz-answer">Answer: ${question.answer}</p>`;
@@ -253,10 +265,35 @@ function convertHTMLToMarkdown(htmlContent: string): string {
     return markdown;
 }
 
-async function convertHTMLToPdf(htmlContent: string): Promise<any> {
-    const options = { format: 'A4' };
+async function convertHTMLToPdf(htmlContent: string, fileName: string) {
     const file = { content: htmlContent };
-    return html_to_pdf.generatePdf(file, options);
+    //return html_to_pdf.generatePdf(file, options);
+    
+    // const browser = await puppeteer.launch();
+    // const page = await browser.newPage();
+    // await page.setContent(htmlContent);
+    // await page.pdf({ path: outputPath, format: 'a4' });
+    // await browser.close();
+    
+    //wkhtmltopdf(htmlContent, { output: fileName} );
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+        vscode.window.showErrorMessage('No workspace folder is open.');
+        return;
+    }
+    
+    const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${fileName}`);
+    const options: pdf.CreateOptions = { format: 'A4' };
+    pdf.create(htmlContent, options).toFile(uri.fsPath, function(err, res) {
+        if (err) return console.log(err);
+        console.log(res);
+    });
+    ///saveDataToFile(fileName, pdf.create(htmlContent, options)), false;
+    //const output = 
+    //html_to_pdf.generatePdf(file, options);
+    //await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
+
+    //fs.writeFileSync(outputPath, pdfBuffer);
 }
 
 
@@ -354,11 +391,13 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                     saveDataToFile(fileNameMD, markdownContent, false);
                 } else if (config.pdfFlag) {
                     // vvv need new lib for pdfs, look at above func
-                    const pdfContent = await convertHTMLToPdf(htmlContent);
                     const fileNamePDF = `quiz_all_students.pdf`;
-                    await saveDataToFile(fileNamePDF, pdfContent, false);
+                    //const pdfContent = await 
+                    convertHTMLToPdf(htmlContent, fileNamePDF);
+                    //.catch(err => console.error('Error generating PDF:', err));
+                    //await saveDataToFile(fileNamePDF, pdfContent, false);
                     //
-                    saveDataToFile(fileNameHTML, htmlContent, false);
+                    //saveDataToFile(fileNameHTML, htmlContent, false);
                 } else {
                     saveDataToFile(fileNameHTML, htmlContent, false);
                 }
@@ -373,11 +412,13 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                         saveDataToFile(fileNameMD, markdownContent, false);
                     } else if (config.pdfFlag) {
                         // vvv placeholder for logic skeleton
-                        const pdfContent = await convertHTMLToPdf(htmlContent);
                         const fileNamePDF = `quiz_${safeStudentName}.pdf`;
-                        await saveDataToFile(fileNamePDF, pdfContent, false);
+                        //const pdfContent = await 
+                        convertHTMLToPdf(htmlContent, fileNamePDF);
+                        //.catch(err => console.error('Error generating PDF:', err));
+                        //await saveDataToFile(fileNamePDF, pdfContent, false);
                         //
-                        saveDataToFile(fileNameHTML, htmlContent, false);
+                        //saveDataToFile(fileNameHTML, htmlContent, false);
                     } else {
                         saveDataToFile(fileNameHTML, htmlContent, false);
                     }
