@@ -314,18 +314,23 @@ describe('viewQuizQuestions', function () {
         await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
         //const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
         const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
-        const acceptRect = await acceptAI.getRect();
         const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
-        const suggestRect = await suggestAI.getRect();
         const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
-        const rephraseRect = await rephraseAI.getRect();
         const exclude = await view.findWebElement(By.id("exclude-0"));
-        const excludeRect = await exclude.getRect();
         const label = await view.findWebElement(By.css("[for='exclude-0']"));
-        const labelRect = await label.getRect();
         var i = 0;
         while (i < 20) {
             console.log("Loop $d: \n", i);
+            const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
+            const acceptRect = await acceptAI.getRect();
+            const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
+            const suggestRect = await suggestAI.getRect();
+            const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
+            const rephraseRect = await rephraseAI.getRect();
+            const exclude = await view.findWebElement(By.id("exclude-0"));
+            const excludeRect = await exclude.getRect();
+            const label = await view.findWebElement(By.css("[for='exclude-0']"));
+            const labelRect = await label.getRect();
             if (!overlap(acceptRect, suggestRect)) {
                 break;
             }
@@ -370,20 +375,22 @@ describe('viewQuizQuestions', function () {
         console.log("found label");
 
         const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
-        const acceptRect = await acceptAI.getRect();
         const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
-        const suggestRect = await suggestAI.getRect();
         const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
-        const rephraseRect = await rephraseAI.getRect();
-        const checkboxRect = await checkbox.getRect();
-        const labelRect = await label.getRect();
-        overlap(checkboxRect, acceptRect);
-        overlap(checkboxRect, suggestRect);
-        overlap(checkboxRect, rephraseRect);
-        overlap(checkboxRect, labelRect);
         var i = 0;
         while (i < 20) {
             console.log("Loop $d: \n", i);
+            var checkbox = await view.findWebElement(By.id('exclude-0'));
+            var label = await view.findWebElement(By.css("[for='exclude-0']"));
+
+            const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
+            const acceptRect = await acceptAI.getRect();
+            const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
+            const suggestRect = await suggestAI.getRect();
+            const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
+            const rephraseRect = await rephraseAI.getRect();
+            const checkboxRect = await checkbox.getRect();
+            const labelRect = await label.getRect();
             if (!overlap(checkboxRect, acceptRect)) {
                 break;
             }
