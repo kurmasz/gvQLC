@@ -240,7 +240,7 @@ describe('viewQuizQuestions', function () {
         await revertButton.click();
     });
 
-    it.skip('notifies of API key error', async() => {
+    it('notifies of API key error', async() => {
         //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
@@ -248,7 +248,9 @@ describe('viewQuizQuestions', function () {
 
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#suggestAI-0')));
-        const aiButton = await tds[3].findElement(By.id("suggestAI-0"));
+        //const aiButton = await tds[3].findElement(By.id("suggestAI-0"));
+        const aiButton = await view.findWebElement(By.id("suggestAI-0"));
+        //Comment might be better?
         await aiButton.click();
 
         await driver.wait(until.elementLocated(By.css('#ai-0')));
@@ -258,7 +260,7 @@ describe('viewQuizQuestions', function () {
         expect(await aiBox.getAttribute('value')).to.be.not.equal('');
     })
 
-    it.skip('suggests a question using AI', async() => {
+    it('suggests a question using AI', async() => {
         //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
@@ -269,13 +271,14 @@ describe('viewQuizQuestions', function () {
         var aiBox = await tds[2].findElement(By.id('ai-0'));
         
         await driver.wait(until.elementLocated(By.css('#suggestAI-0')));
-        const suggestButton = await tds[3].findElement(By.id("suggestAI-0"));
+        //const suggestButton = await tds[3].findElement(By.id("suggestAI-0"));
+        const suggestButton = await view.findWebElement(By.id("suggestAI-0"));
         await suggestButton.click();
 
         expect(await aiBox.getAttribute("value")).to.be.not.equal("");
     })
 
-    it.skip('rephrases a question using AI', async() => {
+    it('rephrases a question using AI', async() => {
         //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
@@ -286,13 +289,14 @@ describe('viewQuizQuestions', function () {
         var aiBox = await tds[2].findElement(By.id('ai-0'));
 
         await driver.wait(until.elementLocated(By.css('#rephraseAI-0')));
-        const rephraseAI = await tds[3].findElement(By.id("rephraseAI-0"));
+        //const rephraseAI = await tds[3].findElement(By.id("rephraseAI-0"));
+        const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
         await rephraseAI.click();
 
         expect(await aiBox.getAttribute("value")).to.be.not.equal("");
     })
 
-    it.skip('accepts AI output', async () => {
+    it('accepts AI output', async () => {
         //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
@@ -306,7 +310,8 @@ describe('viewQuizQuestions', function () {
         var question = await tds[2].findElement(By.id('question-0'));
 
         await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
-        const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
+        //const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
+        const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
         await acceptAI.click();
         console.log('accepted');
 
@@ -317,7 +322,7 @@ describe('viewQuizQuestions', function () {
         console.log('reverted');
     })
 
-    it.skip('Excludes a question when the "Exclude Question" box is checked', async () => {
+    it('Excludes a question when the "Exclude Question" box is checked', async () => {
         //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
@@ -325,24 +330,28 @@ describe('viewQuizQuestions', function () {
 
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
-        var checkbox = await tds[3].findElement(By.id('exclude-0'));
+        //var checkbox = await tds[3].findElement(By.id('exclude-0'));
+        var checkbox = await view.findWebElement(By.id('exclude-0'));
+
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
         expect(await checkbox.isSelected()).to.equal(false);
         
         // Should be excluded
         expect(await checkbox.isEnabled()).to.be.true;
-        await driver.wait(until.elementLocated(By.css('#exclude-0')));
         await checkbox.click();
         console.log("Clicked");
+
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
         expect(await checkbox.isDisplayed()).to.be.true;
         expect(await checkbox.isSelected()).to.equal(true);
 
         // Unexclude it
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
+        var checkbox = await view.findWebElement(By.id('exclude-0'));
         await checkbox.click();
         console.log("Clicked");
+
         expect(await checkbox.isDisplayed()).to.be.true;
         expect(await checkbox.isSelected()).to.equal(false);
     });
@@ -549,18 +558,20 @@ describe('viewQuizQuestions', function () {
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
-        const driver = VSBrowser.instance.driver;
+        var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#filepath-0')));
         var filePath = await tds[1].findElement(By.css('#filepath-0'));
         await filePath.click();
         
         await VSBrowser.instance.driver.close();
         ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
-        
+
+        var driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.css('#refreshBtn')));
+
         const expected = `                while line := file.readline():
                     socket.send_text_line(line)`;
 
-        await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         await verifyQuestionDisplayed(view, {
             rowIndex: 0,
             rowLabel: '1a',

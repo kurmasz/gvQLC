@@ -139,35 +139,44 @@ describe("addQuizQuestions", function () {
   it('notifies of API key error', async() => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     await aiBox.clear();
+    console.log("cleared");
     expect(await aiBox.getAttribute('value')).to.be.equal('');
 
     const aiButton = await view.findWebElement(By.css("#aiButton"));
+    console.log("found");
     await aiButton.click();
+    console.log("clicked");
 
     console.log(await aiBox.getAttribute('value'));
     expect(await aiBox.getAttribute('value')).to.not.equal('');
   })
 
-  it.skip('generates AI output', async () => {
+  it('generates AI output', async () => {
     const aiBox = await view.findWebElement(By.css("#aiOutput"));
     await aiBox.clear();
+    console.log("cleared");
     expect(await aiBox.getAttribute('value')).to.be.equal('');
 
     const aiButton = await view.findWebElement(By.css("#aiButton"));
+    console.log("found");
     await aiButton.click();
+    console.log("clicked");
     // Need to delay further operation until after we get a response
 
     expect(await aiBox.getAttribute('value')).to.be.not.equal('');
   });
 
-  it.skip('fills in answer/question sections with AI output', async () => {
+  it('fills in answer/question sections with AI output', async () => {
     const questionBox = await view.findWebElement(By.css("#question"));
     const answerBox = await view.findWebElement(By.css("#answer"));
     await questionBox.clear();
     await answerBox.clear();
+    console.log("cleared");
 
     const acceptButton = await view.findWebElement(By.css("#acceptAI"));
+    console.log("found");
     await acceptButton.click();
+    console.log("clicked");
     // Need to delay further operation until after we get a response from the earlier button click
 
     expect(await questionBox.getAttribute('value')).to.be.not.equal('');
