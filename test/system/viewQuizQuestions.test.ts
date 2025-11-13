@@ -315,6 +315,7 @@ describe('viewQuizQuestions', function () {
         //const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
         const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
         console.log('found');
+        await pause(1000); //1 second wait
         await acceptAI.click();
         console.log('accepted');
 
@@ -338,6 +339,8 @@ describe('viewQuizQuestions', function () {
         //var checkbox = await tds[3].findElement(By.id('exclude-0'));
         var checkbox = await view.findWebElement(By.id('exclude-0'));
         console.log("found");
+        var label = await view.findWebElement(By.css("[for='exclude-0']"));
+        console.log("found label");
 
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
@@ -345,7 +348,8 @@ describe('viewQuizQuestions', function () {
         
         // Should be excluded
         expect(await checkbox.isEnabled()).to.be.true;
-        await checkbox.click();
+        //await checkbox.click();
+        await label.click();
         console.log("Clicked");
 
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
@@ -353,6 +357,7 @@ describe('viewQuizQuestions', function () {
         console.log("found");
 
         var label = await view.findWebElement(By.css("[for='exclude-0']"));
+        console.log('found label');
         console.log(label.getAttribute("value"));
 
         expect(await checkbox.isDisplayed()).to.be.true;
