@@ -199,7 +199,9 @@ describe('viewQuizQuestions', function () {
             console.log("Windows");
             await question.sendKeys(Key.CONTROL, "v", Key.NULL);
         }
+        await pause(1000); // 1000 ms = 1 sec
         console.log(await question.getAttribute("value"));
+        console.log(await question.getText());
 
         expect(await question.getAttribute("value")).to.be.equal("Explain the difference between `=` and `:=`Explain the difference between `=` and `:=`");
         const revertButton = await view.findWebElement(By.css("#revert-0"));
@@ -312,12 +314,15 @@ describe('viewQuizQuestions', function () {
         await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
         //const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
         const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
+        console.log('found');
         await acceptAI.click();
         console.log('accepted');
 
         expect(await question.getAttribute("value")).to.be.equal(await aiBox.getAttribute("value"));
         await driver.wait(until.elementLocated(By.css('#revert-0')));
-        const revertButton = await tds[3].findElement(By.id("revert-0"));
+        //const revertButton = await tds[3].findElement(By.id("revert-0"));
+        const revertButton = await view.findWebElement(By.id("revert-0"));
+        console.log('found');
         await revertButton.click();
         console.log('reverted');
     })
@@ -332,6 +337,7 @@ describe('viewQuizQuestions', function () {
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
         //var checkbox = await tds[3].findElement(By.id('exclude-0'));
         var checkbox = await view.findWebElement(By.id('exclude-0'));
+        console.log("found");
 
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
@@ -343,13 +349,19 @@ describe('viewQuizQuestions', function () {
         console.log("Clicked");
 
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
+        var checkbox = await view.findWebElement(By.id('exclude-0'));
+        console.log("found");
+
+        var label = await view.findWebElement(By.css("[for='exclude-0']"));
+        console.log(label.getAttribute("value"));
+
         expect(await checkbox.isDisplayed()).to.be.true;
         expect(await checkbox.isSelected()).to.equal(true);
 
         // Unexclude it
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
-        var checkbox = await view.findWebElement(By.id('exclude-0'));
-        await checkbox.click();
+        //await checkbox.click();
+        await label.click();
         console.log("Clicked");
 
         expect(await checkbox.isDisplayed()).to.be.true;
