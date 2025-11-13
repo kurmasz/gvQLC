@@ -12,7 +12,7 @@
 
 
 import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
-import { By, WebElement, Key, until } from 'selenium-webdriver';
+import { By, WebElement, Key, until, IRectangle } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification, pause } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 import {ViewColors} from '../../src/sharedConstants';
@@ -314,8 +314,22 @@ describe('viewQuizQuestions', function () {
         await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
         //const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
         const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
+        const acceptRect = await acceptAI.getRect();
+        const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
+        const suggestRect = await suggestAI.getRect();
+        const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
+        const rephraseRect = await rephraseAI.getRect();
+        const exclude = await view.findWebElement(By.id("exclude-0"));
+        const excludeRect = await exclude.getRect();
+        const label = await view.findWebElement(By.css("[for='exclude-0']"));
+        const labelRect = await label.getRect();
+        console.log(overlap(acceptRect, suggestRect));
+        console.log(overlap(acceptRect, rephraseRect));
+        console.log(overlap(acceptRect, excludeRect));
+        console.log(overlap(acceptRect, labelRect));
         console.log('found');
         await pause(1000); //1 second wait
+
         await acceptAI.click();
         console.log('accepted');
 
@@ -349,6 +363,7 @@ describe('viewQuizQuestions', function () {
         // Should be excluded
         expect(await checkbox.isEnabled()).to.be.true;
         //await checkbox.click();
+        await pause(1000); // 1 sec pause
         await label.click();
         console.log("Clicked");
 
@@ -358,7 +373,7 @@ describe('viewQuizQuestions', function () {
 
         var label = await view.findWebElement(By.css("[for='exclude-0']"));
         console.log('found label');
-        console.log(label.getAttribute("value"));
+        console.log(await label.getAttribute("value"));
 
         expect(await checkbox.isDisplayed()).to.be.true;
         expect(await checkbox.isSelected()).to.equal(true);
@@ -366,6 +381,7 @@ describe('viewQuizQuestions', function () {
         // Unexclude it
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
         //await checkbox.click();
+        await pause(1000); // 1 sec pause
         await label.click();
         console.log("Clicked");
 
@@ -634,6 +650,16 @@ describe('viewQuizQuestions', function () {
     async function verifyQuestionCount(expectedCount: number) {
         const element = await view.findWebElement(By.className('total-count'));
         expect(await element.getText()).to.equal(`Total Questions: ${expectedCount}`);
+    }
+
+    function overlap(rect1: IRectangle, rect2: IRectangle) {
+        if (rect1.x + rect1.width < rect2.x || rect2.x + rect2.width < rect1.x) {
+            return true
+        }
+        if (rect1.y + rect1.height < rect2.y || rect2.y + rect2.height < rect1.y) {
+            return true
+        }
+        return false
     }
 
     function getOperatingSystem(): string {
