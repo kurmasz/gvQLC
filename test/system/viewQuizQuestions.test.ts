@@ -323,12 +323,25 @@ describe('viewQuizQuestions', function () {
         const excludeRect = await exclude.getRect();
         const label = await view.findWebElement(By.css("[for='exclude-0']"));
         const labelRect = await label.getRect();
-        console.log(overlap(acceptRect, suggestRect));
-        console.log(overlap(acceptRect, rephraseRect));
-        console.log(overlap(acceptRect, excludeRect));
-        console.log(overlap(acceptRect, labelRect));
+        var i = 0;
+        while (i < 20) {
+            console.log("Loop $d: \n", i);
+            if (!overlap(acceptRect, suggestRect)) {
+                break;
+            }
+            else if (!overlap(acceptRect, rephraseRect)) {
+                break;
+            }
+            else if (!overlap(acceptRect, excludeRect)) {
+                break;
+            }
+            else if (!overlap(acceptRect, labelRect)) {
+                break;
+            }
+            await pause(1000); //1 second wait
+            i += 1;
+        }
         console.log('found');
-        await pause(1000); //1 second wait
 
         await acceptAI.click();
         console.log('accepted');
@@ -355,6 +368,38 @@ describe('viewQuizQuestions', function () {
         console.log("found");
         var label = await view.findWebElement(By.css("[for='exclude-0']"));
         console.log("found label");
+
+        const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
+        const acceptRect = await acceptAI.getRect();
+        const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
+        const suggestRect = await suggestAI.getRect();
+        const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
+        const rephraseRect = await rephraseAI.getRect();
+        const checkboxRect = await checkbox.getRect();
+        const labelRect = await label.getRect();
+        overlap(checkboxRect, acceptRect);
+        overlap(checkboxRect, suggestRect);
+        overlap(checkboxRect, rephraseRect);
+        overlap(checkboxRect, labelRect);
+        var i = 0;
+        while (i < 20) {
+            console.log("Loop $d: \n", i);
+            if (!overlap(checkboxRect, acceptRect)) {
+                break;
+            }
+            else if (!overlap(checkboxRect, suggestRect)) {
+                break;
+            }
+            else if (!overlap(checkboxRect, rephraseRect)) {
+                break;
+            }
+            else if (!overlap(checkboxRect, labelRect)) {
+                break;
+            }
+            await pause(1000); //1 second wait
+            i += 1;
+        }
+        console.log('found');
 
         // Originally not excluded
         expect(await checkbox.isDisplayed()).to.be.true;
@@ -654,11 +699,14 @@ describe('viewQuizQuestions', function () {
 
     function overlap(rect1: IRectangle, rect2: IRectangle) {
         if (rect1.x + rect1.width < rect2.x || rect2.x + rect2.width < rect1.x) {
+            console.log(`${rect1.x} + ${rect1.width} < ${rect2.x} || ${rect2.x} + ${rect2.width} < ${rect1.x}`);
             return true
         }
         if (rect1.y + rect1.height < rect2.y || rect2.y + rect2.height < rect1.y) {
+            console.log(`${rect1.y} + ${rect1.height} < ${rect2.y} || ${rect2.y} + ${rect2.height} < ${rect1.y}`);
             return true
         }
+        console.log("No overlap");
         return false
     }
 
