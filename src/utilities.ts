@@ -106,10 +106,10 @@ export async function loadConfigData(): Promise<ConfigData> {
       // can remove err, as we are creating a new config file here
       // likely will break automated tests that check for error handling
       await saveDataToFile(configFileName, JSON.stringify(defaultConfig, null, 2), false);
-      vscode.window.showErrorMessage(
-        'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
-        { modal: true }
-      );
+      // vscode.window.showErrorMessage(
+      //   'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
+      //   { modal: true }
+      // );
       return defaultConfig;
     }
   } catch (error) {

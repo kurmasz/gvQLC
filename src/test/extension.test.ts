@@ -46,7 +46,7 @@ suite('Extension Test Suite', () => {
         test('should add commands to context subscriptions', () => {
             activate(mockContext);
             
-            expect(mockContext.subscriptions).to.have.length(3);
+            expect(mockContext.subscriptions).to.have.length(4);
         });
 
         test('should handle context with existing subscriptions', () => {
@@ -55,7 +55,7 @@ suite('Extension Test Suite', () => {
             
             activate(mockContext);
             
-            expect(mockContext.subscriptions).to.have.length(4);
+            expect(mockContext.subscriptions).to.have.length(5);
             expect(mockContext.subscriptions[0]).to.equal(existingSubscription);
         });
 
@@ -73,7 +73,7 @@ suite('Extension Test Suite', () => {
             const result = activate(mockContext);
             
             expect(result).to.be.undefined;
-            expect(mockContext.subscriptions).to.have.length(3);
+            expect(mockContext.subscriptions).to.have.length(4);
         });
     });
 
@@ -99,7 +99,7 @@ suite('Extension Test Suite', () => {
             // Verify all initialization steps
             expect(consoleLogSpy.calledOnce).to.be.true;
             expect(setContextSpy.calledOnce).to.be.true;
-            expect(mockContext.subscriptions).to.have.length(3);
+            expect(mockContext.subscriptions).to.have.length(4);
             
             // Verify the order of operations
             expect(consoleLogSpy.calledBefore(setContextSpy)).to.be.true;
@@ -134,7 +134,7 @@ suite('Extension Test Suite', () => {
             activate(mockContext);
             
             // The commands should be added to subscriptions
-            expect(mockContext.subscriptions).to.have.length(3);
+            expect(mockContext.subscriptions).to.have.length(4);
             
             // Each subscription should have a dispose method (indicating it's a proper command)
             mockContext.subscriptions.forEach((subscription: any) => {
