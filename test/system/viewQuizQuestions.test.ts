@@ -637,27 +637,15 @@ describe('viewQuizQuestions', function () {
         console.log(currWindow);
         console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
 
-        await driver.switchTo().window(windows[-1]);
+        //await driver.switchTo().window(windows[-1]);
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
         console.log(windows);
         console.log(currWindow);
-        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
-        await driver.close();
-        var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
+        console.log("Index of currWindow after click1: ", windows.indexOf(currWindow));
 
-        console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
-        await driver.switchTo().window(windows[-2]);
-        var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
+        //view = new WebView();
 
         // Check the title and number of questions.
         await driver.wait(until.elementLocated(By.css('h1')));
