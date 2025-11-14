@@ -320,7 +320,7 @@ describe('viewQuizQuestions', function () {
         const label = await view.findWebElement(By.css("[for='exclude-0']"));
         var i = 0;
         while (i < 20) {
-            console.log("Loop $d: \n", i);
+            console.log("Loop %d: \n", i);
             const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
             const acceptRect = await acceptAI.getRect();
             const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
@@ -379,7 +379,7 @@ describe('viewQuizQuestions', function () {
         const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
         var i = 0;
         while (i < 20) {
-            console.log("Loop $d: \n", i);
+            console.log("Loop %d: \n", i);
             var checkbox = await view.findWebElement(By.id('exclude-0'));
             var label = await view.findWebElement(By.css("[for='exclude-0']"));
 
@@ -614,7 +614,7 @@ describe('viewQuizQuestions', function () {
         }
     })
 
-    it.skip('Refreshes the page', async () => {
+    it('Refreshes the page', async () => {
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
@@ -622,7 +622,16 @@ describe('viewQuizQuestions', function () {
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
 
-        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
+        await view.switchToFrame();
+
+        // Check the title and number of questions.
+        await driver.wait(until.elementLocated(By.css('h1')));
+        const element = await view.findWebElement(By.css('h1'));
+        expect(await element.getText()).has.string('All Quiz Questions');
+        const element2 = await view.findWebElement(By.css('.total-count'));
+        expect(await element2.getText()).to.have.string(`Total Questions: 14`);
+
+        const summaryContainer = await view.findWebElement(By.css('#summaryTableContainer'));
 
         var expectedNew = `                while line := file.readline():
                     socket.send_text_line(line)`;
