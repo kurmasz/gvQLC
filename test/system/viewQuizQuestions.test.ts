@@ -619,10 +619,45 @@ describe('viewQuizQuestions', function () {
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
         console.log("refreshBtn found");
+
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
+        
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
 
-        await view.switchToFrame();
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
+
+        await driver.switchTo().window(windows[-1]);
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
+        await driver.close();
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
+        await driver.switchTo().window(windows[-2]);
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
 
         // Check the title and number of questions.
         await driver.wait(until.elementLocated(By.css('h1')));
