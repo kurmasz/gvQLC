@@ -44,7 +44,6 @@
     <script>
         const vscode = acquireVsCodeApi();
         // TODO: figure out how to make form reflect config
-        // TODO: fix first config load putting everything in new data obj
 
         // state of inputs should reflect existing config
         // const config = {{{configData}}};
@@ -63,7 +62,6 @@
         // }
         function exportQuiz() {
             // also our submit button
-            //const fileType = document.getElementByName('fileType');
             const fileType = document.querySelector('input[name="fileType"]:checked')?.value || null;
             if (fileType === "pdf") {
                 enablePdf();
@@ -72,7 +70,6 @@
             } else {
                 enableHtml();
             }
-            //const singlePage = document.getElementById("singlePage");
             if (document.querySelector('input[id="singlePage"]:checked')) {
                 vscode.postMessage({ type: 'enableSinglePage' });
             } else {
@@ -90,21 +87,12 @@
         function enableMarkdown() {
             vscode.postMessage({ type: 'enableMarkdown' });
         }
-        // function disableMarkdown() {
-        //     vscode.postMessage({ type: 'disableMarkdown' });
-        // }
         function enablePdf() {
             vscode.postMessage({ type: 'enablePdf' });
         }
-        // function disablePdf() {
-        //     vscode.postMessage({ type: 'disablePdf' });
-        // }
         function enableHtml() {
             vscode.postMessage({ type: 'enableHtml' });
         }
-        // function disableHtml() {
-        //     vscode.postMessage({ type: 'disableHtml' });
-        // }
         function enableSinglePage() {
             vscode.postMessage({ type: 'enableSinglePage' });
         }

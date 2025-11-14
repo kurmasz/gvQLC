@@ -12,8 +12,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as Mustache from 'mustache';
 
-//import TurndownService from 'turndown';
-
 import * as gvQLC from './gvQLC';
 import { GVQLC, ViewColors, configFileName, quizQuestionsFileName } from './sharedConstants';
 
@@ -81,6 +79,7 @@ export function loadDataFromFile(fileName: string) {
 }
 
 export async function loadConfigData(): Promise<ConfigData> {
+  // initialize default config in case file needs to be created
   let defaultConfig = {} as ConfigData;
   defaultConfig.submissionRoot = null;
   defaultConfig.studentNameMapping = null;
@@ -91,26 +90,12 @@ export async function loadConfigData(): Promise<ConfigData> {
   try {
     let configFileUri = null;
     try {
-      console.log("1");
       const fileUri = vscode.Uri.joinPath(gvQLC.workspaceRoot().uri, configFileName);
-      console.log("2");
-      console.log("fileUri: ", fileUri);
-      // vvv err on below line every time, causing view no config bug,
-      //      func only triggered once per instance, always fails,
-      //      thus causing bug.
-      //      TODO: find out what it needs and why it isn't getting it
-      //            - there is no file at the path
-      //            - it is never created, and the err does nothing, so no config perpetually
-      //      Fix:
-      //            - generate new default config @ fileUri if none exist
       await vscode.workspace.fs.stat(fileUri);
-      console.log("3");
       configFileUri = fileUri;
-      console.log(configFileUri);
-    } catch (err) {console.log("missing err"); }
+    } catch (err) {}
 
     if (configFileUri) {
-      console.log("config exists");
       const fileData = await vscode.workspace.fs.readFile(configFileUri);
       const config = JSON.parse(fileData.toString()) as ConfigData;
       gvQLC.state.studentNameMapping = config.studentNameMapping || {};
@@ -118,12 +103,9 @@ export async function loadConfigData(): Promise<ConfigData> {
     } else {
       // TODO: Test me
 
-      // TODO: implement config creation here, as none exists if triggered
-      // if err is due to something else, this will overwrite the existing config, be aware.
-
-      //can remove err, as we are creating a new config file here
+      // can remove err, as we are creating a new config file here
+      // likely will break automated tests that check for error handling
       await saveDataToFile(configFileName, JSON.stringify(defaultConfig, null, 2), false);
-      console.log("err expected");
       vscode.window.showErrorMessage(
         'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
         { modal: true }
@@ -247,7 +229,6 @@ export async function getAllStudentNames(config: ConfigData) {
   return Array.from(allStudents).sort();
 }
 
-
 export function renderMustache(filename: string, data: any): string {
   const templatePath = path.join(gvQLC.context().extensionPath, 'views', filename);
   const template = fs.readFileSync(templatePath, 'utf8');
@@ -299,140 +280,6 @@ export async function saveUserSettingsFile(filename: string, darkMode: any, cont
   const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
   await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
 }
-
-
-// Function to generate HTML quiz string export for a student
-// export function generateHTMLQuizExport(studentName: string, questions: any[]): string {
-//   let retHTML = "";
-//   const header = `<!DOCTYPE html>
-// <html lang="en">
-// <head>
-//   <meta charset="UTF-8">
-//   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//   <title>Quiz Export for ${studentName}</title>
-//   <style>
-//     .global-body {
-//       font-family: "Times New Roman", Times, serif;
-//       margin: 0px;
-//       padding: 0px;
-//     }
-//     .quiz-info {
-//       margin: 0 20px;
-//       .quiz-title {
-//         text-align: center;
-//         margin: 0;
-//       }
-//     }
-//     .quiz-body {
-//       margin: 0 20px;
-//       padding: 0;
-//       .quiz-question {
-
-//         .quiz-number {
-//           margin: 0;
-//           font-weight: bold;
-//         }
-//         .quiz-text {
-//           margin: 10px 20px;
-//         }
-//         .quiz-code {
-//           margin: 0 40px;
-//         }
-//         .quiz-answer {
-//           margin: 100px 20px 10px 20px;
-//           font-weight: bold;
-//         }
-//       }
-//     }
-//   </style>
-// </head>
-// <body class="global-body">`;
-
-//   const footer = `</body>
-// </html>`;
-
-//   retHTML += header;
-  
-//   // Info section
-//   // TODO: add more info (date, instructor, course, etc.)
-//   let infoSection = `<div class="quiz-info">`;
-//   infoSection += `<h1 class="quiz-title">Quiz for ${studentName}</h1><hr>\n`;
-//   const dueDateFlag = true;
-//   const tempDueDate = "Due Date: ____________";
-//   if (dueDateFlag) {
-//     infoSection += `<p>${tempDueDate}</p>`;
-//   }
-//   const descFlag = true;
-//   const tempDesc = "Please answer the following questions based on your code submissions. Write your answers in the space provided.";
-//   if (descFlag) {
-//     infoSection += `<p>${tempDesc}</p>`;
-//   }
-//   infoSection += `</div>`;
-//   retHTML += infoSection;
-
-//   // Questions section
-//   let quizBody = `<div class="quiz-body">`;
-//   for (let i = 0; i < questions.length; i++) {
-//     const question = questions[i];
-//     let questionBlock = `<div class="quiz-question">`;
-//     const sampleFileName = "File: " + "test.py";
-//     const sampleLineRange = "Lines: " + "1-10";
-//     const sampleColRange = "Columns: " + "1-20";
-//     //questionBlock += `<p class="quiz-number">${i + 1}. <span>${sampleFileName} ${sampleLineRange}</span></p>`;
-//     questionBlock += `<p class="quiz-number">${i + 1}. ${sampleFileName} ${sampleLineRange}</p>`;
-//     questionBlock += `<p class="quiz-text">${question.question}</p>`;
-//     questionBlock += `<pre class="quiz-code"><code>${question.codeContext}</code></pre>`;
-//     questionBlock += `\n\n\n`;
-//     questionBlock += `<p class="quiz-answer">Answer: ${question.answer}</p>`;
-//     questionBlock += `</div>`;
-//     quizBody += questionBlock;
-//   }
-//   quizBody += `</div>`;
-//   retHTML += quizBody;
-//   retHTML += footer;
-//   return retHTML;
-// }
-
-// // Function to generate HTML quiz for all students in one file
-// export function generateAllHTMLQuizExport(studentQuestionsMap: Record<string, any[]>): string {
-//   let retHTML = "";
-//   retHTML += `<!DOCTYPE html>
-// <html lang="en">
-// <head>
-//   <meta charset="UTF-8">
-//   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//   <title>All Students Quiz</title>
-//   <style>
-//     .page-break {
-//       page-break-after: always;
-//     }
-//   </style>
-// </head>
-// <body>`;
-//   for (const studentName in studentQuestionsMap) {
-//     const questions = studentQuestionsMap[studentName];
-//     retHTML += `<h1>Quiz for ${studentName}</h1>\n`;
-//     for (let i = 0; i < questions.length; i++) {
-//       const question = questions[i];
-//       retHTML += `<div class="question-block">\n`;
-//       retHTML += `<h2>Question ${i + 1}:</h2>\n`;
-//       retHTML += `<pre><code>${question.codeContext}</code></pre>\n`;
-//       retHTML += `<p>${question.question}</p>\n`;
-//       retHTML += `</div>\n<hr>\n`;
-//     }
-//     retHTML += `<div class="page-break">&nbsp;</div>\n`;
-//   }
-//   retHTML += `</body>
-// </html>`;
-//   return retHTML;
-// }
-
-// // Function to convert HTML to Markdown
-// export function convertHTMLToMarkdown(htmlContent: string): string {
-//   const turndownService = new TurndownService();
-//   const markdown = turndownService.turndown(htmlContent);
-//   return markdown;
-// }
 
 export function chooseQuestionColor(numQuestionsForStudent: number, modeQuestionsForStudent: number) {
   if (numQuestionsForStudent === 0) {
