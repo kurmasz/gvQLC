@@ -651,15 +651,21 @@ describe('viewQuizQuestions', function () {
 
         // Check the title and number of questions.
         await driver.wait(until.elementLocated(By.css('h1')));
+        console.log('1');
         const element = await view.findWebElement(By.css('h1'));
+        console.log('2');
         expect(await element.getText()).has.string('All Quiz Questions');
+        console.log('3');
         const element2 = await view.findWebElement(By.css('.total-count'));
+        console.log('4');
         expect(await element2.getText()).to.have.string(`Total Questions: 14`);
+        console.log('5');
 
         var expectedNew = `                while line := file.readline():
                     socket.send_text_line(line)`;
 
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
+        console.log('6');
         await verifyQuestionDisplayed(view, {
             rowIndex: 0,
             rowLabel: '1a',
@@ -668,6 +674,7 @@ describe('viewQuizQuestions', function () {
             code: expectedNew,
             question: "Explain the difference between `=` and `:=`",
         });
+        console.log('7');
     });
 
     it.skip('opens the link correctly when clicked', async () => {
@@ -680,10 +687,10 @@ describe('viewQuizQuestions', function () {
         var filePath = await tds[1].findElement(By.css('#filepath-0'));
         await filePath.click();
         
-        await VSBrowser.instance.driver.close();
-        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
+        await driver.close();
+        driver = VSBrowser.instance.driver;
+        driver.switchTo().defaultContent();
 
-        var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
 
         const expected = `                while line := file.readline():
