@@ -629,14 +629,8 @@ describe('viewQuizQuestions', function () {
         
         expect(await refreshBtn.isDisplayed()).to.be.true;
         var driver = VSBrowser.instance.driver;
-        const tab2 = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
-        await driver.wait(until.elementIsVisible(tab2), 5_000);
         await refreshBtn.click();
-        console.log('clicked');
         await new Promise(res => setTimeout(res, 10000)); // crude but useful
-
-        const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
-        await driver.wait(until.elementIsVisible(tab), 5_000);
 
         view = new WebView();
         await view.switchToFrame();
@@ -648,16 +642,9 @@ describe('viewQuizQuestions', function () {
         console.log(currWindow);
         console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
 
-        //await driver.switchTo().window(windows[-1]);
-        var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow after click1: ", windows.indexOf(currWindow));
-
         // Check the title and number of questions.
         console.log('1');
+        await driver.wait(until.elementLocated(By.css('h1')), 15_000);
         const element = await view.findWebElement(By.css('h1'));
         console.log('2');
         expect(await element.getText()).has.string('All Quiz Questions');
@@ -670,7 +657,7 @@ describe('viewQuizQuestions', function () {
         var expectedNew = `                while line := file.readline():
                     socket.send_text_line(line)`;
 
-        await driver.wait(until.elementLocated(By.css('#refreshBtn')));
+        await driver.wait(until.elementLocated(By.css('#refreshBtn')), 15_000);
         console.log('6');
         await verifyQuestionDisplayed(view, {
             rowIndex: 0,
