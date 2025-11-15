@@ -636,7 +636,7 @@ describe('viewQuizQuestions', function () {
 
         console.log(windows);
         console.log(currWindow);
-        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
+        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
         var finalWindow = windows.indexOf(currWindow);
 
         expect(finalWindow).to.be.equal(origWindow);
@@ -652,14 +652,9 @@ describe('viewQuizQuestions', function () {
         console.log("Index of currWindow after close: ", windows.indexOf(currWindow));
         var origWindow = windows.indexOf(currWindow);
 
-        var tbody = await view.findWebElement(By.id('questionsTableBody'));
-        var trow = await tbody.findElement(By.id('row-0'));
-
         await driver.wait(until.elementLocated(By.css('#filepath-0')));
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
-        view = new WebView();
-        await view.switchToFrame();
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
@@ -670,8 +665,7 @@ describe('viewQuizQuestions', function () {
         expect(newWindow).to.not.equal(origWindow);
         
         await driver.close();
-        view = new WebView();
-        await view.switchToFrame();
+
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
