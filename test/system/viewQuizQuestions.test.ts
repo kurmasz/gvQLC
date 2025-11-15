@@ -638,10 +638,7 @@ describe('viewQuizQuestions', function () {
         console.log(currWindow);
         console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
         var finalWindow = windows.indexOf(currWindow);
-        view = new WebView();
-        await view.switchToFrame();
 
-        // Check the title and number of questions.
         expect(finalWindow).to.be.equal(origWindow);
     });
 
