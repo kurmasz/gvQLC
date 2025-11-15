@@ -630,8 +630,7 @@ describe('viewQuizQuestions', function () {
         expect(await refreshBtn.isDisplayed()).to.be.true;
         var driver = VSBrowser.instance.driver;
         await refreshBtn.click();
-        await new Promise(res => setTimeout(res, 10000)); // crude but useful
-
+        
         view = new WebView();
         await view.switchToFrame();
 
