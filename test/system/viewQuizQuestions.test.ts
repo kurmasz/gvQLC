@@ -645,12 +645,11 @@ describe('viewQuizQuestions', function () {
         console.log(currWindow);
         console.log("Index of currWindow after click1: ", windows.indexOf(currWindow));
 
-        //view = new WebView();
+        view = new WebView();
         var driver = VSBrowser.instance.driver;
-        //await driver.switchTo().defaultContent();
+        await driver.switchTo().defaultContent();
 
         // Check the title and number of questions.
-        await driver.wait(until.elementLocated(By.css('h1')));
         console.log('1');
         const element = await view.findWebElement(By.css('h1'));
         console.log('2');
