@@ -630,6 +630,13 @@ describe('viewQuizQuestions', function () {
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
 
+        var driver = VSBrowser.instance.driver;
+        const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
+        await driver.wait(until.elementIsVisible(tab), 5_000);
+
+        view = new WebView();
+        await view.switchToFrame();
+
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
@@ -644,10 +651,6 @@ describe('viewQuizQuestions', function () {
         console.log(windows);
         console.log(currWindow);
         console.log("Index of currWindow after click1: ", windows.indexOf(currWindow));
-
-        view = new WebView();
-        var driver = VSBrowser.instance.driver;
-        await driver.switchTo().defaultContent();
 
         // Check the title and number of questions.
         console.log('1');
