@@ -651,10 +651,9 @@ describe('viewQuizQuestions', function () {
 
         console.log(windows);
         console.log(currWindow);
-        console.log("Index of currWindow after close: ", windows.indexOf(currWindow));
+        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
         var origWindow = windows.indexOf(currWindow);
 
-        await driver.wait(until.elementLocated(By.css('#filepath-0')));
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
 
@@ -682,12 +681,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('deletes the entry when clicked', async () => {
-        var tbody = await view.findWebElement(By.id('questionsTableBody'));
-        var trow = await tbody.findElement(By.id('row-0'));
-        var tds = await trow.findElements(By.css('td'));
-
         const driver = VSBrowser.instance.driver;
-        await driver.wait(until.elementLocated(By.css('#delete-0')));
         var deleteButton = await view.findWebElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
@@ -696,7 +690,6 @@ describe('viewQuizQuestions', function () {
         await deleteButton.click();
         
         view = new WebView();
-        await driver.wait(until.elementLocated(By.css('#delete-0')));
 
         await verifyQuestionCount(13);
         //await saveDataToFile('gvQLC.quizQuestions.json', data);
