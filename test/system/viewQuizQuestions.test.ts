@@ -19,6 +19,7 @@ import {ViewColors} from '../../src/sharedConstants';
 
 import { expect } from 'chai';
 import * as os from 'os';
+import { loadDataFromFile, saveDataToFile } from '../../src/utilities';
 
 describe('viewQuizQuestions', function () {
     let view: WebView;
@@ -640,6 +641,7 @@ describe('viewQuizQuestions', function () {
         var finalWindow = windows.indexOf(currWindow);
 
         expect(finalWindow).to.be.equal(origWindow);
+        view = new WebView();
     });
 
     it('opens the link correctly when clicked', async () => {
@@ -655,6 +657,8 @@ describe('viewQuizQuestions', function () {
         await driver.wait(until.elementLocated(By.css('#filepath-0')));
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
+
+        view = new WebView();
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
@@ -665,7 +669,8 @@ describe('viewQuizQuestions', function () {
         expect(newWindow).to.not.equal(origWindow);
         
         await driver.close();
-
+        
+        view = new WebView();
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
@@ -676,23 +681,31 @@ describe('viewQuizQuestions', function () {
         expect(finalWindow).to.be.equal(origWindow);
     });
 
-    it.skip('deletes the entry when clicked', async () => {
+    it('deletes the entry when clicked', async () => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#delete-0')));
-        var deleteButton = await tds[3].findElement(By.css('#delete-0'));
+        var deleteButton = await view.findWebElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
         //Need to find a way to correctly undo the delete after it's clicked
+        var data = await loadDataFromFile('gvQLC.quizQuestions.json');
         await deleteButton.click();
+        
+        view = new WebView();
         await driver.wait(until.elementLocated(By.css('#delete-0')));
 
         await verifyQuestionCount(13);
+        await saveDataToFile('gvQLC.quizQuestions.json', data);
+        var refreshBtn = await view.findWebElement(By.id("refreshBtn"));
+        await refreshBtn.click();
+
+        view = new WebView();
         //Somehow restore JSON to normal
-        //await verifyQuestionCount(14);
+        await verifyQuestionCount(14);
     });
 
     async function verifyFilterCount(expectedCount: number) {
