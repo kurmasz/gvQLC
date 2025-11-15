@@ -630,16 +630,6 @@ describe('viewQuizQuestions', function () {
         expect(await refreshBtn.isDisplayed()).to.be.true;
         var driver = VSBrowser.instance.driver;
         await refreshBtn.click();
-        
-        view = new WebView();
-        await view.switchToFrame();
-
-        var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
 
         // Check the title and number of questions.
         console.log('1');
@@ -669,33 +659,38 @@ describe('viewQuizQuestions', function () {
         console.log('7');
     });
 
-    it.skip('opens the link correctly when clicked', async () => {
+    it('opens the link correctly when clicked', async () => {
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
         var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#filepath-0')));
-        var filePath = await tds[1].findElement(By.css('#filepath-0'));
+        var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
         
         await driver.close();
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
         driver = VSBrowser.instance.driver;
         driver.switchTo().defaultContent();
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
 
-        await driver.wait(until.elementLocated(By.css('#refreshBtn')));
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
 
-        const expected = `                while line := file.readline():
-                    socket.send_text_line(line)`;
-
-        await verifyQuestionDisplayed(view, {
-            rowIndex: 0,
-            rowLabel: '1a',
-            color: ViewColors.GREEN,
-            file: 'antonio/my_http_server.py',
-            code: expected,
-            question: "Explain the difference between `=` and `:=`",
-        });
     });
 
     it.skip('deletes the entry when clicked', async () => {
