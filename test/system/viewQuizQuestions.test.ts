@@ -629,7 +629,10 @@ describe('viewQuizQuestions', function () {
         
         expect(await refreshBtn.isDisplayed()).to.be.true;
         var driver = VSBrowser.instance.driver;
+        const tab2 = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
+        await driver.wait(until.elementIsVisible(tab2), 5_000);
         await refreshBtn.click();
+        console.log('clicked');
         await new Promise(res => setTimeout(res, 10000)); // crude but useful
 
         const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
