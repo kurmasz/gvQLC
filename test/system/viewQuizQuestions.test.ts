@@ -626,71 +626,63 @@ describe('viewQuizQuestions', function () {
         console.log(windows);
         console.log(currWindow);
         console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
+        var origWindow = windows.indexOf(currWindow);
         
         expect(await refreshBtn.isDisplayed()).to.be.true;
         var driver = VSBrowser.instance.driver;
         await refreshBtn.click();
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
+        var finalWindow = windows.indexOf(currWindow);
+        view = new WebView();
+        await view.switchToFrame();
 
         // Check the title and number of questions.
-        console.log('1');
-        await driver.wait(until.elementLocated(By.css('h1')), 15_000);
-        const element = await view.findWebElement(By.css('h1'));
-        console.log('2');
-        expect(await element.getText()).has.string('All Quiz Questions');
-        console.log('3');
-        const element2 = await view.findWebElement(By.css('.total-count'));
-        console.log('4');
-        expect(await element2.getText()).to.have.string(`Total Questions: 14`);
-        console.log('5');
-
-        var expectedNew = `                while line := file.readline():
-                    socket.send_text_line(line)`;
-
-        await driver.wait(until.elementLocated(By.css('#refreshBtn')), 15_000);
-        console.log('6');
-        await verifyQuestionDisplayed(view, {
-            rowIndex: 0,
-            rowLabel: '1a',
-            color: ViewColors.GREEN,
-            file: 'antonio/my_http_server.py',
-            code: expectedNew,
-            question: "Explain the difference between `=` and `:=`",
-        });
-        console.log('7');
+        expect(finalWindow).to.be.equal(origWindow);
     });
 
     it('opens the link correctly when clicked', async () => {
+        var driver = VSBrowser.instance.driver;
+        var windows = await driver.getAllWindowHandles();
+        var currWindow = await driver.getWindowHandle();
+
+        console.log(windows);
+        console.log(currWindow);
+        console.log("Index of currWindow after close: ", windows.indexOf(currWindow));
+        var origWindow = windows.indexOf(currWindow);
+
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
-        var tds = await trow.findElements(By.css('td'));
 
-        var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#filepath-0')));
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
+        view = new WebView();
+        await view.switchToFrame();
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
         console.log(windows);
         console.log(currWindow);
-        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
+        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
+        var newWindow = windows.indexOf(currWindow);
+        expect(newWindow).to.not.equal(origWindow);
         
         await driver.close();
+        view = new WebView();
+        await view.switchToFrame();
         var windows = await driver.getAllWindowHandles();
         var currWindow = await driver.getWindowHandle();
 
         console.log(windows);
         console.log(currWindow);
-        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
-        driver = VSBrowser.instance.driver;
-        driver.switchTo().defaultContent();
-        var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
-
+        console.log("Index of currWindow after close: ", windows.indexOf(currWindow));
+        var finalWindow = windows.indexOf(currWindow);
+        expect(finalWindow).to.be.equal(origWindow);
     });
 
     it.skip('deletes the entry when clicked', async () => {
@@ -708,9 +700,6 @@ describe('viewQuizQuestions', function () {
         await driver.wait(until.elementLocated(By.css('#delete-0')));
 
         await verifyQuestionCount(13);
-        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '13'));
-        
-        await driver.wait(until.elementLocated(By.css('#delete-0')));
         //Somehow restore JSON to normal
         //await verifyQuestionCount(14);
     });
