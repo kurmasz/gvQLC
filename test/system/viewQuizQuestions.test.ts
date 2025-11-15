@@ -628,9 +628,10 @@ describe('viewQuizQuestions', function () {
         console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
         
         expect(await refreshBtn.isDisplayed()).to.be.true;
-        await refreshBtn.click();
-
         var driver = VSBrowser.instance.driver;
+        await refreshBtn.click();
+        await new Promise(res => setTimeout(res, 10000)); // crude but useful
+
         const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
         await driver.wait(until.elementIsVisible(tab), 5_000);
 
