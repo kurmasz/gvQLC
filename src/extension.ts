@@ -7,6 +7,7 @@ import { viewQuizQuestionsCommand } from './commands/viewQuizQuestions';
 import { addQuizQuestionCommand } from './commands/addQuizQuestion';
 import { setLLMApiKeyCommand } from './commands/setLLMApiKey';
 import { exportQuizCommand } from './commands/exportQuiz';
+import { generateQuestionsCommand } from './commands/generateQuestions';
 
 
 // This method is called when your extension is activated
@@ -27,7 +28,8 @@ export function activate(context: vscode.ExtensionContext) {
 		viewQuizQuestionsCommand,
 		addQuizQuestionCommand,
 		setLLMApiKeyCommand,
-		exportQuizCommand
+		exportQuizCommand,
+		generateQuestionsCommand
 	);
 }
 

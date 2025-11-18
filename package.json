@@ -44,6 +44,10 @@
       {
         "command": "gvqlc.exportQuiz",
         "title": "gvQLC: Export Quiz"
+      },
+      {
+        "command": "gvqlc.generateQuestions",
+        "title": "gvQLC: Generate Quiz Questions"
       }
     ],
     "configuration": {
