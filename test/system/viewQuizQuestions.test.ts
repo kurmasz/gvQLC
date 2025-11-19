@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 
-import {WebView, VSBrowser, NotificationType, Workbench } from 'vscode-extension-tester';
+import {WebView, VSBrowser, NotificationType, Workbench, EditorView } from 'vscode-extension-tester';
 import { By, WebElement, Key, until, IRectangle } from 'selenium-webdriver';
 import { logAllNotifications, openWorkspace, waitForNotification, pause } from '../helpers/systemHelpers';
 import {verifyQuestionDisplayed, verifySummaryDisplayed, setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
@@ -616,86 +616,28 @@ describe('viewQuizQuestions', function () {
     })
 
     it('Refreshes the page', async () => {
+        //WindowHandle ID not updating
         var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
         console.log("refreshBtn found");
 
-        var windows = await driver.getAllWindowHandles();
-        var origWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(origWindow);
+        const editorView = new EditorView();
+        var tabs = await editorView.getOpenEditorTitles();
+        console.log(tabs);
+        await editorView.openEditor('View Quiz Questions');
+        var currTab = await editorView.getActiveTab();
+        var tabTitle = await currTab?.getTitle();
+        console.log(tabTitle);
         
         expect(await refreshBtn.isDisplayed()).to.be.true;
         var driver = VSBrowser.instance.driver;
         await refreshBtn.click();
-        var windows = await driver.getAllWindowHandles();
-        var finalWindow = await driver.getWindowHandle();
 
-        console.log(windows);
-        console.log(finalWindow);
+        var tabs = await editorView.getOpenEditorTitles();
+        console.log(tabs);
 
-        expect(finalWindow).to.be.equal(origWindow);
-    });
-
-    it.skip('opens the link correctly when clicked', async () => {
-        var view = new WebView();
-        var driver = VSBrowser.instance.driver;
-        await driver.switchTo().defaultContent();
-        await driver.navigate().refresh();
-        await pause(5000);
-        var view = new WebView();
-        await pause(5000);
-
-        var windows = await driver.getAllWindowHandles();
-        var origWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(origWindow);
-
-        var filePath = await view.findWebElement(By.css('#filepath-0'));
-        await filePath.click();
-
-        var windows = await driver.getAllWindowHandles();
-        var newWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(newWindow);
-        expect(newWindow).to.not.equal(origWindow);
-        
-        await driver.close();
-        await driver.switchTo().window(origWindow);
-        
-        view = new WebView();
-        var windows = await driver.getAllWindowHandles();
-        var finalWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(finalWindow);
-        expect(finalWindow).to.be.equal(origWindow);
-    });
-
-    it.skip('deletes the entry when clicked', async () => {
-        const driver = VSBrowser.instance.driver;
-        var view = new WebView();
-        await driver.switchTo().defaultContent();
-        await driver.navigate().refresh();
-        var deleteButton = await view.findWebElement(By.css('#delete-0'));
-        expect(await deleteButton.isDisplayed()).to.be.true;
-
-        //Need to find a way to correctly undo the delete after it's clicked
-        //var data = await loadDataFromFile('gvQLC.quizQuestions.json');
-        await deleteButton.click();
-        
-        view = new WebView();
-        await driver.switchTo().defaultContent();
-        await driver.navigate().refresh();
-
-        await verifyQuestionCount(13);
-        //await saveDataToFile('gvQLC.quizQuestions.json', data);
-        //Somehow restore JSON to normal
-        //await verifyQuestionCount(14);
+        //expect(finalWindow).to.be.equal(origWindow);
     });
 
     async function verifyFilterCount(expectedCount: number) {

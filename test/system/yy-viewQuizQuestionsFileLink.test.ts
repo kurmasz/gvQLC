@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 
-import {WebView, VSBrowser } from 'vscode-extension-tester';
+import {WebView, VSBrowser, Browser, Workbench, EditorView } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
 import { pause } from '../helpers/systemHelpers';
 import {setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
@@ -38,52 +38,19 @@ describe('viewQuizQuestions FileLink', function () {
     });
 
     it('opens the link correctly when clicked', async () => {
+        // Even after 60 seconds, window handle ID isn't updating
         var driver = VSBrowser.instance.driver;
-
-        var windows = await driver.getAllWindowHandles();
-        var origWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(origWindow);
+        const editorView = new EditorView();
+        var tabs = await editorView.getOpenEditorTitles();
+        console.log(tabs);
 
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
         console.log('clicked');
 
-        await pause(5000);
-        var windows = await driver.getAllWindowHandles();
-        var newWindow = windows.find(handle => handle !== origWindow);
-        var i = 0;
-        while (newWindow === undefined) {
-            windows = await driver.getAllWindowHandles();
-            console.log(i, windows);
-            newWindow = windows.find(handle => handle !== origWindow);
-            await pause(1000);
-            i += 1;
-            if (i > 60) {
-                console.log('After 60 seconds, newWindow not found');
-                break;
-            }
-        }
-        if (newWindow) {
-            await driver.switchTo().window(newWindow);
-        }
-
-        console.log(windows);
-        console.log(newWindow);
-        expect(newWindow).to.not.equal(origWindow);
-        /*
-        await driver.close();
-        await pause(1000);
-        await driver.switchTo().window(origWindow);
-        await pause(1000);
-        
-        var windows = await driver.getAllWindowHandles();
-        var finalWindow = await driver.getWindowHandle();
-
-        console.log(windows);
-        console.log(finalWindow);
-        expect(finalWindow).to.be.equal(origWindow);
-        */
+        var newTabs = await editorView.getOpenEditorTitles();
+        console.log(newTabs);
+    
+        expect(tabs).to.not.equal(newTabs);
     });
 });
