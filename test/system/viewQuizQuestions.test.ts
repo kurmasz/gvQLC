@@ -640,8 +640,8 @@ describe('viewQuizQuestions', function () {
     });
 
     view = new WebView();
-    var driver = VSBrowser.instance.driver;
-    driver.switchTo().defaultContent();
+    //var driver = VSBrowser.instance.driver;
+    //driver.switchTo().defaultContent();
 
     it('opens the link correctly when clicked', async () => {
         var driver = VSBrowser.instance.driver;
@@ -674,8 +674,8 @@ describe('viewQuizQuestions', function () {
     });
 
     view = new WebView();
-    driver = VSBrowser.instance.driver;
-    driver.switchTo().defaultContent();
+    //driver = VSBrowser.instance.driver;
+    //driver.switchTo().defaultContent();
 
     it('deletes the entry when clicked', async () => {
         const driver = VSBrowser.instance.driver;
