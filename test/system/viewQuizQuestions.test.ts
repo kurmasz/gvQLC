@@ -7,7 +7,7 @@
  * IMPORTANT: Remember: VSCode and the extension are _not_ re-set between tests.
  * these tests must run in order.
  * 
- * (C) 2025 Zachary Kurmas
+ * (C) 2025 Zachary Kurmas, Phuc Le
  * *********************************************************************************/
 
 
@@ -642,6 +642,7 @@ describe('viewQuizQuestions', function () {
 
         expect(finalWindow).to.be.equal(origWindow);
         view = new WebView();
+        ({ view, summaryContainer } = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
     it('opens the link correctly when clicked', async () => {
@@ -681,6 +682,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('deletes the entry when clicked', async () => {
+        ({ view, summaryContainer } = await setUpQuizQuestionWebView('cis371_server', '14'));
         const driver = VSBrowser.instance.driver;
         var deleteButton = await view.findWebElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
