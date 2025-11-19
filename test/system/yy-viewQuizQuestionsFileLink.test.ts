@@ -18,7 +18,7 @@ import {setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 
 import { expect } from 'chai';
 
-describe('viewQuizQuestionsFileLink', function () {
+describe('viewQuizQuestions FileLink', function () {
     let view: WebView;
     let summaryContainer: WebElement;
 
@@ -48,11 +48,18 @@ describe('viewQuizQuestionsFileLink', function () {
 
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
+
         await pause(1000);
-        await driver.switchTo().defaultContent();
+        await driver.wait(async () => {
+            const handles = await driver.getAllWindowHandles();
+            return handles.length > 1;
+        }, 10000); // Timeout after 10 seconds
 
         var windows = await driver.getAllWindowHandles();
-        var newWindow = await driver.getWindowHandle();
+        const newWindow = windows.find(handle => handle !== origWindow);
+        if (newWindow) {
+            await driver.switchTo().window(newWindow);
+        }
 
         console.log(windows);
         console.log(newWindow);
@@ -60,7 +67,13 @@ describe('viewQuizQuestionsFileLink', function () {
         
         await driver.close();
         await pause(1000);
+        await driver.wait(async () => {
+            const handles = await driver.getAllWindowHandles();
+            return handles.length === 0;
+        }, 10000); // Timeout after 10 seconds
+
         await driver.switchTo().window(origWindow);
+        await pause(1000);
         
         var windows = await driver.getAllWindowHandles();
         var finalWindow = await driver.getWindowHandle();

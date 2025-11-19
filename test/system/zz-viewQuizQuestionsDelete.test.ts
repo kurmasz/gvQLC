@@ -18,7 +18,7 @@ import { setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
 
 import { expect } from 'chai';
 
-describe('viewQuizQuestionsFileLink', function () {
+describe('viewQuizQuestions Delete', function () {
     let view: WebView;
     let summaryContainer: WebElement;
 
