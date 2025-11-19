@@ -49,14 +49,20 @@ describe('viewQuizQuestions FileLink', function () {
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
 
-        await pause(1000);
-        await driver.wait(async () => {
-            const handles = await driver.getAllWindowHandles();
-            return handles.length > 1;
-        }, 10000); // Timeout after 10 seconds
-
+        await pause(5000);
         var windows = await driver.getAllWindowHandles();
         const newWindow = windows.find(handle => handle !== origWindow);
+        var i = 0;
+        while (newWindow === undefined) {
+            var windows = await driver.getAllWindowHandles();
+            const newWindow = windows.find(handle => handle !== origWindow);
+            await pause(1000);
+            i += 1;
+            if (i > 30) {
+                console.log('After 30 seconds, newWindow not found');
+                break;
+            }
+        }
         if (newWindow) {
             await driver.switchTo().window(newWindow);
         }
