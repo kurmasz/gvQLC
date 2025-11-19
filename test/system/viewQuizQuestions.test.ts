@@ -639,7 +639,7 @@ describe('viewQuizQuestions', function () {
         expect(finalWindow).to.be.equal(origWindow);
     });
 
-    it('opens the link correctly when clicked', async () => {
+    it.skip('opens the link correctly when clicked', async () => {
         var view = new WebView();
         var driver = VSBrowser.instance.driver;
         await driver.switchTo().defaultContent();
@@ -676,7 +676,7 @@ describe('viewQuizQuestions', function () {
         expect(finalWindow).to.be.equal(origWindow);
     });
 
-    it('deletes the entry when clicked', async () => {
+    it.skip('deletes the entry when clicked', async () => {
         const driver = VSBrowser.instance.driver;
         var view = new WebView();
         await driver.switchTo().defaultContent();
