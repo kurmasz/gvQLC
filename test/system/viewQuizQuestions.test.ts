@@ -639,12 +639,10 @@ describe('viewQuizQuestions', function () {
         expect(finalWindow).to.be.equal(origWindow);
     });
 
-    view = new WebView();
-    //var driver = VSBrowser.instance.driver;
-    //driver.switchTo().defaultContent();
-
     it('opens the link correctly when clicked', async () => {
+        var view = new WebView();
         var driver = VSBrowser.instance.driver;
+        await driver.switchTo().defaultContent();
         var windows = await driver.getAllWindowHandles();
         var origWindow = await driver.getWindowHandle();
 
@@ -673,12 +671,10 @@ describe('viewQuizQuestions', function () {
         expect(finalWindow).to.be.equal(origWindow);
     });
 
-    view = new WebView();
-    //driver = VSBrowser.instance.driver;
-    //driver.switchTo().defaultContent();
-
     it('deletes the entry when clicked', async () => {
         const driver = VSBrowser.instance.driver;
+        var view = new WebView();
+        await driver.switchTo().defaultContent();
         var deleteButton = await view.findWebElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
