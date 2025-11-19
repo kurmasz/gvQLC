@@ -622,67 +622,62 @@ describe('viewQuizQuestions', function () {
         console.log("refreshBtn found");
 
         var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
+        var origWindow = await driver.getWindowHandle();
 
         console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
-        var origWindow = windows.indexOf(currWindow);
+        console.log(origWindow);
         
         expect(await refreshBtn.isDisplayed()).to.be.true;
         var driver = VSBrowser.instance.driver;
         await refreshBtn.click();
         var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
+        var finalWindow = await driver.getWindowHandle();
 
         console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
-        var finalWindow = windows.indexOf(currWindow);
+        console.log(finalWindow);
 
         expect(finalWindow).to.be.equal(origWindow);
-        view = new WebView();
-        ({ view, summaryContainer } = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
+
+    view = new WebView();
+    var driver = VSBrowser.instance.driver;
+    driver.switchTo().defaultContent();
 
     it('opens the link correctly when clicked', async () => {
         var driver = VSBrowser.instance.driver;
         var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
+        var origWindow = await driver.getWindowHandle();
 
         console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow before click: ", windows.indexOf(currWindow));
-        var origWindow = windows.indexOf(currWindow);
+        console.log(origWindow);
 
         var filePath = await view.findWebElement(By.css('#filepath-0'));
         await filePath.click();
 
-        view = new WebView();
         var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
+        var newWindow = await driver.getWindowHandle();
 
         console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow after click: ", windows.indexOf(currWindow));
-        var newWindow = windows.indexOf(currWindow);
+        console.log(newWindow);
         expect(newWindow).to.not.equal(origWindow);
         
         await driver.close();
+        await driver.switchTo().window(origWindow);
         
         view = new WebView();
         var windows = await driver.getAllWindowHandles();
-        var currWindow = await driver.getWindowHandle();
+        var finalWindow = await driver.getWindowHandle();
 
         console.log(windows);
-        console.log(currWindow);
-        console.log("Index of currWindow after close: ", windows.indexOf(currWindow));
-        var finalWindow = windows.indexOf(currWindow);
+        console.log(finalWindow);
         expect(finalWindow).to.be.equal(origWindow);
     });
 
+    view = new WebView();
+    driver = VSBrowser.instance.driver;
+    driver.switchTo().defaultContent();
+
     it('deletes the entry when clicked', async () => {
-        ({ view, summaryContainer } = await setUpQuizQuestionWebView('cis371_server', '14'));
         const driver = VSBrowser.instance.driver;
         var deleteButton = await view.findWebElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
@@ -692,13 +687,10 @@ describe('viewQuizQuestions', function () {
         await deleteButton.click();
         
         view = new WebView();
+        await driver.switchTo().defaultContent();
 
         await verifyQuestionCount(13);
         //await saveDataToFile('gvQLC.quizQuestions.json', data);
-        var refreshBtn = await view.findWebElement(By.id("refreshBtn"));
-        await refreshBtn.click();
-
-        view = new WebView();
         //Somehow restore JSON to normal
         //await verifyQuestionCount(14);
     });
