@@ -623,8 +623,9 @@ describe('viewQuizQuestions', function () {
         console.log("refreshBtn found");
 
         const workbench = new Workbench();
+        console.log('workbench');
         const editorView = workbench.getEditorView();
-
+        console.log('editorView');
         var tabs = await editorView.getOpenEditorTitles();
         console.log(tabs);
         await editorView.openEditor('View Quiz Questions');
