@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 
-import { WebView, VSBrowser, EditorView } from 'vscode-extension-tester';
+import { WebView, VSBrowser, Workbench, EditorView } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
 import { pause } from '../helpers/systemHelpers';
 import { setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
@@ -46,7 +46,8 @@ describe('viewQuizQuestions Delete', function () {
         //var data = await loadDataFromFile('gvQLC.quizQuestions.json');
         await deleteButton.click();
         
-        const editorView = new EditorView();
+        const workbench = new Workbench();
+        const editorView = workbench.getEditorView();
         await editorView.openEditor('View Quiz Questions');
 
         await verifyQuestionCount(13);

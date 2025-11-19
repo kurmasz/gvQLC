@@ -40,7 +40,8 @@ describe('viewQuizQuestions FileLink', function () {
     it('opens the link correctly when clicked', async () => {
         // Even after 60 seconds, window handle ID isn't updating
         var driver = VSBrowser.instance.driver;
-        const editorView = new EditorView();
+        const workbench = new Workbench();
+        const editorView = workbench.getEditorView();
         var tabs = await editorView.getOpenEditorTitles();
         console.log(tabs);
 

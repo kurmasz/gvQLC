@@ -622,7 +622,9 @@ describe('viewQuizQuestions', function () {
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
         console.log("refreshBtn found");
 
-        const editorView = new EditorView();
+        const workbench = new Workbench();
+        const editorView = workbench.getEditorView();
+
         var tabs = await editorView.getOpenEditorTitles();
         console.log(tabs);
         await editorView.openEditor('View Quiz Questions');
