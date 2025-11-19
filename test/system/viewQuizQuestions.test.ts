@@ -643,6 +643,11 @@ describe('viewQuizQuestions', function () {
         var view = new WebView();
         var driver = VSBrowser.instance.driver;
         await driver.switchTo().defaultContent();
+        await driver.navigate().refresh();
+        await pause(5000);
+        var view = new WebView();
+        await pause(5000);
+
         var windows = await driver.getAllWindowHandles();
         var origWindow = await driver.getWindowHandle();
 
@@ -675,6 +680,7 @@ describe('viewQuizQuestions', function () {
         const driver = VSBrowser.instance.driver;
         var view = new WebView();
         await driver.switchTo().defaultContent();
+        await driver.navigate().refresh();
         var deleteButton = await view.findWebElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
@@ -684,6 +690,7 @@ describe('viewQuizQuestions', function () {
         
         view = new WebView();
         await driver.switchTo().defaultContent();
+        await driver.navigate().refresh();
 
         await verifyQuestionCount(13);
         //await saveDataToFile('gvQLC.quizQuestions.json', data);
