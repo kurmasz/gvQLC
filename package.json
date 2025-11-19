@@ -55,7 +55,7 @@
     "test": "npm run test:system"
   },
   "devDependencies": {
-    "@stylistic/eslint-plugin": "^5.6.0",
+    "@stylistic/eslint-plugin": "^5.6.1",
     "@types/chai": "^4.3.16",
     "@types/fs-extra": "^11.0.4",
     "@types/mocha": "^10.0.10",
