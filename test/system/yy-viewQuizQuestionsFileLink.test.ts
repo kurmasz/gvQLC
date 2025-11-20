@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 
-import {WebView, VSBrowser, Browser, Workbench, EditorView } from 'vscode-extension-tester';
+import {WebView, VSBrowser, Browser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
 import { pause } from '../helpers/systemHelpers';
 import {setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
@@ -40,7 +40,10 @@ describe('viewQuizQuestions FileLink', function () {
 
     it('opens the link correctly when clicked', async () => {
         var driver = VSBrowser.instance.driver;
-        const editorView = workbench.getEditorView();
+        var browser = VSBrowser.instance;
+        browser.waitForWorkbench();
+
+        var editorView = workbench.getEditorView();
         var tabs = await editorView.getOpenTabs();
         //var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding .monaco-workbench element
         console.log(tabs);
@@ -49,6 +52,10 @@ describe('viewQuizQuestions FileLink', function () {
         await filePath.click();
         console.log('clicked');
 
+        await driver.wait(until.stalenessOf(workbench));
+        await browser.waitForWorkbench();
+
+        editorView = workbench.getEditorView();
         var newTabs = await editorView.getOpenEditorTitles();
         console.log(newTabs);
     

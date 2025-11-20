@@ -618,11 +618,14 @@ describe('viewQuizQuestions', function () {
 
     it('Refreshes the page', async () => {
         var driver = VSBrowser.instance.driver;
+        var browser = VSBrowser.instance;
+        browser.waitForWorkbench();
+
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
         console.log("refreshBtn found");
 
-        const editorView = workbench.getEditorView();
+        var editorView = workbench.getEditorView();
         console.log('editorView');
         var tabs = await editorView.getOpenTabs();
         //var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding .monaco-workbench element
@@ -633,11 +636,14 @@ describe('viewQuizQuestions', function () {
         console.log(tabTitle);
         
         expect(await refreshBtn.isDisplayed()).to.be.true;
-        var driver = VSBrowser.instance.driver;
         await refreshBtn.click();
 
-        var tabs = await editorView.getOpenEditorTitles();
-        console.log(tabs);
+        await driver.wait(until.stalenessOf(workbench));
+        await browser.waitForWorkbench();
+
+        editorView = workbench.getEditorView();
+        var tabsNew = await editorView.getOpenEditorTitles();
+        console.log(tabsNew);
 
         expect(tabTitle).to.be.equal('View Quiz Questions');
     });

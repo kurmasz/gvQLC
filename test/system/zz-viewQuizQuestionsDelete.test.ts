@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 
-import { WebView, VSBrowser, Workbench, EditorView } from 'vscode-extension-tester';
+import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
 import { pause } from '../helpers/systemHelpers';
 import { setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
@@ -40,12 +40,18 @@ describe('viewQuizQuestions Delete', function () {
 
     it('deletes the entry when clicked', async () => {
         const driver = VSBrowser.instance.driver;
+        var browser = VSBrowser.instance;
+        browser.waitForWorkbench();
+
         var deleteButton = await view.findWebElement(By.css('#delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
         //Need to find a way to correctly undo the delete after it's clicked
         //var data = await loadDataFromFile('gvQLC.quizQuestions.json');
         await deleteButton.click();
+
+        await driver.wait(until.stalenessOf(workbench));
+        await browser.waitForWorkbench();
         
         const editorView = workbench.getEditorView();
         await editorView.openEditor('View Quiz Questions');
