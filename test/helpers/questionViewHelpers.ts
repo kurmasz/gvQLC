@@ -17,12 +17,14 @@ import { expect } from 'chai';
 export async function setUpQuizQuestionWebView(folder: string, expectedQuestionTotal: string): Promise<{
     view: WebView;
     summaryContainer: WebElement;
+    workbench: Workbench;
 }> {
     const driver = VSBrowser.instance.driver;
     await openWorkspace(folder);
 
     // Run the command
-    await (new Workbench()).executeCommand('gvQLC: View Quiz Questions');
+    const workbench = new Workbench();
+    await workbench.executeCommand('gvQLC: View Quiz Questions');
     await new Promise(res => setTimeout(res, 10000)); // crude but useful
 
     // const tabs = await driver.findElements(By.css('.tab-label'));
@@ -44,7 +46,7 @@ export async function setUpQuizQuestionWebView(folder: string, expectedQuestionT
 
     const summaryContainer = await view.findWebElement(By.css('#summaryTableContainer'));
 
-    return { view, summaryContainer };
+    return { view, summaryContainer, workbench };
 }
 
 type QuestionData = {

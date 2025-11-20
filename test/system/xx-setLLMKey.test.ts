@@ -24,8 +24,6 @@ import {
   pause,
   logAllNotifications,
   waitForNotification,
-  readFile,
-  openFile,
   openWorkspace,
   openTempWorkspace,
   assertNumNotifications,
