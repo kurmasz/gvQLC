@@ -617,7 +617,6 @@ describe('viewQuizQuestions', function () {
     })
 
     it('Refreshes the page', async () => {
-        //WindowHandle ID not updating
         var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
@@ -625,7 +624,8 @@ describe('viewQuizQuestions', function () {
 
         const editorView = workbench.getEditorView();
         console.log('editorView');
-        var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding monaco.workbench
+        var tabs = await editorView.getOpenTabs();
+        //var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding .monaco-workbench element
         console.log(tabs);
         await editorView.openEditor('View Quiz Questions');
         var currTab = await editorView.getActiveTab();

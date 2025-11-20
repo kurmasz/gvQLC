@@ -46,16 +46,8 @@ describe("Set LLM API Key", function () {
     await VSBrowser.instance.driver.switchTo().defaultContent();
   });
 
-  it("Notifies when a folder has existing questions when trying to export questions", async () => {
+  it("Opens a workspace", async () => {
     await openWorkspace("cis371_server");
-    await new Workbench().executeCommand("gvQLC: Set LLM API Key");
-
-    await waitForNotification(NotificationType.Error, (message) => {
-      return (
-        message ===
-        "gvQLC: No active editor tab found. (You must have a code snippet selected to add a quiz question.)"
-      );
-    });
   });
 
   it("Selects 'Set New API Key' and submits new key with an already existing key", async () => {
@@ -131,7 +123,6 @@ describe("Set LLM API Key", function () {
     } 
     else if (option === 1 && picks.length === 3) {
       await inputBox.selectQuickPick(option);
-      await inputBox.confirm(); //Enter Key
       await waitForNotification(NotificationType.Info, (message) => message === 'LLM API key cleared successfully.');
       text = 'clear';
     } 

@@ -39,10 +39,10 @@ describe('viewQuizQuestions FileLink', function () {
     });
 
     it('opens the link correctly when clicked', async () => {
-        // Even after 60 seconds, window handle ID isn't updating
         var driver = VSBrowser.instance.driver;
         const editorView = workbench.getEditorView();
-        var tabs = await editorView.getOpenEditorTitles();
+        var tabs = await editorView.getOpenTabs();
+        //var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding .monaco-workbench element
         console.log(tabs);
 
         var filePath = await view.findWebElement(By.css('#filepath-0'));
