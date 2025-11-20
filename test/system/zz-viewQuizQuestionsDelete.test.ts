@@ -21,6 +21,7 @@ import { expect } from 'chai';
 describe('viewQuizQuestions Delete', function () {
     let view: WebView;
     let summaryContainer: WebElement;
+    let workbench: Workbench;
 
     this.timeout(150_000);
 
@@ -34,7 +35,7 @@ describe('viewQuizQuestions Delete', function () {
     //
     ///////////////////////// 
     it('opens the folder, runs the command and shows the title and total questions', async () => {      
-        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
+        ({view, summaryContainer, workbench} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
     it('deletes the entry when clicked', async () => {
@@ -46,7 +47,6 @@ describe('viewQuizQuestions Delete', function () {
         //var data = await loadDataFromFile('gvQLC.quizQuestions.json');
         await deleteButton.click();
         
-        const workbench = new Workbench();
         const editorView = workbench.getEditorView();
         await editorView.openEditor('View Quiz Questions');
 

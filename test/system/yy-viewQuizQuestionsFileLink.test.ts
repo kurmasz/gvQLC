@@ -21,6 +21,7 @@ import { expect } from 'chai';
 describe('viewQuizQuestions FileLink', function () {
     let view: WebView;
     let summaryContainer: WebElement;
+    let workbench: Workbench;
 
     this.timeout(150_000);
 
@@ -34,13 +35,12 @@ describe('viewQuizQuestions FileLink', function () {
     //
     ///////////////////////// 
     it('opens the folder, runs the command and shows the title and total questions', async () => {      
-        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
+        ({view, summaryContainer, workbench} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
     it('opens the link correctly when clicked', async () => {
         // Even after 60 seconds, window handle ID isn't updating
         var driver = VSBrowser.instance.driver;
-        const workbench = new Workbench();
         const editorView = workbench.getEditorView();
         var tabs = await editorView.getOpenEditorTitles();
         console.log(tabs);

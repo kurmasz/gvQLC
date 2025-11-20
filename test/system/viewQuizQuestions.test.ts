@@ -24,6 +24,7 @@ import { loadDataFromFile, saveDataToFile } from '../../src/utilities';
 describe('viewQuizQuestions', function () {
     let view: WebView;
     let summaryContainer: WebElement;
+    let workbench: Workbench;
 
     this.timeout(150_000);
 
@@ -49,7 +50,7 @@ describe('viewQuizQuestions', function () {
     //
     ///////////////////////// 
     it('opens the folder, runs the command and shows the title and total questions', async () => {      
-        ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
+        ({view, summaryContainer, workbench} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
     it('displays the first queston', async () => {
@@ -622,11 +623,9 @@ describe('viewQuizQuestions', function () {
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
         console.log("refreshBtn found");
 
-        const workbench = new Workbench();
-        console.log('workbench');
         const editorView = workbench.getEditorView();
         console.log('editorView');
-        var tabs = await editorView.getOpenEditorTitles();
+        var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding monaco.workbench
         console.log(tabs);
         await editorView.openEditor('View Quiz Questions');
         var currTab = await editorView.getActiveTab();
@@ -640,7 +639,7 @@ describe('viewQuizQuestions', function () {
         var tabs = await editorView.getOpenEditorTitles();
         console.log(tabs);
 
-        //expect(finalWindow).to.be.equal(origWindow);
+        expect(tabTitle).to.be.equal('View Quiz Questions');
     });
 
     async function verifyFilterCount(expectedCount: number) {
@@ -653,18 +652,13 @@ describe('viewQuizQuestions', function () {
         expect(await element.getText()).to.equal('');
     }
 
-    async function verifyQuestionCount(expectedCount: number) {
-        const element = await view.findWebElement(By.className('total-count'));
-        expect(await element.getText()).to.equal(`Total Questions: ${expectedCount}`);
-    }
-
     function overlap(rect1: IRectangle, rect2: IRectangle) {
         if (rect1.x + rect1.width < rect2.x || rect2.x + rect2.width < rect1.x) {
-            console.log(`${rect1.x} + ${rect1.width} < ${rect2.x} || ${rect2.x} + ${rect2.width} < ${rect1.x}`);
+            //console.log(`${rect1.x} + ${rect1.width} < ${rect2.x} || ${rect2.x} + ${rect2.width} < ${rect1.x}`);
             return true
         }
         if (rect1.y + rect1.height < rect2.y || rect2.y + rect2.height < rect1.y) {
-            console.log(`${rect1.y} + ${rect1.height} < ${rect2.y} || ${rect2.y} + ${rect2.height} < ${rect1.y}`);
+            //console.log(`${rect1.y} + ${rect1.height} < ${rect2.y} || ${rect2.y} + ${rect2.height} < ${rect1.y}`);
             return true
         }
         console.log("No overlap");
