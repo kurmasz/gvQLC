@@ -50,6 +50,7 @@ describe('viewQuizQuestions Delete', function () {
         //var data = await loadDataFromFile('gvQLC.quizQuestions.json');
         await deleteButton.click();
 
+        workbench = new Workbench();
         await driver.wait(until.stalenessOf(workbench));
         await browser.waitForWorkbench();
         

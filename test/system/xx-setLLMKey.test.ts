@@ -110,6 +110,8 @@ describe("Set LLM API Key", function () {
     if (option === 0 && picks.length === 3) {
       await inputBox.selectQuickPick(option);
       await inputBox.sendKeys("V");
+      await pause(2000);
+      
       if (final_key === 'enter') {
         await inputBox.confirm(); //Enter Key
         await waitForNotification(NotificationType.Info, (message) => message === 'LLM API key stored securely.');
@@ -134,6 +136,7 @@ describe("Set LLM API Key", function () {
     else if (option === 0 && picks.length === 2) {
       await inputBox.selectQuickPick(option);
       await inputBox.sendKeys("V");
+      await pause(2000);
       
       if (final_key === 'enter') {
         await inputBox.confirm(); //Enter Key

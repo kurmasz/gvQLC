@@ -638,6 +638,7 @@ describe('viewQuizQuestions', function () {
         expect(await refreshBtn.isDisplayed()).to.be.true;
         await refreshBtn.click();
 
+        workbench = new Workbench();
         await driver.wait(until.stalenessOf(workbench));
         await browser.waitForWorkbench();
 

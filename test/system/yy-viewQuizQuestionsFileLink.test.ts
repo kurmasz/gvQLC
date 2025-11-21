@@ -52,6 +52,7 @@ describe('viewQuizQuestions FileLink', function () {
         await filePath.click();
         console.log('clicked');
 
+        workbench = new Workbench();
         await driver.wait(until.stalenessOf(workbench));
         await browser.waitForWorkbench();
 
