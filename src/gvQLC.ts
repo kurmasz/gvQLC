@@ -60,7 +60,7 @@ export function setWorkspaceRoot(root: vscode.WorkspaceFolder) {
 
 //
 // Config
-//
+// 
 let configData = null as ConfigData | null;
 export async function config() : Promise<ConfigData> {
     if (!configData) {

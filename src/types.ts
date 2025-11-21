@@ -18,7 +18,12 @@ export type PersonalizedQuestionsData = {
     excludeFromQuiz: boolean
 };
 
+// currently breaks automated tests as export flags are new
 export interface ConfigData {
   submissionRoot: string | null;
   studentNameMapping: null | Record<string, string>;
+  markdownFlag?: boolean | null;
+  pdfFlag?: boolean | null;
+  singlePageFlag?: boolean | null;
+  includeAnswersFlag?: boolean | null;
 }

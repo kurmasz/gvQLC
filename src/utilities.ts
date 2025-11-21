@@ -79,14 +79,21 @@ export function loadDataFromFile(fileName: string) {
 }
 
 export async function loadConfigData(): Promise<ConfigData> {
+  // initialize default config in case file needs to be created
   let defaultConfig = {} as ConfigData;
+  defaultConfig.submissionRoot = null;
+  defaultConfig.studentNameMapping = null;
+  defaultConfig.markdownFlag = false;
+  defaultConfig.pdfFlag = false;
+  defaultConfig.singlePageFlag = false;
+  defaultConfig.includeAnswersFlag = false;
   try {
     let configFileUri = null;
     try {
       const fileUri = vscode.Uri.joinPath(gvQLC.workspaceRoot().uri, configFileName);
       await vscode.workspace.fs.stat(fileUri);
       configFileUri = fileUri;
-    } catch (err) { }
+    } catch (err) {}
 
     if (configFileUri) {
       const fileData = await vscode.workspace.fs.readFile(configFileUri);
@@ -95,10 +102,14 @@ export async function loadConfigData(): Promise<ConfigData> {
       return config;
     } else {
       // TODO: Test me
-      vscode.window.showErrorMessage(
-        'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
-        { modal: true }
-      );
+
+      // can remove err, as we are creating a new config file here
+      // likely will break automated tests that check for error handling
+      await saveDataToFile(configFileName, JSON.stringify(defaultConfig, null, 2), false);
+      // vscode.window.showErrorMessage(
+      //   'No config file found. Press Command + Shift + P and select "Create Sample Config File".',
+      //   { modal: true }
+      // );
       return defaultConfig;
     }
   } catch (error) {
@@ -205,8 +216,10 @@ export async function getAllStudentNames(config: ConfigData) {
   const allStudents = new Set<string>();
   let submissionDirectory = gvQLC.workspaceRoot().uri;
   if (config.submissionRoot) {
+    console.log("subDir config exists");
     submissionDirectory = vscode.Uri.joinPath(submissionDirectory, config.submissionRoot);
   }
+  console.log("after");
   const files = await vscode.workspace.fs.readDirectory(submissionDirectory);
   for (const [name, type] of files) {
     if (type === vscode.FileType.Directory && !name.startsWith('.')) {
@@ -215,7 +228,6 @@ export async function getAllStudentNames(config: ConfigData) {
   }
   return Array.from(allStudents).sort();
 }
-
 
 export function renderMustache(filename: string, data: any): string {
   const templatePath = path.join(gvQLC.context().extensionPath, 'views', filename);
@@ -267,34 +279,6 @@ export async function saveUserSettingsFile(filename: string, darkMode: any, cont
   const output = useJSON ? JSON.stringify(toWrite, null, 2) : JSON.stringify({darkMode: darkMode, contrastMode: contrastMode});
   const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${filename}`);
   await vscode.workspace.fs.writeFile(uri, Buffer.from(output));
-}
-
-// Function to generate HTML quiz string export for a student
-export function generateHTMLQuizExport(studentName: string, questions: any[]): string {
-  const header = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Export for ${studentName}</title>
-  <style>
-  </style>
-</head>
-<body>`;
-  const footer = `</body>
-</html>`;
-  const quizTitle = `<h1>Quiz for ${studentName}</h1>\n`;
-  let retHTML = header + quizTitle;
-  for (let i = 0; i < questions.length; i++) {
-    const question = questions[i];
-    retHTML += `<div class="question-block">\n`;
-    retHTML += `<h2>Question ${i + 1}:</h2>\n`;
-    retHTML += `<pre><code>${question.codeContext}</code></pre>\n`;
-    retHTML += `<p>${question.question}</p>\n`;
-    retHTML += `</div>\n<hr>\n`;
-  }
-  retHTML += footer;
-  return retHTML;
 }
 
 export function chooseQuestionColor(numQuestionsForStudent: number, modeQuestionsForStudent: number) {

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Export Quiz</title>
+        <style>
+            .body {
+                font-family: Times, "Times New Roman", serif;
+                background-color: rgba(0, 0, 0, 0);
+                text-align: center;
+                justify-content: center;
+                display: flex;
+                position: relative;
+                color: rgb(0, 0, 0);
+            }
+            .options {
+                background-color: rgba(180, 180, 180, 0.649);
+            }
+        </style>
+    </head>
+    <body class="body">
+        <div class="options">
+            <h1>Export Quiz</h1>
+            <p>File Type:</p>
+            <label><input type="radio" name="fileType" id="htmlType" value="html" checked> HTML</label>
+            <label><input type="radio" name="fileType" id="markdownType" value="markdown"> Markdown</label>
+            <label><input type="radio" name="fileType" id="pdfType" value="pdf"> PDF</label>
+            <br>
+            <p>Advanced Options:</p>
+            <label><input type="checkbox" id="singlePage"> Single File Export</label>
+            <label><input type="checkbox" id="includeAnswers"> Include Answers</label>
+            <br>
+            <!-- <p>File Name:</p>
+            <input type="text" id="fileName" value="quiz_export">
+            <br>
+            <p>Export Location:</p>
+            <input type="text" id="exportLocation" placeholder="Enter export path"> -->
+            <br><br>
+            <button id="exportBtn" onclick="exportQuiz()">Export Quiz</button>
+            <p></p>
+        </div>
+    </body>
+    <script>
+        const vscode = acquireVsCodeApi();
+        // TODO: figure out how to make form reflect config
+
+        // state of inputs should reflect existing config
+        // const config = {{{configData}}};
+        // if (config.pdfFlag) {
+        //     document.getElementById("pdfType").checked = 'true';
+        // } else if (config.markdownFlag) {
+        //     document.getElementById("markdownType").checked = 'true';
+        // } else {
+        //     document.getElementById("htmlType").checked = 'true';
+        // }
+        // if (config.singlePageFlag) {
+        //     document.getElementById("singlePage").checked = 'true';
+        // }
+        // if (config.includeAnswersFlag) {
+        //     document.getElementById("includeAnswers").checked = 'true';
+        // }
+        function exportQuiz() {
+            // also our submit button
+            const fileType = document.querySelector('input[name="fileType"]:checked')?.value || null;
+            if (fileType === "pdf") {
+                enablePdf();
+            } else if (fileType === "markdown") {
+                enableMarkdown();
+            } else {
+                enableHtml();
+            }
+            if (document.querySelector('input[id="singlePage"]:checked')) {
+                vscode.postMessage({ type: 'enableSinglePage' });
+            } else {
+                vscode.postMessage({ type: 'disableSinglePage' });
+            }
+
+            if (document.querySelector('input[id="includeAnswers"]:checked')) {
+                vscode.postMessage({ type: 'enableIncludeAnswers' });
+            } else {
+                vscode.postMessage({ type: 'disableIncludeAnswers' });
+            }
+
+            vscode.postMessage({ type: 'exportQuiz' });
+        }
+        function enableMarkdown() {
+            vscode.postMessage({ type: 'enableMarkdown' });
+        }
+        function enablePdf() {
+            vscode.postMessage({ type: 'enablePdf' });
+        }
+        function enableHtml() {
+            vscode.postMessage({ type: 'enableHtml' });
+        }
+        function enableSinglePage() {
+            vscode.postMessage({ type: 'enableSinglePage' });
+        }
+        function disableSinglePage() {
+            vscode.postMessage({ type: 'disableSinglePage' });
+        }
+        function enableIncludeAnswers() {
+            vscode.postMessage({ type: 'enableIncludeAnswers' });
+        }
+        function disableIncludeAnswers() {
+            vscode.postMessage({ type: 'disableIncludeAnswers' });
+        }
+    </script>
+</html>
