@@ -32,7 +32,7 @@
                     alert('Please enter a prompt to generate questions.');
                     return;
                 }
-                vscode.postMessage({ type: 'generate', userPrompt: userPrompt.valu, numQuestions: quantity.value });
+                vscode.postMessage({ type: 'generate', userPrompt: userPrompt.value, numQuestions: quantity.value });
             }
 
             function saveQuestions() {
