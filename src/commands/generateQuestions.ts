@@ -11,6 +11,7 @@ import { getLLMProvider } from '../llm/llmConfig';
 
 import type { PersonalizedQuestionsData } from '../types';
 
+//may be deprecated with prompt engineering
 // Known issue: also counts \n in quote strings when calculating line numbers, so may be off in those cases
 //              need more robust parsing to avoid that, but it is too time expensive to implement right now
 function locateSnippetInCode(snippet: string, fullCode: string): { startLine: number, startCol: number, endLine: number, endCol: number }{
@@ -34,6 +35,7 @@ function locateSnippetInCode(snippet: string, fullCode: string): { startLine: nu
     return { startLine: 0, startCol: 0, endLine: 0, endCol: 0 };
 }
 
+// may be deprecated with prompt engineering
 function parseLLMOutput(output: string): string[] {
     // placeholder function to parse LLM output into array of questions
     // implement parsing logic based on expected output format
@@ -144,6 +146,16 @@ export const generateQuestionsCommand = vscode.commands.registerCommand('gvqlc.g
         return;
     }
 
+    // Get workspace root and calculate relative path
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders) {
+        vscode.window.showErrorMessage('No workspace folder is open.');
+        return;
+    }
+    const workspaceRoot = workspaceFolders[0].uri.fsPath;
+    const absolutePath = editor.document.uri.fsPath;
+    const relativePath = path.relative(workspaceRoot, absolutePath);
+
     const panel = vscode.window.createWebviewPanel(
         'generateQuestions',
         'Generate Quiz Questions',
@@ -153,9 +165,10 @@ export const generateQuestionsCommand = vscode.commands.registerCommand('gvqlc.g
     
     // may not need this passed in
     // vvv figure out how to store this
-    let generatedQuestions = null;
+    let generatedQuestions = null as PersonalizedQuestionsData[] | null;
     const htmlData = {
-        questions: generatedQuestions
+        //questions: generatedQuestions
+        questions: '',
     };
     panel.webview.html = Util.renderMustache('generateQuestions.mustache.html', htmlData);
 
@@ -166,7 +179,8 @@ export const generateQuestionsCommand = vscode.commands.registerCommand('gvqlc.g
             //const generatedQuestions = "test q1";
             
             //const generatedQuestions = await generateAllInOne(studentCode, message.userPrompt, message.numQuestions);
-            const generatedQuestions = [{ filePath: vscode.window.activeTextEditor?.document.uri.fsPath || '', text: "test", range: { start: { line: 1, character: 1 }, end: { line: 1, character: 10 } }, highlightedCode: "this is a code snippet", excludeFromQuiz: false, answer: "test answer" }, { filePath: vscode.window.activeTextEditor?.document.uri.fsPath || '', text: "test2", range: { start: { line: 2, character: 1 }, end: { line: 2, character: 10 } }, highlightedCode: "this is another code snippet", excludeFromQuiz: false, answer: "test answer 2" }];
+            
+            generatedQuestions = [{ filePath: relativePath, text: "test", range: { start: { line: 1, character: 1 }, end: { line: 1, character: 10 } }, highlightedCode: "this is a code snippet", excludeFromQuiz: false, answer: "test answer" }, { filePath: relativePath, text: "test2", range: { start: { line: 2, character: 1 }, end: { line: 2, character: 10 } }, highlightedCode: "this is another code snippet", excludeFromQuiz: false, answer: "test answer 2" }];
             // convert to displayable format
             //const convertedQuestions = JSON.stringify(generatedQuestions, null, 2);
             //const questions
@@ -181,8 +195,12 @@ export const generateQuestionsCommand = vscode.commands.registerCommand('gvqlc.g
             //         range: q.range
             //     };
             // });
+            if (!generatedQuestions) {
+                vscode.window.showErrorMessage('No questions were generated.');
+                return;
+            }
             const convertedQuestions = generatedQuestions.map((q, index) => {
-                return `<h3>Question ${index + 1}:</h3><p>${q.text}</p><h3>Code Snippet:</h3><pre><code>${q.highlightedCode}</code></pre><h3>Answer:</h3><p>${q.answer}</p><h3>Location:</h3><p>${q.filePath} [Lines ${q.range.start.line}-${q.range.end.line}, Start col: ${q.range.start.character}, End col: ${q.range.end.character}]</p><br /><br />`;
+                return `<h3>Question ${index + 1}:</h3><p>${q.text}</p><h3>Code Snippet:</h3><pre><code>${q.highlightedCode}</code></pre><h3>Answer:</h3><p>${q.answer}</p><h3>Location:</h3><p>${q.filePath} [Lines ${q.range.start.line}-${q.range.end.line}, Start col: ${q.range.start.character}, End col: ${q.range.end.character}]</p><h3>File Path:</h3><p>${q.filePath}</p><br /><br />`;
             }).join('\n');
 
 
@@ -196,143 +214,17 @@ export const generateQuestionsCommand = vscode.commands.registerCommand('gvqlc.g
         if (message.type === 'save') {
             // save generated questions to quiz file
             // refer to addQuizQuestion.ts for saving quiz questions
-            console.log(locateSnippetInCode(`def close(self):
-        self.socket.close()`, `"""
-http_socket.py
-
-This class opens a socket, then provides a means to perform both text and binary operations.
-In particular, it supports reading the text responses and headers from an HTTP server, followed
-by reading a binary payload. (In general, one must be careful when switching between text and 
-binary operations to ensure that any buffered data are not lost.)
-
-The main goal for this code is simplicity. It is, by no means, the most efficient implementation.
-
-GVSU CIS 371 2025
-
-Name: Mateo Vrooman
-"""
-
-import socket
-import ssl
-import sys
-
-BLOCK_SIZE = 1024
-CR_LF = b'\r\n'
-
-class HTTPSocket: 
-
-    def __init__(self, skt,  verbose=False):
-        self.socket = skt
-        self.leftover = b''
-        self.verbose = verbose 
-
-    @classmethod
-    def connect(cls, hostname, port, secure=True, verbose=False):
-        """
-        Open a socket connection to the specified host and port.
-        * secure: Use SSL
-        * verbose: display send and received messages on stderr. 
-        """ 
-        raw_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-        print("Connecting to", hostname, port)      
-        
-        if secure:
-            context = ssl.create_default_context()  # Create a default SSL context
-            skt = context.wrap_socket(raw_socket, server_hostname=hostname)
-        else:
-            skt = raw_socket
-        skt.connect((hostname, port))
-        return cls(skt, verbose=verbose)
-
-    def receive_text_line(self):
-        """
-        Receive one line of text from the sender.
-
-        Conceptually, this method pulls one byte at a time from the socket until it 
-        encounters a newline, then returns the line of text.
-
-        However, reading one byte at a time would be very inefficient. So, instead, 
-        this method reads a chunk of BLOCK_SIZE bytes. If the line of text is shorter than 
-        BLOCK_SIZE, it saves the leftovers and uses those bytes before reading more bytes 
-        from the socket. 
-        """
-
-        # Check and see if the leftover bytes contain a full line of text.
-        # if not, read more bytes and combine them with the leftovers 
-        # (if any)
-        if CR_LF in self.leftover:
-            chunk = self.leftover
-        else:
-            received = self.socket.recv(BLOCK_SIZE)    
-        
-            if not received: # Handle the case where the socket closes before a full line is received.
-                return None
-            
-            chunk = self.leftover + received
-            print("chunk", chunk)
-
-
-        # Split the bytes at the first CR/LF combination.
-        # The first part is decoded and returned as text.
-        # The second part is the "leftover" bytes and is 
-        # saved for the read operation
-        if CR_LF not in chunk: # Incomplete data
-            self.leftover = chunk
-            return None
-
-        line, self.leftover = chunk.split(CR_LF, 1)
-        return line.decode()
-
-    def send_text_line(self, message):
-        """
-        Send one line of text followed by CR_LF
-        """
-        if (self.verbose):
-            sys.stderr.write(f"Sending =>{message}<=\n")
-            sys.stderr.flush()
-        self.socket.sendall(message.encode('utf-8') + CR_LF)
-
-
-    def transfer_incoming_binary_data(self, target, content_length):
-        """
-        Transfer content_length bytes from the socket to the target stream.
-        (Or simply transfer any remaining bytes if the socket closes before
-        reaching content_length)
-        """
-
-        # If we have enough leftover bytes, simply use them.
-        if content_length < len(self.leftover):
-            data = self.leftover[:content_length]
-            self.leftover = self.leftover[content_length:]
-            target.write(data)
-        else: 
-            # Begin by writing any leftover bytes.
-            target.write(self.leftover)
-            bytes_received = len(self.leftover)
-
-            # receive and write chunks of BLOCK_SIZE bytes until content_length
-            # bytes have been received.
-            while bytes_received < content_length:  
-                chunk = self.socket.recv(min(content_length - bytes_received, BLOCK_SIZE))
-                target.write(chunk)
-                bytes_received += len(chunk)
-
-    def send_binary_data_from_file(self, source, content_length):
-        """
-        Send content_length bytes from the source file.
-        """
-        bytes_sent = 0
-        while bytes_sent < content_length:
-            chunk = source.read(min(content_length, BLOCK_SIZE))
-            self.socket.sendall(chunk)
-            bytes_sent += len(chunk) 
-
-    def close(self):
-        self.socket.close()
-
-
-    def __del__(self):
-        self.close()`));
+            console.log('Personalized Questions Data: ', state.personalizedQuestionsData);
+            if (!generatedQuestions) {
+                vscode.window.showErrorMessage('No generated questions to save.');
+            } else if (generatedQuestions.length > 0) {
+                for (const questionData of generatedQuestions) {
+                    console.log('Saving Question Data: ', questionData);
+                    state.personalizedQuestionsData.push(questionData);
+                }
+                // save after all questions are added to state
+                await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
+            }
         }
     });
 });
