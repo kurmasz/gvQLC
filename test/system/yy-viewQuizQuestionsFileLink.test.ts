@@ -41,7 +41,7 @@ describe('viewQuizQuestions FileLink', function () {
     it.skip('opens the link correctly when clicked', async () => {
         var driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
-        browser.waitForWorkbench();
+        await browser.waitForWorkbench();
         await driver.wait(until.elementsLocated(By.css('.monaco-workbench')), 15000);
 
         var editorView = workbench.getEditorView();

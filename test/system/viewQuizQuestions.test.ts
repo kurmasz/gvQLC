@@ -314,7 +314,6 @@ describe('viewQuizQuestions', function () {
         var question = await tds[2].findElement(By.id('question-0'));
 
         await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
-        //const acceptAI = await tds[3].findElement(By.id("acceptAI-0"));
         const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
         const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
         const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
@@ -322,7 +321,6 @@ describe('viewQuizQuestions', function () {
         const label = await view.findWebElement(By.css("[for='exclude-0']"));
         var i = 0;
         while (i < 10) {
-            console.log("Loop %d: \n", i);
             const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
             const acceptRect = await acceptAI.getRect();
             const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
@@ -355,7 +353,6 @@ describe('viewQuizQuestions', function () {
 
         expect(await question.getAttribute("value")).to.be.equal(await aiBox.getAttribute("value"));
         await driver.wait(until.elementLocated(By.css('#revert-0')));
-        //const revertButton = await tds[3].findElement(By.id("revert-0"));
         const revertButton = await view.findWebElement(By.id("revert-0"));
         console.log('found');
         await revertButton.click();
@@ -363,14 +360,12 @@ describe('viewQuizQuestions', function () {
     })
 
     it('Excludes a question when the "Exclude Question" box is checked', async () => {
-        //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
-        //var checkbox = await tds[3].findElement(By.id('exclude-0'));
         var checkbox = await view.findWebElement(By.id('exclude-0'));
         console.log("found");
         var label = await view.findWebElement(By.css("[for='exclude-0']"));
@@ -416,7 +411,6 @@ describe('viewQuizQuestions', function () {
         
         // Should be excluded
         expect(await checkbox.isEnabled()).to.be.true;
-        //await checkbox.click();
         await pause(1000); // 1 sec pause
         await label.click();
         console.log("Clicked");
@@ -434,7 +428,6 @@ describe('viewQuizQuestions', function () {
 
         // Unexclude it
         await driver.wait(until.elementLocated(By.css('#exclude-0')));
-        //await checkbox.click();
         await pause(1000); // 1 sec pause
         await label.click();
         console.log("Clicked");
@@ -619,7 +612,7 @@ describe('viewQuizQuestions', function () {
     it.skip('Refreshes the page', async () => {
         var driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
-        browser.waitForWorkbench();
+        await browser.waitForWorkbench();
 
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));

@@ -41,13 +41,15 @@ describe('viewQuizQuestions Delete', function () {
     it('deletes the entry when clicked', async () => {
         const driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
-        browser.waitForWorkbench();
+        await browser.waitForWorkbench();
 
-        var deleteButton = await view.findWebElement(By.css('#delete-0'));
+        await driver.wait(until.elementLocated(By.id('delete-0')));
+        var deleteButton = await view.findWebElement(By.id('delete-0'));
         expect(await deleteButton.isDisplayed()).to.be.true;
 
         //Need to find a way to correctly undo the delete after it's clicked
         //var data = await loadDataFromFile('gvQLC.quizQuestions.json');
+        await pause(10000);
         await deleteButton.click();
 
         workbench = new Workbench();

@@ -261,5 +261,6 @@ describe("exportQuizQuestions", function () {
     
     const exportBtn = await view.findWebElement(By.id("exportBtn"));
     await exportBtn.click();
+    await pause(5000);
   }
 });
