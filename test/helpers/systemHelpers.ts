@@ -45,9 +45,19 @@ export async function openWorkspace(folder: string) {
 }
 
 export async function readFile(filepath: string) {
+  var i = 0;
+  while (!(fs.existsSync(path.resolve(path.join("test-fixtures", 'cis371_server', filepath))))) {
+    console.log(filepath, 'not found after', i, 'secs');
+    await pause(1000);
+    i += 1;
+    if (i > 10) {
+      break;
+    }
+  }
   var file = await fs.readFile(path.resolve(path.join("test-fixtures", 'cis371_server', filepath)));
   if (filepath.includes('.pdf')) {
     var fileContents = await pdfToText(file);
+    fileContents.replaceAll("\t", " ");
   } else {
     var fileContents = Buffer.from(file).toString("utf-8");
   }

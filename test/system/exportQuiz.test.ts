@@ -94,7 +94,6 @@ describe("exportQuizQuestions", function () {
   it("Checks that a single page PDF file is created", async () => {
     await exportQuizQuestion('pdf', true, false);
     const allQuiz = await readFile('quiz_all_students.pdf');
-    console.log(allQuiz);
     expect(allQuiz).to.include('Quiz for ');
     expect(allQuiz).to.include('Due Date: ');
     expect(allQuiz).to.include('File: ');
@@ -121,7 +120,6 @@ describe("exportQuizQuestions", function () {
   it("Checks that a single page Markdown file with answer keys is created", async () => {
     await exportQuizQuestion('markdown', true, true);
     const allQuiz = await readFile('quiz_all_students.md');
-    console.log(allQuiz);
     expect(allQuiz).to.include('Quiz for ');
     expect(allQuiz).to.include('Due Date: ');
     expect(allQuiz).to.include('File: ');
@@ -131,7 +129,6 @@ describe("exportQuizQuestions", function () {
   it("Checks that a single page PDF file with answer keys is created", async () => {
     await exportQuizQuestion('pdf', true, true);
     const allQuiz = await readFile('quiz_all_students.pdf');
-    console.log(allQuiz);
     expect(allQuiz).to.include('Quiz for ');
     expect(allQuiz).to.include('Due Date: ');
     expect(allQuiz).to.include('File: ');
@@ -203,7 +200,6 @@ describe("exportQuizQuestions", function () {
   it("Checks that multiple PDF files with answer keys are created", async () => {
     await exportQuizQuestion('pdf', false, true);
     const antonioQuiz = await readFile('quiz_antonio.pdf');
-    console.log(antonioQuiz);
     expect(antonioQuiz).to.include('Quiz for antonio');
     expect(antonioQuiz).to.include('Due Date: ');
     expect(antonioQuiz).to.include('File: ');
