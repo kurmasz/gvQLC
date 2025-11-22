@@ -11,7 +11,7 @@ import { getLLMProvider } from '../llm/llmConfig';
 
 import type { PersonalizedQuestionsData } from '../types';
 
-//may be deprecated with prompt engineering
+//deprecated with prompt engineering
 // Known issue: also counts \n in quote strings when calculating line numbers, so may be off in those cases
 //              need more robust parsing to avoid that, but it is too time expensive to implement right now
 function locateSnippetInCode(snippet: string, fullCode: string): { startLine: number, startCol: number, endLine: number, endCol: number }{
@@ -35,105 +35,62 @@ function locateSnippetInCode(snippet: string, fullCode: string): { startLine: nu
     return { startLine: 0, startCol: 0, endLine: 0, endCol: 0 };
 }
 
-// may be deprecated with prompt engineering
+// some LLMs may output extra text before/after the json array of questions
+// need to parse that out
 function parseLLMOutput(output: string): PersonalizedQuestionsData[] {
-    // placeholder function to parse LLM output into array of questions
-    // implement parsing logic based on expected output format
-    
-    // look for "Question: " delimiters to split questions
-    // const questionBlocks = output.split('Question: ').slice(1); // first split is before first question
-    // const questions: string[] = [];
-    
-    // for (const block of questionBlocks) {
-    //     const questionText = block.split('Code Context Snippet: ')[0].trim();
-    //     const codeSnippet = block.split('Code Context Snippet: ')[1]?.split('Answer: ')[0].trim() || '';
-    //     const answerText = block.split('Answer: ')[1]?.trim() || '';
-
-    //     const fullcodeTemp = '';
-    //     const range = locateSnippetInCode(codeSnippet, fullcodeTemp); // need full code here
-    //     //NOT DONE, STOPPING HERE
-    // }
-    //let formattedQuestion: PersonalizedQuestionsData;
-    // file path needs to be determined from main func
-
     // cut off everything before first { and after last }
     const firstCurly = output.indexOf('{');
     const lastCurly = output.lastIndexOf('}');
     if (firstCurly !== -1 && lastCurly !== -1 && lastCurly > firstCurly) {
+        // slice out the json string
         const jsonString = output.slice(firstCurly, lastCurly + 1);
         try {
             const parsed = JSON.parse(jsonString);
+            // check if correct format
+            if (!parsed.questions || !Array.isArray(parsed.questions)) {
+                throw new Error('Parsed JSON does not contain a valid questions array.');
+            }
+            if (parsed.questions.length === 0) {
+                throw new Error('Parsed questions array is empty.');
+            }
+            // validate format of each question
+            for (const question of parsed.questions) {
+                try {
+                    if (typeof question.text !== 'string' 
+                        || typeof question.highlightedCode !== 'string' 
+                        || typeof question.filePath !== 'string' 
+                        || typeof question.excludeFromQuiz !== 'boolean' 
+                        || typeof question.answer !== 'string' 
+                        || typeof question.range !== 'object' 
+                        || typeof question.range.start !== 'object' 
+                        || typeof question.range.end !== 'object' 
+                        || typeof question.range.start.line !== 'number' 
+                        || typeof question.range.start.character !== 'number' 
+                        || typeof question.range.end.line !== 'number' 
+                        || typeof question.range.end.character !== 'number') {
+                        throw new Error('One or more questions are not in the expected format.');
+                    }
+                } catch (error) {
+                    console.error('Error validating question format:', error);
+                    throw new Error('One or more questions are not in the expected format.');
+                }
+
+            }
+            // all checks passed
             return parsed.questions as PersonalizedQuestionsData[];
         } catch (error) {
             console.error('Error parsing LLM output as JSON:', error);
-            return [];
+            throw new Error('Failed to parse LLM output as JSON.');
+            //return [];
         }
     }
-
-    return [];
+    // should this throw error instead?
+    //return [];
+    throw new Error('LLM output does not contain valid JSON.');
 }
 
 // use one LLM call to generate multiple questions
-// vvv figure out output format/type
-//async function generateAllInOne(code: string, userPrompt: string, numQuestions: number): Promise<string[]> {
 async function generateAllInOne(code: string, userSpecifications: string, numQuestions: number, relativePath: string): Promise<PersonalizedQuestionsData[]> {
-// need to figure out how to format everything
-    // prompts have their own files
-    // refer to addQuizQuestion.ts for llm output handling
-    // LLMResponse type has content: string field,
-    // will need to parse that string into multiple questions and json data
-    // think about how to use prompt engineering here and how to check for discrepancies
-
-    // probably output as an array of json questions that can be
-    // pushed to our state and saved to our quiz json
-
-    // For parsing output:
-    // - planning on having llm include formatted response with:
-    //   Question: ...
-    //   Code Context Snippet: ...
-    //   Answer: ...
-    //   Question: ...
-    //   Code Context Snippet: ...
-    //   Answer: ...
-    // - split by "Question: " to get individual questions
-    // - for each question block, extract code snippet and answer
-    // - use regex or string methods
-    // - find location of snippet in original code for line and col info
-    // - create question objects and push to array, formatted like our json
-
-    // For finding snippet location:
-    // - use indexOf to find start of snippet in full code
-    // - count newlines before that index for line number
-    // - find last newline before index for column number
-    // - store line and col in question object
-
-    // For prompt engineering:
-    // - use free gpt and manually test this process to find semi-reliable prompt
-    //   that has expected output format somewhere in the output
-    // - need one prompt for multiple questions generation
-    // - need one prompt for retrying if parsing fails
-    // - may use one prompt for doing a single question at a time,
-    //   with deliniated code claimed by prev llm call
-    
-    // Pseudocode:
-    /*
-    const provider = await getLLMProvider(context());
-    const response = await provider.generateCompletion([
-        { role: 'system', content: 'You are a helpful assistant that generates quiz questions from code snippets.' },
-        { role: 'user', content: `Generate ${numQuestions} quiz questions from the following code:\n\n${code}\n\n${userPrompt}` }
-    ]);
-
-    const output = response.content;
-    // Parse output into questions array
-    const questions: string[] = parseQuestionsFromOutput(output, code);
-    return questions;
-    */
-
-    //const finalUserPrompt = userPrompt + ` Please provide ${numQuestions} quiz questions. Contents: ${code}`;
-
-
-    
-
     try {
         // Load the prompt template from the extension's directory
         // In development: extensionPath/src/llm/prompts/autoGenerateQuestions.json
@@ -151,8 +108,8 @@ async function generateAllInOne(code: string, userSpecifications: string, numQue
         const promptContent = await fs.readFile(promptPath, 'utf-8');
         const promptTemplate = JSON.parse(promptContent);
 
-        // Replace the code placeholder in the user prompt
-        //const userPrompt = promptTemplate.user.replace('{{code}}', code).replace('{{fullCode}}', fullCode);
+        // prompt engineering tool to show expected question format
+        // should match PersonalizedQuestionsData type, but Gemini ignores optional answer field every time
         const questionTemplate = `{
     answer: string,
     filePath: string,
@@ -164,95 +121,32 @@ async function generateAllInOne(code: string, userSpecifications: string, numQue
     highlightedCode: string,
     excludeFromQuiz: boolean
 }`;
+        // Inject question template into system prompt
         const systemPrompt = promptTemplate.system.replace('{{questionTemplate}}', questionTemplate);
         
         // only give file name instead path
         const fileName = path.basename(relativePath);
+
+        // Inject dynamic values into user prompt
         const userPrompt = promptTemplate.user.replace('{{userSpecifications}}', userSpecifications).replace('{{numQuestions}}', numQuestions.toString()).replace('{{fileName}}', fileName).replace('{{studentCode}}', code);
 
         console.log('before LLM call prompts:');
+        
         // Get the appropriate LLM provider based on configuration
         const provider = await getLLMProvider(context());
+
         console.log('LLM provider obtained.');
         console.log('llm provider:', provider);
+
         // Generate the completion
         const response = await provider.generateCompletion([
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
         ]);
-        console.log('after LLM call response received.');
 
+        console.log('after LLM call response received.');
         console.log('System Prompt:', systemPrompt);
         console.log('User Prompt:', userPrompt);
-        
-        // sample response for testing
-        // const response = {
-        //     content: `[{"filePath": "${relativePath}", "text": "What is a data structure used to implement a stack?", "range": {"start": {"line": 10, "character": 5}, "end": {"line": 12, "character": 20}}, "highlightedCode": "class Stack:\\n    def __init__(self):\\n        self.items = []", "excludeFromQuiz": false, "answer": "A list or array can be used to implement a stack."}, {"filePath": "${relativePath}", "text": "Explain the difference between a list and a tuple in Python.", "range": {"start": {"line": 20, "character": 1}, "end": {"line": 22, "character": 15}}, "highlightedCode": "my_list = [1, 2, 3]\\nmy_tuple = (1, 2, 3)", "excludeFromQuiz": false, "answer": "Lists are mutable while tuples are immutable."}]`
-        // }
-
-//         const response = {
-//             content: JSON.stringify({
-//   "questions": [
-//     {
-//       "filePath": "",
-//       "text": "What data structure is used to store unread bytes between socket reads, and why is it necessary for processing text lines efficiently?",
-//       "answer": "A bytes object (`self.leftover`) is used to store unread leftover bytes so the code can avoid rereading data from the socket and efficiently assemble complete text lines.",
-//       "range": {
-//         "start": {"line": 32, "character": 8},
-//         "end": {"line": 32, "character": 28}
-//       },
-//       "highlightedCode": "self.leftover = b''",
-//       "excludeFromQuiz": false
-//     },
-//     {
-//       "filePath": "",
-//       "text": "How does the `receive_text_line` method use the leftover buffer to minimize unnecessary socket reads?",
-//       "answer": "It first checks if `CR_LF` is already in `self.leftover`; if so, it uses the leftover data without performing a new `recv` call.",
-//       "range": {
-//         "start": {"line": 48, "character": 8},
-//         "end": {"line": 52, "character": 30}
-//       },
-//       "highlightedCode": "if CR_LF in self.leftover:\n    chunk = self.leftover\nelse:\n    received = self.socket.recv(BLOCK_SIZE)",
-//       "excludeFromQuiz": false
-//     },
-//     {
-//       "filePath": "",
-//       "text": "When transferring binary data, what role does the variable `bytes_received` play, and why is it important for loop control?",
-//       "answer": "`bytes_received` tracks how many bytes have been written so far. It ensures the loop continues receiving and writing until the content_length is satisfied or the socket closes.",
-//       "range": {
-//         "start": {"line": 96, "character": 12},
-//         "end": {"line": 110, "character": 40}
-//       },
-//       "highlightedCode": "bytes_received = len(self.leftover)\n...\nwhile bytes_received < content_length:",
-//       "excludeFromQuiz": false
-//     },
-//     {
-//       "filePath": "",
-//       "text": "In the method `send_binary_data_from_file`, what data structure is used to store chunks of data read from the file before sending them over the socket?",
-//       "answer": "A bytes object (`chunk`) is used to store each block of binary data read from the file before being sent using `sendall`.",
-//       "range": {
-//         "start": {"line": 114, "character": 12},
-//         "end": {"line": 121, "character": 30}
-//       },
-//       "highlightedCode": "chunk = source.read(min(content_length, BLOCK_SIZE))",
-//       "excludeFromQuiz": false
-//     },
-//     {
-//       "filePath": "",
-//       "text": "Why is a `bytes` constant (`CR_LF = b'\\r\\n'`) used instead of a string when processing incoming text lines?",
-//       "answer": "Because socket data is received as raw bytes, using a bytes constant allows efficient detection and splitting of line endings without converting between types.",
-//       "range": {
-//         "start": {"line": 14, "character": 0},
-//         "end": {"line": 14, "character": 20}
-//       },
-//       "highlightedCode": "CR_LF = b'\\r\\n'",
-//       "excludeFromQuiz": false
-//     }
-//   ]
-// }
-// )
-//         }
-
         console.log('LLM Response:', response.content);
 
 
@@ -263,26 +157,36 @@ async function generateAllInOne(code: string, userSpecifications: string, numQue
 
         // try to parse output as json
         //const parsedOutput = JSON.parse(output);
+
+        // this should be in the correct format if it did not throw error
+        // if it did throw error, it will be caught in catch block below
         const parsedOutput = parseLLMOutput(output);
+
         console.log('Parsed LLM Output:', parsedOutput);
         console.log('Value:', parsedOutput);
+
         // check if parsedOutput is array of questions
-        if (Array.isArray(parsedOutput)) {
-            // further checks can be added here
-            if (parsedOutput.length === 0) {
-                throw new Error('LLM output contains an empty array of questions.');
-            }
-            // assign filePath for each question
-            for (const question of parsedOutput) {
-                question.filePath = relativePath;
-            }
-            // should be fine, it will error if incorrect, and we can catch it
-            return parsedOutput as PersonalizedQuestionsData[];
-        } else {
-            throw new Error('LLM output is not an array of questions.');
+        // unnecessary due to parseLLMOutput checks
+        // if (Array.isArray(parsedOutput)) {
+        //     // further checks can be added here
+        //     if (parsedOutput.length === 0) {
+        //         throw new Error('LLM output contains an empty array of questions.');
+        //     }
+
+        // } else {
+        //     throw new Error('LLM output is not an array of questions.');
+        // }
+
+        // assign filePath for each question
+        for (const question of parsedOutput) {
+            question.filePath = relativePath;
         }
+        // should be fine, it will throw an error if incorrect, and we can catch it
+        return parsedOutput as PersonalizedQuestionsData[];
+
     } catch (error) {
         console.error('Error generating question from code:', error);
+        //vscode.window.showErrorMessage(`Error generating question: ${error instanceof Error ? error.message : 'Unknown error'}`);
         throw new Error(`Failed to generate question: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
@@ -339,48 +243,57 @@ export const generateQuestionsCommand = vscode.commands.registerCommand('gvqlc.g
 
     panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'generate') {
-            // vvv assign to our state questions var
-            //generateAllInOne(studentCode, message.userPrompt, message.numQuestions, relativePath);
-            //const generatedQuestions = "test q1";
-            
-            console.log("generate message received:", message);
-            generatedQuestions = await generateAllInOne(studentCode, message.userPrompt, message.numQuestions, relativePath);
-            
             //generatedQuestions = [{ filePath: relativePath, text: "test", range: { start: { line: 1, character: 1 }, end: { line: 1, character: 10 } }, highlightedCode: "this is a code snippet", excludeFromQuiz: false, answer: "test answer" }, { filePath: relativePath, text: "test2", range: { start: { line: 2, character: 1 }, end: { line: 2, character: 10 } }, highlightedCode: "this is another code snippet", excludeFromQuiz: false, answer: "test answer 2" }];
+            
             // convert to displayable format
+            
             //const convertedQuestions = JSON.stringify(generatedQuestions, null, 2);
             //const questions
             // converted questions only need to display text, code snippet, answer, and lines/start col end col in innerHTML
             // const convertedQuestions = generatedQuestions.map((q, index) => {
-            //     return {
-            //         number: index + 1,
-            //         text: q.text,
-            //         highlightedCode: q.highlightedCode,
-            //         answer: q.answer,
-            //         filePath: q.filePath,
-            //         range: q.range
-            //     };
-            // });
-            if (!generatedQuestions) {
-                vscode.window.showErrorMessage('No questions were generated.');
+                //     return {
+                    //         number: index + 1,
+                    //         text: q.text,
+                    //         highlightedCode: q.highlightedCode,
+                    //         answer: q.answer,
+                    //         filePath: q.filePath,
+                    //         range: q.range
+                    //     };
+                    // });
+                    
+
+            // var in command scope, only assigned if it matches expected format
+            // so if not null, it is safe to use
+            // null means something went wrong during generation, or improper format
+            try {
+                generatedQuestions = await generateAllInOne(studentCode, message.userPrompt, message.numQuestions, relativePath);
+            } catch (error) {
+                vscode.window.showErrorMessage(`Error generating questions: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                generatedQuestions = null;
+                // return leaves the anonymous function, not the outer command
                 return;
             }
-            const convertedQuestions = generatedQuestions.map((q, index) => {
-                return `<h3>Question ${index + 1}:</h3><p>${q.text}</p><h3>Code Snippet:</h3><pre><code>${q.highlightedCode}</code></pre><h3>Answer:</h3><p>${q.answer}</p><h3>Location:</h3><p>${q.filePath} [Lines ${q.range.start.line}-${q.range.end.line}, Start col: ${q.range.start.character}, End col: ${q.range.end.character}]</p><h3>File Path:</h3><p>${q.filePath}</p><br /><br />`;
-            }).join('\n');
 
-
-
-            // display questions on view
-            panel.webview.postMessage({
-                type: 'displayQuestions',
-                questions: convertedQuestions
-            });
+            // never should be null here, but check anyway
+            if (!generatedQuestions) {
+                vscode.window.showErrorMessage('No questions were generated.');
+            } else if (generatedQuestions.length > 0 ) {
+                // convert to displayable HTML format
+                const convertedQuestions = generatedQuestions.map((q, index) => {
+                    return `<h3>Question ${index + 1}:</h3><p>${q.text}</p><h3>Code Snippet:</h3><pre><code>${q.highlightedCode}</code></pre><h3>Answer:</h3><p>${q.answer}</p><h3>Location:</h3><p>${q.filePath} [Lines ${q.range.start.line}-${q.range.end.line}, Start col: ${q.range.start.character}, End col: ${q.range.end.character}]</p><h3>File Path:</h3><p>${q.filePath}</p><br /><br />`;
+                }).join('\n');
+    
+                // display questions on view
+                panel.webview.postMessage({
+                    type: 'displayQuestions',
+                    questions: convertedQuestions
+                });
+            }
         }
+
         if (message.type === 'save') {
             // save generated questions to quiz file
             // refer to addQuizQuestion.ts for saving quiz questions
-            console.log('Personalized Questions Data: ', state.personalizedQuestionsData);
             if (!generatedQuestions) {
                 vscode.window.showErrorMessage('No generated questions to save.');
             } else if (generatedQuestions.length > 0) {
@@ -388,8 +301,13 @@ export const generateQuestionsCommand = vscode.commands.registerCommand('gvqlc.g
                     console.log('Saving Question Data: ', questionData);
                     state.personalizedQuestionsData.push(questionData);
                 }
-                // save after all questions are added to state
-                await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
+                // save to file after all questions are added to state
+                try {
+                    await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
+                    vscode.window.showInformationMessage('Generated questions saved to quiz file successfully.');
+                } catch (error) {
+                    vscode.window.showErrorMessage(`Error saving questions to file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
             }
         }
     });
