@@ -1,8 +1,8 @@
 /************************************************************************************
  * 
- * viewQuizQuestions.test.ts
+ * viewQuizQuestionsDelete.test.ts
  * 
- * Test the viewQuizQuestions command.
+ * Test the View Quiz Questions's delete button in the UI.
  * 
  * IMPORTANT: Remember: VSCode and the extension are _not_ re-set between tests.
  * these tests must run in order.

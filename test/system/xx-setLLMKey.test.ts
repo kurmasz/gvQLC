@@ -1,8 +1,8 @@
 /************************************************************************************
  *
- * exportQuizQuestions.test.ts
+ * setLLMKey.test.ts
  *
- * Test the exportQuizQuestions command.
+ * Test the Set LLM API Key command.
  *
  * IMPORTANT: Remember: VSCode and the extension are _not_ re-set between tests.
  * these tests must run in order.
@@ -93,19 +93,7 @@ describe("Set LLM API Key", function () {
     await new Promise((res) => setTimeout(res, 3000));
     const inputBox = await InputBox.create();
     const picks = await inputBox.getQuickPicks();
-    /* Quick Picks
-    'Set New API Key' --> Enter API Key --> Press Enter --> Info Message 'LLM API key stored securely.'
-    'Clear Existing API Key' --> Info Message 'LLM API key cleared successfully.'
-    'Cancel' --> Closes
-    
-    Formats
-    'Set New API Key'
-    'Cancel'
 
-    'Set New API Key'
-    'Clear Existing API Key'
-    'Cancel'
-    */
     var text = '';
     if (option === 0 && picks.length === 3) {
       await inputBox.selectQuickPick(option);

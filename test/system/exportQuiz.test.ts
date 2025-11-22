@@ -1,8 +1,8 @@
 /************************************************************************************
  *
- * exportQuizQuestions.test.ts
+ * exportQuiz.test.ts
  *
- * Test the exportQuizQuestions command.
+ * Test the exportQuiz command.
  *
  * IMPORTANT: Remember: VSCode and the extension are _not_ re-set between tests.
  * these tests must run in order.
@@ -52,7 +52,7 @@ describe("exportQuizQuestions", function () {
   //
   it("Notifies when a folder has no existing questions when trying to export questions", async () => {
     await openWorkspace("cis371_server_empty");
-    await new Workbench().executeCommand("gvQLC: Export Quiz Questions");
+    await new Workbench().executeCommand("gvQLC: Export Quiz");
     await waitForNotification(NotificationType.Error, (message) => {
       return (
         message ==="No personalized questions added yet!"
@@ -212,11 +212,11 @@ describe("exportQuizQuestions", function () {
 
   async function setupExportQuizQuestion() {
     const driver = VSBrowser.instance.driver;
-    await new Workbench().executeCommand("gvQLC: Export Quiz Question");
+    await new Workbench().executeCommand("gvQLC: Export Quiz");
     await new Promise((res) => setTimeout(res, 1000));
 
     const tab = await driver.wait(
-      until.elementLocated(By.css('[aria-label="Export Quiz Question"]')),
+      until.elementLocated(By.css('[aria-label="Export Menu"]')),
       15_000
     );
     await driver.wait(until.elementIsVisible(tab), 5_000);
@@ -226,9 +226,9 @@ describe("exportQuizQuestions", function () {
     await view.switchToFrame();
 
     // Check the title and number of questions.
-    await driver.wait(until.elementLocated(By.id("exportQuizQuestionTitle")));
-    const element = await view.findWebElement(By.id("exportQuizQuestionTitle"));
-    expect(await element.getText()).has.string("Export a Quiz Question");
+    await driver.wait(until.elementLocated(By.id("exportBtn")));
+    const element = await view.findWebElement(By.id("exportBtn"));
+    expect(await element.getText()).has.string("Export Quiz");
 
     return view;
   }
