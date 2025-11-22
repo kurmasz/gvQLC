@@ -18,3 +18,4 @@ test-fixtures/cis371_server/userSettings.json
 test-fixtures/cis371_server/quiz_all_students.html
 test-fixtures/cis371_server/quiz_all_students.pdf
 test-fixtures/cis371_server/quiz_all_students.md
+quiz_*

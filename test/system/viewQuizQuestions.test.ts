@@ -627,8 +627,9 @@ describe('viewQuizQuestions', function () {
 
         var editorView = workbench.getEditorView();
         console.log('editorView');
-        var tabs = await editorView.getOpenTabs();
-        //var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding .monaco-workbench element
+        await driver.wait(until.elementsLocated(By.css('.monaco-workbench')), 15000);
+        
+        var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding .monaco-workbench element
         console.log(tabs);
         await editorView.openEditor('View Quiz Questions');
         var currTab = await editorView.getActiveTab();

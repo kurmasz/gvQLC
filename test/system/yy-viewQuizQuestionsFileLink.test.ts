@@ -42,6 +42,7 @@ describe('viewQuizQuestions FileLink', function () {
         var driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
         browser.waitForWorkbench();
+        await driver.wait(until.elementsLocated(By.css('.monaco-workbench')), 15000);
 
         var editorView = workbench.getEditorView();
         var tabs = await editorView.getOpenTabs();

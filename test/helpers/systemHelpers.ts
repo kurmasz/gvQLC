@@ -43,6 +43,12 @@ export async function openWorkspace(folder: string) {
   );
 }
 
+export async function readFile(filepath: string) {
+  var file = await fs.readFile(path.resolve(path.join("test-fixtures", 'cis371_server', filepath)));
+  var fileContents = Buffer.from(file).toString("utf-8");
+  return fileContents;
+}
+
 export async function openTempWorkspace(folder: string) {
   const sourceDir = path.resolve(path.join("test-fixtures", folder));
   const tempWorkspaceDir = await fs.mkdtemp(

@@ -7,7 +7,7 @@
  * IMPORTANT: Remember: VSCode and the extension are _not_ re-set between tests.
  * these tests must run in order.
  *
- * (C) 2025 Zachary Kurmas
+ * (C) 2025 Zachary Kurmas, Phuc Le
  * *********************************************************************************/
 
 import {

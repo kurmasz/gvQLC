@@ -231,7 +231,9 @@ async function convertHTMLToPdf(htmlContent: string, fileName: string) {
     const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${fileName}`);
     const options: pdf.CreateOptions = { format: 'A4' };
     pdf.create(htmlContent, options).toFile(uri.fsPath, function(err, res) {
-        if (err) return console.log(err);
+        if (err) {
+            return console.log(err);
+        }
     });
 }
 
