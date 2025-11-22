@@ -37,6 +37,7 @@ import { expect } from "chai";
 import * as path from "path";
 import * as fs from "fs";
 
+
 describe("exportQuizQuestions", function () {
   let view: WebView;
   let tempWorkspaceDir: string;
@@ -53,9 +54,9 @@ describe("exportQuizQuestions", function () {
   it("Notifies when a folder has no existing questions when trying to export questions", async () => {
     await openWorkspace("cis371_server_empty");
     await new Workbench().executeCommand("gvQLC: Export Quiz");
-    await waitForNotification(NotificationType.Error, (message) => {
+    await waitForNotification(NotificationType.Info, (message) => {
       return (
-        message ==="No personalized questions added yet!"
+        message === "No personalized questions added yet!"
       );
     });
   });
@@ -118,8 +119,8 @@ describe("exportQuizQuestions", function () {
   });
 
   it("Checks that a single page Markdown file with answer keys is created", async () => {
-    await exportQuizQuestion('pdf', true, true);
-    const allQuiz = await readFile('quiz_all_students.pdf');
+    await exportQuizQuestion('markdown', true, true);
+    const allQuiz = await readFile('quiz_all_students.md');
     console.log(allQuiz);
     expect(allQuiz).to.include('Quiz for ');
     expect(allQuiz).to.include('Due Date: ');
@@ -164,8 +165,8 @@ describe("exportQuizQuestions", function () {
   });
 
   it("Checks that multiple PDF files are created", async () => {
-    await exportQuizQuestion('markdown', false, false);
-    const antonioQuiz = await readFile('quiz_antonio.html');
+    await exportQuizQuestion('pdf', false, false);
+    const antonioQuiz = await readFile('quiz_antonio.pdf');
     expect(antonioQuiz).to.include('Quiz for antonio');
     expect(antonioQuiz).to.include('Due Date: ');
     expect(antonioQuiz).to.include('File: ');
@@ -196,7 +197,7 @@ describe("exportQuizQuestions", function () {
     expect(antonioQuiz).to.include('Quiz for antonio');
     expect(antonioQuiz).to.include('Due Date: ');
     expect(antonioQuiz).to.include('File: ');
-    expect(antonioQuiz).to.include('Answer: ');    
+    expect(antonioQuiz).to.include('Answer: ');
   });
 
   it("Checks that multiple PDF files with answer keys are created", async () => {

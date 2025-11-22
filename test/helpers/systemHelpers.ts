@@ -19,6 +19,7 @@ import { By, until, error } from "selenium-webdriver";
 import { expect } from "chai";
 import * as path from "path";
 import * as fs from "fs-extra";
+import {pdfToText} from 'pdf-ts';
 
 export async function pause(time: number) {
   await new Promise((res) => setTimeout(res, time));
@@ -45,7 +46,11 @@ export async function openWorkspace(folder: string) {
 
 export async function readFile(filepath: string) {
   var file = await fs.readFile(path.resolve(path.join("test-fixtures", 'cis371_server', filepath)));
-  var fileContents = Buffer.from(file).toString("utf-8");
+  if (filepath.includes('.pdf')) {
+    var fileContents = await pdfToText(file);
+  } else {
+    var fileContents = Buffer.from(file).toString("utf-8");
+  }
   return fileContents;
 }
 
