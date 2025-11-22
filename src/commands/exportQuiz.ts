@@ -339,12 +339,12 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                         return;
                     }
                     const fileNameMD = `quiz_all_students.md`;
-                    saveDataToFile(fileNameMD, markdownContent, false);
+                    await saveDataToFile(fileNameMD, markdownContent, false);
                 } else if (config.pdfFlag) {
                     const fileNamePDF = `quiz_all_students.pdf`;
-                    convertHTMLToPdf(htmlContent, fileNamePDF);
+                    await convertHTMLToPdf(htmlContent, fileNamePDF);
                 } else {
-                    saveDataToFile(fileNameHTML, htmlContent, false);
+                    await saveDataToFile(fileNameHTML, htmlContent, false);
                 }
             } else {
                 for (const student in studentQuestionsMap) {
@@ -358,12 +358,12 @@ export const exportQuizCommand = vscode.commands.registerCommand('gvqlc.exportQu
                             return;
                         }
                         const fileNameMD = `quiz_${safeStudentName}.md`;
-                        saveDataToFile(fileNameMD, markdownContent, false);
+                        await saveDataToFile(fileNameMD, markdownContent, false);
                     } else if (config.pdfFlag) {
                         const fileNamePDF = `quiz_${safeStudentName}.pdf`;
-                        convertHTMLToPdf(htmlContent, fileNamePDF);
+                        await convertHTMLToPdf(htmlContent, fileNamePDF);
                     } else {
-                        saveDataToFile(fileNameHTML, htmlContent, false);
+                        await saveDataToFile(fileNameHTML, htmlContent, false);
                     }
                 }
             }

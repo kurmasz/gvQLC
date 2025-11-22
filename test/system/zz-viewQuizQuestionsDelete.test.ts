@@ -13,7 +13,7 @@
 
 import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
-import { pause } from '../helpers/systemHelpers';
+import { pause, readFile } from '../helpers/systemHelpers';
 import { setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
 
 import { expect } from 'chai';
@@ -49,24 +49,23 @@ describe('viewQuizQuestions Delete', function () {
 
         //Need to find a way to correctly undo the delete after it's clicked
         //var data = await loadDataFromFile('gvQLC.quizQuestions.json');
+        await verifyQuestionCount(14);
         await pause(10000);
         await deleteButton.click();
-
-        workbench = new Workbench();
-        await driver.wait(until.stalenessOf(workbench));
-        await browser.waitForWorkbench();
-        
-        const editorView = workbench.getEditorView();
-        await editorView.openEditor('View Quiz Questions');
-
-        await verifyQuestionCount(13);
-        //await saveDataToFile('gvQLC.quizQuestions.json', data);
-        //Somehow restore JSON to normal
-        //await verifyQuestionCount(14);
+        await pause(5000);
+        await verifyQuestionCountJSON(13);
     });
 
     async function verifyQuestionCount(expectedCount: number) {
         const element = await view.findWebElement(By.className('total-count'));
         expect(await element.getText()).to.equal(`Total Questions: ${expectedCount}`);
+    }
+
+    async function verifyQuestionCountJSON(expectedCount: number) {
+        const jsonFile = await readFile('gvQLC.quizQuestions.json');
+        const parsedContent = JSON.parse(jsonFile);
+        const dataContent = parsedContent.data;
+        console.log(dataContent, dataContent.length);
+        expect(await dataContent.length).to.equal(expectedCount);
     }
 });
