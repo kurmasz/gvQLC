@@ -14,7 +14,7 @@
 import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
 import { pause, readFile } from '../helpers/systemHelpers';
-import { setUpQuizQuestionWebView } from '../helpers/questionViewHelpers';
+import { setUpQuizQuestionWebView, overlap } from '../helpers/questionViewHelpers';
 
 import { expect } from 'chai';
 
@@ -39,10 +39,40 @@ describe('viewQuizQuestions Delete', function () {
     });
 
     it('deletes the entry when clicked', async () => {
+        var driver = VSBrowser.instance.driver;
         var deleteButton = await view.findWebElement(By.id('delete-0'));
 
         await verifyQuestionCount(14);
         await pause(5000);
+        await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
+        var i = 0;
+        while (i < 10) {
+            const deleteButton = await view.findWebElement(By.id('delete-0'));
+            const deleteRect = await deleteButton.getRect();
+            const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
+            const suggestRect = await suggestAI.getRect();
+            const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
+            const rephraseRect = await rephraseAI.getRect();
+            const edit = await view.findWebElement(By.id("edit-0"));
+            const editRect = await edit.getRect();
+            const copy = await view.findWebElement(By.id("copy-0"));
+            const copyRect = await copy.getRect();
+            if (!overlap(deleteRect, suggestRect)) {
+                break;
+            }
+            else if (!overlap(deleteRect, rephraseRect)) {
+                break;
+            }
+            else if (!overlap(deleteRect, editRect)) {
+                break;
+            }
+            else if (!overlap(deleteRect, copyRect)) {
+                break;
+            }
+            await pause(1000); //1 second wait
+            i += 1;
+        }
+        console.log('found');
         await deleteButton.click();
         await pause(5000);
         await verifyQuestionCountJSON(13);

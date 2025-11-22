@@ -149,6 +149,7 @@ describe("exportQuizQuestions", function () {
     expect(antonioQuiz).to.include('Quiz for antonio');
     expect(antonioQuiz).to.include('Due Date: ');
     expect(antonioQuiz).to.include('File: ');
+    console.log(antonioQuiz.includes("Answer: "));
     expect(antonioQuiz).to.not.include('Answer: ');
   });
 
