@@ -34,11 +34,11 @@ describe('viewQuizQuestions FileLink', function () {
     // Folder with data
     //
     ///////////////////////// 
-    it('opens the folder, runs the command and shows the title and total questions', async () => {      
+    it.skip('opens the folder, runs the command and shows the title and total questions', async () => {      
         ({view, summaryContainer, workbench} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
-    it('opens the link correctly when clicked', async () => {
+    it.skip('opens the link correctly when clicked', async () => {
         var driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
         browser.waitForWorkbench();

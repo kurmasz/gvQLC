@@ -234,9 +234,9 @@ describe("exportQuizQuestions", function () {
   }
 
   async function exportQuizQuestion(format: string, singlePage: boolean, includeAnswers: boolean) {
-    if (!(format in ['html', 'pdf', 'markdown'])) {
+    if (!(['html', 'pdf', 'markdown'].includes(format))) {
       console.log("Expected format = 'html', 'pdf', 'markdown'");
-      return
+      return;
     }
     const formatSelect = await view.findWebElement(By.id(`${format}Type`));
     if ((await formatSelect.isSelected()) === false) {

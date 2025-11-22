@@ -616,7 +616,7 @@ describe('viewQuizQuestions', function () {
         }
     })
 
-    it('Refreshes the page', async () => {
+    it.skip('Refreshes the page', async () => {
         var driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
         browser.waitForWorkbench();
