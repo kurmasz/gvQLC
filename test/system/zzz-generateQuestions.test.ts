@@ -55,7 +55,8 @@ describe('Generate Quiz Questions', function () {
         expect(await promtArea.getAttribute("value")).to.be.equal("Focus on the first function");
     });
 
-    it('generates output', async() => {
+    it.skip('generates output', async() => {
+        // Got to set a valid API key first which is iffy 
         var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.id('generateBtn')));
         var generateBtn = await view.findWebElement(By.id('generateBtn'));
@@ -80,7 +81,8 @@ describe('Generate Quiz Questions', function () {
         expect(await outputArea.getText()).to.be.not.equal("");
     });
 
-    it('saves output', async() => {
+    it.skip('saves output', async() => {
+        // Skipped if generates output is skipped
         var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.id('saveBtn')));
         var saveBtn = await view.findWebElement(By.id('saveBtn'));
