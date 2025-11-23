@@ -13,7 +13,7 @@
 
 import {WebView, VSBrowser, Browser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
-import { pause } from '../helpers/systemHelpers';
+import { pause, openWorkspace } from '../helpers/systemHelpers';
 import {setUpQuizQuestionWebView} from '../helpers/questionViewHelpers';
 
 import { expect } from 'chai';
@@ -34,11 +34,15 @@ describe('viewQuizQuestions FileLink', function () {
     // Folder with data
     //
     ///////////////////////// 
-    it.skip('opens the folder, runs the command and shows the title and total questions', async () => {      
+    it("Opens a workspace", async () => {
+        await openWorkspace("cis371_server");
+    });
+
+    it('opens the folder, runs the command and shows the title and total questions', async () => {      
         ({view, summaryContainer, workbench} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
-    it.skip('opens the link correctly when clicked', async () => {
+    it('opens the link correctly when clicked', async () => {
         var driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
         await browser.waitForWorkbench();
