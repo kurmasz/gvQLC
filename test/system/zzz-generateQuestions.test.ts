@@ -12,7 +12,7 @@
 
 import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
-import { pause, openFile, readFile, verifyQuestionCountJSON } from '../helpers/systemHelpers';
+import { pause, openFile, readFile, openWorkspace, verifyQuestionCountJSON } from '../helpers/systemHelpers';
 
 import { expect } from 'chai';
 import * as path from "path";
@@ -32,6 +32,11 @@ describe('Generate Quiz Questions', function () {
     // Folder with data
     //
     ///////////////////////// 
+
+    it("Opens a workspace", async () => {
+        await openWorkspace("cis371_server");
+    });
+    
     it('opens the folder, runs the command and shows the title and generate button', async () => {      
         view = await setupGenerateQuestion("cooper/http_socket.py");
     });

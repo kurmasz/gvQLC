@@ -13,7 +13,7 @@
 
 import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
-import { pause, readFile, verifyQuestionCountJSON } from '../helpers/systemHelpers';
+import { pause, readFile, openWorkspace, verifyQuestionCountJSON } from '../helpers/systemHelpers';
 import { setUpQuizQuestionWebView, overlap } from '../helpers/questionViewHelpers';
 
 import { expect } from 'chai';
@@ -34,6 +34,10 @@ describe('viewQuizQuestions Delete', function () {
     // Folder with data
     //
     ///////////////////////// 
+    it("Opens a workspace", async () => {
+        await openWorkspace("cis371_server");
+    });
+
     it('opens the folder, runs the command and shows the title and total questions', async () => {      
         ({view, summaryContainer, workbench} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
