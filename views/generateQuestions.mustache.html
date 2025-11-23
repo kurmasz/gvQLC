@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Generate Quiz Questions</title>
+        <style>
+            .prompt-input textarea {
+                margin: 20px 0 20px 0;
+                width: 75%;
+                height: 200px;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="prompt-input">
+            <textarea id="userPrompt" placeholder="Enter your prompt here..."></textarea>
+        </div>
+        <div class="quantity-input">
+            <label for="quantity">Amount of Questions to Generate:</label>
+            <input type="number" id="quantity" name="quantity" min="1" max="10" value="5">
+        </div>
+        <div class="generate-button">
+            <button id="generateBtn" onclick="generateQuestions()">Generate Questions</button>
+        </div>
+        <div class="output-area">
+            {{{questions}}}
+        </div>
+        <div class="save-results">
+            <button id="saveBtn" onclick="saveQuestions()
+            ">Save Questions</button>
+        </div>
+        <script>
+            const vscode = acquireVsCodeApi();
+
+            function generateQuestions() {
+                if (!userPrompt.value.trim()) {
+                    alert('Please enter a prompt to generate questions.');
+                    return;
+                }
+                vscode.postMessage({ type: 'generate', userPrompt: userPrompt.value, numQuestions: quantity.value });
+            }
+
+            function saveQuestions() {
+                //check if there are questions to save
+                const outputArea = document.querySelector('.output-area');
+                if (!outputArea.innerHTML.trim()) {
+                    alert('No questions to save. Please generate questions first.');
+                    return;
+                }
+                vscode.postMessage({ type: 'save' });
+            }
+            
+            window.addEventListener('message', event => {
+                const message = event.data;
+                if (message.type === 'displayQuestions') {
+                    document.querySelector('.output-area').innerHTML = message.questions;
+                }
+            });
+        </script>
+    </body>
+</html>
