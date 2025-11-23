@@ -46,6 +46,7 @@ export async function openWorkspace(folder: string) {
 
 export async function readFile(filepath: string) {
   var i = 0;
+  console.log(path.resolve(path.join("test-fixtures", 'cis371_server', filepath)));
   while (!(fs.existsSync(path.resolve(path.join("test-fixtures", 'cis371_server', filepath))))) {
     console.log(filepath, 'not found after', i, 'secs');
     await pause(1000);

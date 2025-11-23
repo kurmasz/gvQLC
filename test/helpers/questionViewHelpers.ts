@@ -31,7 +31,7 @@ export async function setUpQuizQuestionWebView(folder: string, expectedQuestionT
     // console.log('Tabs 1:', await Promise.all(tabs.map(t => t.getText())));
 
     const tab = await driver.wait(until.elementLocated(By.css('[aria-label="View Quiz Questions"]')), 15_000);
-    await driver.wait(until.elementIsVisible(tab), 5_000);
+    await driver.wait(until.elementIsVisible(tab), 15_000);
 
     // Switch to the frame containing the new view
     const view = new WebView();

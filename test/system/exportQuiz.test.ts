@@ -93,6 +93,7 @@ describe("exportQuizQuestions", function () {
 
   it("Checks that a single page PDF file is created", async () => {
     // Acts oddly on Linux machines, says pdf file being tested can't be found
+    // Passes on macoOS and Windows
     await exportQuizQuestion('pdf', true, false);
     const allQuiz = await readFile('quiz_all_students.pdf');
     expect(allQuiz).to.include('Quiz for ');
@@ -129,6 +130,7 @@ describe("exportQuizQuestions", function () {
 
   it("Checks that a single page PDF file with answer keys is created", async () => {
     // Acts oddly on Linux machines, says pdf file being tested can't be found
+    // Passes on macoOS and Windows
     await exportQuizQuestion('pdf', true, true);
     const allQuiz = await readFile('quiz_all_students.pdf');
     expect(allQuiz).to.include('Quiz for ');
@@ -166,6 +168,7 @@ describe("exportQuizQuestions", function () {
 
   it("Checks that multiple PDF files are created", async () => {
     // Acts oddly on Linux machines, says pdf file being tested can't be found
+    // Passes on macoOS and Windows
     await exportQuizQuestion('pdf', false, false);
     const antonioQuiz = await readFile('quiz_antonio.pdf');
     expect(antonioQuiz).to.include('Quiz for antonio');
@@ -203,6 +206,7 @@ describe("exportQuizQuestions", function () {
 
   it("Checks that multiple PDF files with answer keys are created", async () => {
     // Acts oddly on Linux machines, says pdf file being tested can't be found
+    // Passes on macoOS and Windows
     await exportQuizQuestion('pdf', false, true);
     const antonioQuiz = await readFile('quiz_antonio.pdf');
     expect(antonioQuiz).to.include('Quiz for antonio');
