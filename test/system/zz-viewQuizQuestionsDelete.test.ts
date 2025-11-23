@@ -13,7 +13,7 @@
 
 import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
-import { pause, readFile } from '../helpers/systemHelpers';
+import { pause, readFile, verifyQuestionCountJSON } from '../helpers/systemHelpers';
 import { setUpQuizQuestionWebView, overlap } from '../helpers/questionViewHelpers';
 
 import { expect } from 'chai';
@@ -44,7 +44,6 @@ describe('viewQuizQuestions Delete', function () {
 
         await verifyQuestionCount(14);
         await pause(5000);
-        await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
         var i = 0;
         while (i < 10) {
             const deleteButton = await view.findWebElement(By.id('delete-0'));
@@ -81,13 +80,5 @@ describe('viewQuizQuestions Delete', function () {
     async function verifyQuestionCount(expectedCount: number) {
         const element = await view.findWebElement(By.className('total-count'));
         expect(await element.getText()).to.equal(`Total Questions: ${expectedCount}`);
-    }
-
-    async function verifyQuestionCountJSON(expectedCount: number) {
-        const jsonFile = await readFile('gvQLC.quizQuestions.json');
-        const parsedContent = JSON.parse(jsonFile);
-        const dataContent = parsedContent.data;
-        console.log(dataContent, dataContent.length);
-        expect(await dataContent.length).to.equal(expectedCount);
     }
 });

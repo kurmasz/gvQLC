@@ -170,6 +170,14 @@ export async function dismissAllNotifications() {
   await center.close();
 }
 
+export async function verifyQuestionCountJSON(expectedCount: number) {
+  const jsonFile = await readFile('gvQLC.quizQuestions.json');
+  const parsedContent = JSON.parse(jsonFile);
+  const dataContent = parsedContent.data;
+  console.log(dataContent, dataContent.length);
+  expect(await dataContent.length).to.equal(expectedCount);
+}
+
 export async function openFile(filePath: string) {
   const timeoutMs = 10000;
   const quickOpen = await new Workbench().openCommandPrompt();
