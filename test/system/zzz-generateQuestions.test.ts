@@ -65,6 +65,17 @@ describe('Generate Quiz Questions', function () {
         await pause(10000);
 
         var outputArea = await view.findWebElement(By.className('output-area'));
+        var i = 0;
+        while ((await outputArea.getText()) === "") {
+          outputArea = await view.findWebElement(By.className('output-area'));
+          await pause(1000);
+          i += 1;
+          console.log(i);
+          if (i > 120) {
+            break;
+          }
+        }
+        outputArea = await view.findWebElement(By.className('output-area'));
         await driver.wait(until.elementTextContains(outputArea, "Question 1"), 60_000);
         expect(await outputArea.getText()).to.be.not.equal("");
     });
@@ -84,13 +95,10 @@ describe('Generate Quiz Questions', function () {
     async function setupGenerateQuestion(fileToOpen: string) {
       await openFile(fileToOpen);
       const driver = VSBrowser.instance.driver;
-      var windowHandles = await driver.getAllWindowHandles();
-      console.log(windowHandles, 'before');
       await new Workbench().executeCommand("gvQLC: Generate Quiz Question");
       await new Promise((res) => setTimeout(res, 1000));
 
-      windowHandles = await driver.getAllWindowHandles();
-      console.log(windowHandles, 'after');
+      var windowHandles = await driver.getAllWindowHandles();
       driver.switchTo().window(windowHandles[-1]);
 
       const tab = await driver.wait(
