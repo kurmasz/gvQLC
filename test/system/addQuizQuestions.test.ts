@@ -124,6 +124,9 @@ describe("addQuizQuestions", function () {
   it.skip("Copies part of the code segment when part of the code is highlighted", async () => {
     // Trouble highlighting only part of the code
     const codeBox = await view.findWebElement(By.css("#codeBlock"));
+    
+    // Theoretically should be highlighting the last 'section' of the codeBox's text
+    // But ends up doing nothing
     await codeBox.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
 
     const questionBox = await view.findWebElement(By.css("#question"));
@@ -161,7 +164,7 @@ describe("addQuizQuestions", function () {
     console.log("found");
     await aiButton.click();
     console.log("clicked");
-    // Need to delay further operation until after we get a response
+    await pause(10000);
 
     expect(await aiBox.getAttribute('value')).to.be.not.equal('');
   });
@@ -177,7 +180,7 @@ describe("addQuizQuestions", function () {
     console.log("found");
     await acceptButton.click();
     console.log("clicked");
-    // Need to delay further operation until after we get a response from the earlier button click
+    await pause(1000);
 
     expect(await questionBox.getAttribute('value')).to.be.not.equal('');
     expect(await answerBox.getAttribute('value')).to.be.not.equal('');

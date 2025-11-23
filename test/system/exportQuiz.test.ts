@@ -92,6 +92,7 @@ describe("exportQuizQuestions", function () {
   });
 
   it("Checks that a single page PDF file is created", async () => {
+    // Acts oddly on Linux machines, says pdf file being tested can't be found
     await exportQuizQuestion('pdf', true, false);
     const allQuiz = await readFile('quiz_all_students.pdf');
     expect(allQuiz).to.include('Quiz for ');
@@ -127,6 +128,7 @@ describe("exportQuizQuestions", function () {
   });
 
   it("Checks that a single page PDF file with answer keys is created", async () => {
+    // Acts oddly on Linux machines, says pdf file being tested can't be found
     await exportQuizQuestion('pdf', true, true);
     const allQuiz = await readFile('quiz_all_students.pdf');
     expect(allQuiz).to.include('Quiz for ');
@@ -140,12 +142,12 @@ describe("exportQuizQuestions", function () {
   it("Checks that multiple HTML files are created", async () => {
     await exportQuizQuestion('html', false, false);
     const antonioQuiz = await readFile('quiz_antonio.html');
-    expect(antonioQuiz).to.include('</div><div class="quiz-body">');
+    expect(antonioQuiz).to.include('<div class="quiz-body">');
     expect(antonioQuiz).to.include('<div class="quiz-question">');
     expect(antonioQuiz).to.include('<p class="quiz-number">');
     expect(antonioQuiz).to.include('<p class="quiz-text">');
     expect(antonioQuiz).to.include('<pre class="quiz-code">');
-    expect(antonioQuiz).to.include('<p class="quiz-answer">');
+    expect(antonioQuiz).to.not.include('<p class="quiz-answer">');
     expect(antonioQuiz).to.include('Quiz for antonio');
     expect(antonioQuiz).to.include('Due Date: ');
     expect(antonioQuiz).to.include('File: ');
@@ -163,6 +165,7 @@ describe("exportQuizQuestions", function () {
   });
 
   it("Checks that multiple PDF files are created", async () => {
+    // Acts oddly on Linux machines, says pdf file being tested can't be found
     await exportQuizQuestion('pdf', false, false);
     const antonioQuiz = await readFile('quiz_antonio.pdf');
     expect(antonioQuiz).to.include('Quiz for antonio');
@@ -199,6 +202,7 @@ describe("exportQuizQuestions", function () {
   });
 
   it("Checks that multiple PDF files with answer keys are created", async () => {
+    // Acts oddly on Linux machines, says pdf file being tested can't be found
     await exportQuizQuestion('pdf', false, true);
     const antonioQuiz = await readFile('quiz_antonio.pdf');
     expect(antonioQuiz).to.include('Quiz for antonio');

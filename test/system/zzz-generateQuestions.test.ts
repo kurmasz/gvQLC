@@ -65,7 +65,8 @@ describe('Generate Quiz Questions', function () {
     })
 
     it.skip('generates output', async() => {
-        // Got to set a valid API key first which is iffy 
+        // Got to set a valid API key first which is iffy in terms of security
+        // So just skipping for now
         var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.id('generateBtn')));
         var generateBtn = await view.findWebElement(By.id('generateBtn'));
@@ -91,7 +92,8 @@ describe('Generate Quiz Questions', function () {
     });
 
     it.skip('saves output', async() => {
-        // Skipped if generates output is skipped
+        // Skipped as generates output test is skipped
+        // No output means we can't save to JSON
         var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.id('saveBtn')));
         var saveBtn = await view.findWebElement(By.id('saveBtn'));

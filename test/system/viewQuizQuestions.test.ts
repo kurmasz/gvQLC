@@ -217,6 +217,8 @@ describe('viewQuizQuestions', function () {
         var tds = await trow.findElements(By.css('td'));
 
         // Find question text and highlight an area
+        // Theoretically should be highlighting the last 'section' of the question's text
+        // But ends up doing nothing
         var question = await tds[2].findElement(By.id('question-0'));
         await question.sendKeys(Key.CONTROL, Key.SHIFT, Key.ARROW_LEFT, Key.NULL);
 
@@ -245,16 +247,13 @@ describe('viewQuizQuestions', function () {
     });
 
     it('notifies of API key error', async() => {
-        //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
 
         const driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.css('#suggestAI-0')));
-        //const aiButton = await tds[3].findElement(By.id("suggestAI-0"));
         const aiButton = await view.findWebElement(By.id("suggestAI-0"));
-        //Comment might be better?
         await aiButton.click();
 
         await driver.wait(until.elementLocated(By.css('#ai-0')));
@@ -265,7 +264,6 @@ describe('viewQuizQuestions', function () {
     })
 
     it('suggests a question using AI', async() => {
-        //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -275,7 +273,6 @@ describe('viewQuizQuestions', function () {
         var aiBox = await tds[2].findElement(By.id('ai-0'));
         
         await driver.wait(until.elementLocated(By.css('#suggestAI-0')));
-        //const suggestButton = await tds[3].findElement(By.id("suggestAI-0"));
         const suggestButton = await view.findWebElement(By.id("suggestAI-0"));
         await suggestButton.click();
 
@@ -283,7 +280,6 @@ describe('viewQuizQuestions', function () {
     })
 
     it('rephrases a question using AI', async() => {
-        //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -293,7 +289,6 @@ describe('viewQuizQuestions', function () {
         var aiBox = await tds[2].findElement(By.id('ai-0'));
 
         await driver.wait(until.elementLocated(By.css('#rephraseAI-0')));
-        //const rephraseAI = await tds[3].findElement(By.id("rephraseAI-0"));
         const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
         await rephraseAI.click();
 
@@ -301,7 +296,6 @@ describe('viewQuizQuestions', function () {
     })
 
     it('accepts AI output', async () => {
-        //Click intercepted error
         var tbody = await view.findWebElement(By.id('questionsTableBody'));
         var trow = await tbody.findElement(By.id('row-0'));
         var tds = await trow.findElements(By.css('td'));
@@ -315,10 +309,6 @@ describe('viewQuizQuestions', function () {
 
         await driver.wait(until.elementLocated(By.css('#acceptAI-0')));
         const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
-        const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
-        const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
-        const exclude = await view.findWebElement(By.id("exclude-0"));
-        const label = await view.findWebElement(By.css("[for='exclude-0']"));
         var i = 0;
         while (i < 10) {
             const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
@@ -371,9 +361,6 @@ describe('viewQuizQuestions', function () {
         var label = await view.findWebElement(By.css("[for='exclude-0']"));
         console.log("found label");
 
-        const acceptAI = await view.findWebElement(By.id("acceptAI-0"));
-        const suggestAI = await view.findWebElement(By.id("suggestAI-0"));
-        const rephraseAI = await view.findWebElement(By.id("rephraseAI-0"));
         var i = 0;
         while (i < 10) {
             console.log("Loop %d: \n", i);
@@ -610,9 +597,10 @@ describe('viewQuizQuestions', function () {
     })
 
     it.skip('Refreshes the page', async () => {
+        // vscode-extension-tester is finicky
+        // Having trouble getting the .monaco-workbench element
         var driver = VSBrowser.instance.driver;
         var browser = VSBrowser.instance;
-        await browser.waitForWorkbench();
 
         await driver.wait(until.elementLocated(By.css('#refreshBtn')));
         const refreshBtn = await view.findWebElement(By.css('#refreshBtn'));
@@ -622,7 +610,9 @@ describe('viewQuizQuestions', function () {
         console.log('editorView');
         await driver.wait(until.elementsLocated(By.css('.monaco-workbench')), 15000);
         
-        var tabs = await editorView.getOpenEditorTitles(); // Issue here with finding .monaco-workbench element
+        var tabs = await editorView.getOpenEditorTitles(); 
+        // Issue here with finding .monaco-workbench element
+        
         console.log(tabs);
         await editorView.openEditor('View Quiz Questions');
         var currTab = await editorView.getActiveTab();
