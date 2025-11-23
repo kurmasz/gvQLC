@@ -12,7 +12,7 @@
 
 import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
 import { By, WebElement } from 'selenium-webdriver';
-import { pause, openFile, readFile, openWorkspace, verifyQuestionCountJSON } from '../helpers/systemHelpers';
+import { pause, openFile, readFile, openTempWorkspace, verifyQuestionCountJSON } from '../helpers/systemHelpers';
 
 import { expect } from 'chai';
 import * as path from "path";
@@ -20,6 +20,7 @@ import * as fs from "fs";
 
 describe('Generate Quiz Questions', function () {
     let view: WebView;
+    let tempWorkspaceDir: string;
 
     this.timeout(150_000);
 
@@ -33,8 +34,9 @@ describe('Generate Quiz Questions', function () {
     //
     ///////////////////////// 
 
-    it("Opens a workspace", async () => {
-        await openWorkspace("cis371_server");
+    it("Opens a temporary workspace", async () => {
+        tempWorkspaceDir = await openTempWorkspace("cis371_server");
+        await new Promise((res) => setTimeout(res, 5000)); // crude but useful
     });
     
     it('opens the folder, runs the command and shows the title and generate button', async () => {      
