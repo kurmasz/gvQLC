@@ -11,7 +11,7 @@
  * *********************************************************************************/
 
 import { WebView, VSBrowser, Workbench, until } from 'vscode-extension-tester';
-import { By, WebElement } from 'selenium-webdriver';
+import { By, WebElement, Key } from 'selenium-webdriver';
 import { pause, openFile, readFile, openTempWorkspace, verifyQuestionCountJSON } from '../helpers/systemHelpers';
 
 import { expect } from 'chai';
@@ -54,6 +54,15 @@ describe('Generate Quiz Questions', function () {
         await pause(5000);
         expect(await promtArea.getAttribute("value")).to.be.equal("Focus on the first function");
     });
+
+    it('sets question quantity to 6', async () => {
+      var driver = VSBrowser.instance.driver;
+        await driver.wait(until.elementLocated(By.id('quantity')));
+        var quantityInput = await view.findWebElement(By.id('quantity'));
+        expect(parseInt(await quantityInput.getAttribute('value'))).to.be.equal(5);
+        quantityInput.sendKeys(Key.ARROW_UP);
+        expect(parseInt(await quantityInput.getAttribute('value'))).to.be.equal(6);
+    })
 
     it.skip('generates output', async() => {
         // Got to set a valid API key first which is iffy 
