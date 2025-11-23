@@ -65,7 +65,7 @@ describe('Generate Quiz Questions', function () {
         await pause(10000);
 
         var outputArea = await view.findWebElement(By.id('output-area'));
-        await driver.wait(until.elementTextContains(outputArea, "Question 1"));
+        await driver.wait(until.elementTextContains(outputArea, "Question 1"), 60_000);
         expect(await outputArea.getText()).to.be.not.equal("");
     });
 
