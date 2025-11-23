@@ -1,3 +1,11 @@
+/************************************************************************************
+ * 
+ * generateQuestions.ts
+ * 
+ * The generateQuestions command.
+ * 
+ * (C) 2025 Richard Roy
+ * *********************************************************************************/
 
 import * as path from 'path';
 import * as vscode from 'vscode';

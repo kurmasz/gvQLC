@@ -4,7 +4,7 @@
  * 
  * Helpers for testing the quiz question view
  * 
- * (C) 2025 Zachary Kurmas
+ * (C) 2025 Zachary Kurmas, Phuc Le
  * *********************************************************************************/
 
 

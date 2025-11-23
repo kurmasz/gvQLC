@@ -4,7 +4,7 @@
  *
  * Helpers for system tests
  *
- * (C) 2025 Zachary Kurmas
+ * (C) 2025 Zachary Kurmas, Phuc Le
  * *********************************************************************************/
 
 import {

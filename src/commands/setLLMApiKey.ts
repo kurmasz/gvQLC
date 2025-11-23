@@ -4,7 +4,7 @@
  * 
  * Command to securely store LLM API key insystem keychain.
  * 
- * (C) 2025 Zachary Kurmas
+ * (C) 2025 Elijah Morgan
  * *********************************************************************************/
 
 import * as vscode from 'vscode';

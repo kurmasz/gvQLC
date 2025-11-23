@@ -4,7 +4,7 @@
  * 
  * The viewQuizQuestions command.
  * 
- * (C) 2025 Benedict Osei Sefa and Zachary Kurmas
+ * (C) 2025 Benedict Osei Sefa, Zachary Kurmas, Phuc Le
  * *********************************************************************************/
 
 import * as vscode from 'vscode';
