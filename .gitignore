@@ -15,3 +15,4 @@ gvQLC.quizQuestions.json
 
 /.github/copilot-instructions.md
 test-fixtures/cis371_server/userSettings.json
+quiz_*
