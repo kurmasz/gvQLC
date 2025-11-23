@@ -82,8 +82,14 @@ describe('Generate Quiz Questions', function () {
     async function setupGenerateQuestion(fileToOpen: string) {
       await openFile(fileToOpen);
       const driver = VSBrowser.instance.driver;
+      var windowHandles = await driver.getAllWindowHandles();
+      console.log(windowHandles, 'before');
       await new Workbench().executeCommand("gvQLC: Generate Quiz Question");
       await new Promise((res) => setTimeout(res, 1000));
+
+      windowHandles = await driver.getAllWindowHandles();
+      console.log(windowHandles, 'after');
+      driver.switchTo().window(windowHandles[-1]);
 
       const tab = await driver.wait(
         until.elementLocated(By.css('[aria-label="Generate Quiz Questions"]')),
