@@ -56,11 +56,11 @@ describe('Generate Quiz Questions', function () {
     });
 
     it('sets question quantity to 6', async () => {
-      var driver = VSBrowser.instance.driver;
+        var driver = VSBrowser.instance.driver;
         await driver.wait(until.elementLocated(By.id('quantity')));
         var quantityInput = await view.findWebElement(By.id('quantity'));
         expect(parseInt(await quantityInput.getAttribute('value'))).to.be.equal(5);
-        quantityInput.sendKeys(Key.ARROW_UP);
+        await quantityInput.sendKeys(Key.ARROW_UP);
         expect(parseInt(await quantityInput.getAttribute('value'))).to.be.equal(6);
     })
 
