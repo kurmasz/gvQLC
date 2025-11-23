@@ -38,7 +38,7 @@ describe('Generate Quiz Questions', function () {
     });
     
     it('opens the folder, runs the command and shows the title and generate button', async () => {      
-        view = await setupGenerateQuestion("cooper/http_socket.py");
+        view = await setupGenerateQuestion("sam/my_http_server.py");
     });
 
     it('enters a prompt', async () => {
