@@ -102,6 +102,9 @@ export async function verifyVisibility(container: WebElement, expectedVisibility
     const rows = await tbody.findElements(By.css('tr'));
     for (const row of rows) {
         const label = await row.getAttribute('data-label');
+        if (label === null) {
+            throw new Error('Question row is missing its data-label attribute');
+        }
         expect(await container.isDisplayed(), `Visiblity of ${label} should be ${expectedVisibility[label]}`).to.equal(expectedVisibility[label]);
     }
 }

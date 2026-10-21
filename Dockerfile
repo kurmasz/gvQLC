@@ -1,5 +1,5 @@
-# Use official Node 20 image (Debian Bullseye)
-FROM node:20-bullseye
+# Use official Node 24 image (Debian Bullseye)
+FROM node:24-bullseye
 
 # Install system dependencies needed for VS Code & Xvfb
 RUN apt-get update && apt-get install -y \
