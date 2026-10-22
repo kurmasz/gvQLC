@@ -1,5 +1,7 @@
 src/**
 test-resources/**
+test-fixtures/**
+test-fixtures-tmp/**
 *test-extensions/**
 **/*.ts
 **/*.d.ts
@@ -10,3 +12,4 @@ resources/**
 .vscode/
 settings.json
 out/ui-test/
+out/test/**
