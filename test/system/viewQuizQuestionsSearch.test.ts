@@ -126,7 +126,7 @@ describe('viewQuizQuestions search', function () {
         const visibility = allHidden();
         visibility['1b'] = true;
 
-        verifyVisibility(view, visibility);
+        await verifyVisibility(view, visibility);
     });
 
     it('shows all questions after search bar is cleared', async () => {
@@ -138,7 +138,7 @@ describe('viewQuizQuestions search', function () {
         const element = await view.findWebElement(By.css('#filterCount'));
         expect(await element.getText()).to.be.empty;
 
-        verifyVisibility(view, allVisible());
+        await verifyVisibility(view, allVisible());
     });
 
 

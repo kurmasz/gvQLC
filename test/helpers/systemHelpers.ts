@@ -236,7 +236,7 @@ export async function openFile(filePath: string) {
   while (Date.now() - start < timeoutMs) {
     try {
       // Attempt a minimal interaction that requires the editor to be ready
-      await editor.selectText(""); // selecting empty string
+      await editor.setCursor(1, 1);
       return editor;
     } catch {
       // editor not ready yet

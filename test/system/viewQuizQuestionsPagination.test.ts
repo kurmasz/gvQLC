@@ -35,11 +35,11 @@ describe('viewQuizQuestions pagination', function () {
     it('defaults to displaying 15 rows', async () => {
         // Make sure the pagination is set to 15. Otherwise, tests further down will break.
         const element3 = await view.findWebElement(By.css('#rowsPerPage option[value="15"]'));
-        expect(await element3.getAttribute('selected') !== null);
+        expect(await element3.isSelected()).to.be.true;
     });
 
     it('shows that there is only one page', async () => {
-       verifyTotalPages(1);
+       await verifyTotalPages(1);
 
         const pageNumberContainer = await view.findWebElement(By.css('#pageNumbers'));
         const allPageNumbers = await pageNumberContainer.findElements(By.css('.page-btn'));
@@ -48,10 +48,10 @@ describe('viewQuizQuestions pagination', function () {
     });
 
     it('disables the navigation buttons', async () => {
-        verifyButtonDisabled('#firstPageBtn');
-        verifyButtonDisabled('#prevPageBtn');
-        verifyButtonDisabled('#nextPageBtn');
-        verifyButtonDisabled('#lastPageBtn');
+        await verifyButtonDisabled('#firstPageBtn');
+        await verifyButtonDisabled('#prevPageBtn');
+        await verifyButtonDisabled('#nextPageBtn');
+        await verifyButtonDisabled('#lastPageBtn');
     });
 
     it('displays the 1st row', async () => {
@@ -78,33 +78,23 @@ describe('viewQuizQuestions pagination', function () {
     });
 
     it('shows there are now two pages', async () => {
-        verifyTotalPages(2);
+        await verifyTotalPages(2);
 
         const pageNumberContainer = await view.findWebElement(By.css('#pageNumbers'));
         const allPageNumbers = await pageNumberContainer.findElements(By.css('.page-btn'));
         expect(allPageNumbers.length).to.equal(2);
         expect(await allPageNumbers[0].getText()).to.equal("1");
-        expect(await allPageNumbers[0].getText()).to.equal("1");
+        expect(await allPageNumbers[1].getText()).to.equal("2");
     });
 
     it('disables "previous" buttons when on page 1 of 2', async() => {
-        verifyButtonDisabled('#firstPageBtn');
-        verifyButtonDisabled('#prevPageBtn');
+        await verifyButtonDisabled('#firstPageBtn');
+        await verifyButtonDisabled('#prevPageBtn');
     });
 
     it('enables "next" buttons when on page 1 of 2', async() => {
-        verifyButtonEnabled('#nextPageBtn');
-        verifyButtonEnabled('#lastPageBtn');
-    });
-
-    it('enables "previous" buttons when on page 2 of 2', async() => {
-        verifyButtonEnabled('#firstPageBtn');
-        verifyButtonEnabled('#prevPageBtn');
-    });
-
-    it('disables "next" buttons when on page 2 of 2', async() => {
-        verifyButtonDisabled('#nextPageBtn');
-        verifyButtonDisabled('#lastPageBtn');
+        await verifyButtonEnabled('#nextPageBtn');
+        await verifyButtonEnabled('#lastPageBtn');
     });
 
     it('displays the first queston (when two pages)', async () => {
@@ -152,6 +142,11 @@ describe('viewQuizQuestions pagination', function () {
         // Finds: <button class="page-ban">2</button>
         const button2 = await VSBrowser.instance.driver.findElement(By.xpath("//button[normalize-space()='2']"));
         await button2.click();
+
+        await verifyButtonEnabled('#firstPageBtn');
+        await verifyButtonEnabled('#prevPageBtn');
+        await verifyButtonDisabled('#nextPageBtn');
+        await verifyButtonDisabled('#lastPageBtn');
 
         const row0 = await view.findWebElement(By.css(`#row-0`));
         expect(await row0.isDisplayed()).to.be.false;
@@ -202,7 +197,7 @@ describe('viewQuizQuestions pagination', function () {
         expect(await header.getText()).to.equal('Student Question Summary');
 
         // first row
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'antonio',
             questionCount: 2,
             color: ViewColors.GREEN,
@@ -210,10 +205,10 @@ describe('viewQuizQuestions pagination', function () {
         });
 
         // last row
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'uncle_bob',
-            questionCount: 1,
-            color: ViewColors.YELLOW,
+            questionCount: 2,
+            color: ViewColors.GREEN,
             hasQuestions: true
         });
     });
@@ -238,10 +233,35 @@ describe('viewQuizQuestions pagination', function () {
         // Run a search that will produce two results
         await searchFor('awesome');
         await verifyTotalPages(1);
+        const awesomeRow = await view.findWebElement(By.css('#row-2'));
+        expect(await awesomeRow.isDisplayed()).to.be.true;
+
+        // A match beyond the original first page must still appear on page 1.
+        await searchFor('uncle_bob');
+        await verifyTotalPages(1);
+        const lastRow = await view.findWebElement(By.css('#row-13'));
+        expect(await lastRow.isDisplayed()).to.be.true;
 
         // Now run a search that will produce 13 results
         await searchFor("Wh");
         await verifyTotalPages(2);
+        const rows = await view.findWebElements(By.css('#questionsTableBody tr'));
+        expect((await Promise.all(rows.map(row => row.isDisplayed()))).filter(Boolean).length).to.equal(10);
+        await (await view.findWebElement(By.id('nextPageBtn'))).click();
+        expect((await Promise.all(rows.map(row => row.isDisplayed()))).filter(Boolean).length).to.equal(3);
+    });
+
+    it('keeps navigation disabled when a search has no matches', async () => {
+        await searchFor('n0suchStr1ngF0und');
+        await verifyTotalPages(1);
+        await verifyButtonDisabled('#firstPageBtn');
+        await verifyButtonDisabled('#prevPageBtn');
+        await verifyButtonDisabled('#nextPageBtn');
+        await verifyButtonDisabled('#lastPageBtn');
+        await (await view.findWebElement(By.css('#rowsPerPage option[value="15"]'))).click();
+        await verifyTotalPages(1);
+        const pageJump = await view.findWebElement(By.id('pageJumpInput'));
+        expect(await pageJump.getAttribute('value')).to.equal('1');
     });
 
     async function verifyTotalPages(expectedTotalPages: number) {
@@ -252,11 +272,10 @@ describe('viewQuizQuestions pagination', function () {
 
     async function verifyButtonEnabled(id: string, enabled: boolean = true) {
         const button = await view.findWebElement(By.css(id));
-        const firstIsDisabled = await button.getAttribute('disabled') !== null;
-        expect(firstIsDisabled).to.equal(enabled);
+        expect(await button.isEnabled()).to.equal(enabled);
     }
 
     async function verifyButtonDisabled(id: string) {
-        verifyButtonEnabled(id, false);
+        await verifyButtonEnabled(id, false);
     }
 }); // end describe
