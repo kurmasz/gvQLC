@@ -213,13 +213,13 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     };
     panel.webview.html = Util.renderMustache('quizQuestions.mustache.html', data);
     // Handle messages from the Webview
-    panel.webview.onDidReceiveMessage((message) => {
+    panel.webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'saveChanges') {
             reorderedQuestions[message.index].highlightedCode = message.updatedCode;
             reorderedQuestions[message.index].text = message.updatedQuestion;
             logToFile('Re-assigning personalizedQuestonsData with reordered questions from saveChanges');
             state.personalizedQuestionsData = reorderedQuestions;
-            Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            await Util.saveDataToFile('gvQLC.quizQuestions.json', state.personalizedQuestionsData);
             vscode.window.showInformationMessage('Changes saved successfully!');
         }
 
@@ -227,7 +227,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
             reorderedQuestions[message.index].excludeFromQuiz = message.excludeStatus;
             logToFile('Re-assigning personalizedQuestonsData with reordered questions from toggleExclude');
             state.personalizedQuestionsData = reorderedQuestions;
-            Util.saveDataToFile('personalizedQuestions.json', state.personalizedQuestionsData);
+            await Util.saveDataToFile('gvQLC.quizQuestions.json', state.personalizedQuestionsData);
         }
 
         if (message.type === 'editQuestion') {
@@ -236,6 +236,10 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
         }
 
         if (message.type === 'refreshView') {
+            state.personalizedQuestionsData = [];
+            state.commentsData = [];
+            state.questionsData = [];
+            state.dataLoaded = false;
             panel.dispose();
             vscode.commands.executeCommand('gvqlc.viewQuizQuestions');
         }
