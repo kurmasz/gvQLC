@@ -62,17 +62,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         console.log('Could not load existing questions:', error);
     }
 
-    // Function to load existing answers
-    const loadExistingAnswers = async () => {
-        try {
-            const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/quiz_questions_answers.json`);
-            const fileContent = await vscode.workspace.fs.readFile(uri);
-            return JSON.parse(fileContent.toString());
-        } catch (error) {
-            return [];
-        }
-    };
-
     // Create a Webview Panel for adding a personalized question
     const panel = vscode.window.createWebviewPanel(
         'addPersonalizedQuestion',
@@ -272,12 +261,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         if (message.type === 'submitQuestion') {
            
             
-            // TODO: Is studentName here because it might be useful later when we 
-            // add the quiz prep feature?)
-            /* 
-            const submissionRoot = (await config(true)).submissionRoot;
-            const studentName = Util.extractStudentName(editor.document.uri.fsPath, submissionRoot);
-            */
             const questionData = {
                 filePath: relativePath, // Using relative path here
                 range: {
@@ -293,31 +276,6 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
             // Save to personalizedQuestions.json
             state.personalizedQuestionsData.push(questionData);
             await Util.saveDataToFile(quizQuestionsFileName, state.personalizedQuestionsData);
-
-            //
-            // Why is this here?  I think this is old code we can deprecate.
-            //
-            // Save answer to quiz_questions_answers.json if provided
-            /*
-            if (message.answer && message.answer.trim() !== '') {
-                try {
-                    let answersData = await loadExistingAnswers();
-                    answersData.push({
-                        questionId: state.personalizedQuestionsData.length - 1,
-                        questionText: message.question,
-                        answer: message.answer.trim(),
-                        studentName: studentName,
-                        filePath: relativePath, // Using relative path here too
-                        timestamp: new Date().toISOString(),
-                        highlightedCode: message.editedCode
-                    });
-                    await Util.saveDataToFile('quiz_questions_answers.json', answersData);
-                    vscode.window.showInformationMessage('Answer saved successfully!');
-                } catch (error: any) {
-                    vscode.window.showErrorMessage(`Failed to save answer: ${error.message}`);
-                }
-            }
-            */
 
             vscode.window.showInformationMessage('Question added successfully.');
             panel.dispose();
