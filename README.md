@@ -1,33 +1,22 @@
-# Hello World ExTester
+# gvQLC
 
-This is a Hello World example extension that shows you how to set up and run simple UI tests for VS Code extensions using the ExTester.
+## Set up development environment
 
-## Motivation
+1. Install Node.js 24 with npm and VS Code 1.101 or later.
+2. Install the dependencies from the repository folder:
 
-Our example extension gives us the ability to call the `Hello World` command, one that shows a notification saying `Hello World!`. We would like to write automated regression tests for this feature.
+    ```sh
+   npm ci
+    ```
 
-![demo](./demo.gif)
+3. Open the folder in VS Code. Press F5 to start the extension in a development window.
 
-## Dependencies and Requirements
+## Build VSIX file
 
-In order to run the ExTester, the extension needs 2 packages as (dev)Dependencies:
+Run this command from the repository folder:
 
-- `vscode-extension-tester` - the extension testing framework itself
-- `mocha` - Mocha test framework is required, as the ExTester uses it for writing and running its tests
+```sh
+npx @vscode/vsce package
+```
 
-This example also uses `chai` as the assertion framework of choice, but feel free to use any assertion package you like.
-
-Also note that the folder `test-resources` (which stores all the required binaries for testing) is excluded from typescript compiler and ESLint. This is necessary for both to work when building your project. We also recommend adding the folder into your `.gitignore` file.
-
-## Running the Tests
-
-- Run `npm install` in terminal to install dependencies
-- Run `npm run ui-test` in terminal. This will:
-  - Compile the code
-  - Download the latest version of VS Code
-  - Download the adequate version of ChromeDriver
-  - Run the downloaded VS Code binary using ChromeDriver
-  - Run the tests located in `src/ui-test`
-
-To check the `ui-test` script, see the `script` section inside `package.json`.
-To check the test code, see the `src/ui-test/*-test.ts` files.
+The command compiles the code, runs the lint checks, and creates `gvqlc-<version>.vsix` in the repository folder.
