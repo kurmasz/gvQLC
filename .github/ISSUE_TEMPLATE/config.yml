@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: 💡 Questions
-    url: https://github.com/redhat-developer/vscode-extension-tester/discussions
-    about: FAQ, Ideas, Q&A, ...
-  - name: 📝 Documentation
-    url: https://github.com/redhat-developer/vscode-extension-tester/wiki
-    about: Documentation with examples of usage.
