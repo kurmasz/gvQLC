@@ -57,7 +57,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         const uri = vscode.Uri.file(`${workspaceFolders[0].uri.fsPath}/${quizQuestionsFileName}`);
         const fileContent = await vscode.workspace.fs.readFile(uri);
         const data = JSON.parse(fileContent.toString());
-        existingQuestions = data.map((item: { text: string; }) => item.text).filter(Boolean);
+        existingQuestions = data.data.map((item: { text: string; }) => item.text).filter(Boolean);
     } catch (error) {
         console.log('Could not load existing questions:', error);
     }
