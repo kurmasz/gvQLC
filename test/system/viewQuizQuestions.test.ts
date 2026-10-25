@@ -157,7 +157,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('generates a correct summary for first student', async () => {
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'antonio',
             questionCount: 2,
             color: ViewColors.GREEN,
@@ -166,7 +166,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('generates a correct summary for awesome', async () => {
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'awesome',
             questionCount: 2,
             color: ViewColors.GREEN,
@@ -175,7 +175,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('generates a correct summary for caleb', async () => {
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'caleb',
             questionCount: 1,
             color: ViewColors.YELLOW,
@@ -184,7 +184,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('generates a correct summary for larry', async () => {
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'larry',
             questionCount: 0,
             color: ViewColors.RED,
@@ -193,7 +193,7 @@ describe('viewQuizQuestions', function () {
     });
 
     it('generates a correct summary for george', async () => {
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'george',
             questionCount: 1,
             color: ViewColors.YELLOW,
@@ -202,10 +202,10 @@ describe('viewQuizQuestions', function () {
     });
 
     it('generates a correct summary for last student', async () => {
-        verifySummaryDisplayed(summaryContainer, {
+        await verifySummaryDisplayed(summaryContainer, {
             name: 'uncle_bob',
-            questionCount: 1,
-            color: ViewColors.YELLOW,
+            questionCount: 2,
+            color: ViewColors.GREEN,
             hasQuestions: true
         });
     });

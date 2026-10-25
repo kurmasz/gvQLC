@@ -1,5 +1,5 @@
 {
-  "typescript.updateImportsOnFileMove.enabled": "always",
+  "js/ts.updateImportsOnFileMove.enabled": "always",
   "workbench.editor.enablePreview": true,
   "git.autoRepositoryDetection": false,
   "terminal.integrated.sendKeybindingsToShell": true,

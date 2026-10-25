@@ -2,6 +2,7 @@ out
 node_modules
 .vscode-test/
 *.vsix
+*.vsix.*
 test-resources/
 .test-extensions
 .DS_Store
@@ -9,3 +10,15 @@ Thumbs.db
 .test_gitignore
 .npm
 gvQLC_log.txt
+
+/.bash_history
+/.cache/
+/.config/
+/.dbus/
+/.pki/
+/.vscode-test-user-data/
+/.vscode/argv.json
+
+*.log
+__pycache__/
+*.py[cod]

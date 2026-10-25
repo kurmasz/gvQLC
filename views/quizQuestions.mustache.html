@@ -264,7 +264,8 @@
                     return;
                 }
 
-                if (index >= startIdx && index < endIdx) {
+                const pageIndex = isFiltered ? filteredRows.indexOf(index) : index;
+                if (pageIndex >= startIdx && pageIndex < endIdx) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
@@ -368,7 +369,7 @@
         // Change rows per page
         function changeRowsPerPage() {
             rowsPerPage = parseInt(document.getElementById('rowsPerPage').value);
-            totalPages = Math.ceil((isFiltered ? filteredRows.length : totalQuestions) / rowsPerPage);
+            totalPages = Math.max(1, Math.ceil((isFiltered ? filteredRows.length : totalQuestions) / rowsPerPage));
             if (currentPage > totalPages) {
                 currentPage = totalPages;
             }
@@ -403,7 +404,7 @@
                     : 'No matches';
             }
 
-            totalPages = Math.ceil((isFiltered ? filteredRows.length : totalQuestions) / rowsPerPage);
+            totalPages = Math.max(1, Math.ceil((isFiltered ? filteredRows.length : totalQuestions) / rowsPerPage));
             currentPage = 1;
             initializeTable();
         }

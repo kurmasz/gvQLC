@@ -97,12 +97,15 @@ export async function verifySummaryDisplayed(container: WebElement, summaryData:
     expect(await cells[2].getText()).to.equal(expected);
 }
 
-export async function verifyVisibility(container: WebElement, expectedVisibility: Record<string, boolean>) {
-    const tbody = await container.findElement(By.css('#questionsTableBody'));
+export async function verifyVisibility(view: WebView, expectedVisibility: Record<string, boolean>) {
+    const tbody = await view.findWebElement(By.css('#questionsTableBody'));
     const rows = await tbody.findElements(By.css('tr'));
     for (const row of rows) {
         const label = await row.getAttribute('data-label');
-        expect(await container.isDisplayed(), `Visiblity of ${label} should be ${expectedVisibility[label]}`).to.equal(expectedVisibility[label]);
+        if (label === null) {
+            throw new Error('Question row is missing its data-label attribute');
+        }
+        expect(await row.isDisplayed(), `Visibility of ${label} should be ${expectedVisibility[label]}`).to.equal(expectedVisibility[label]);
     }
 }
 

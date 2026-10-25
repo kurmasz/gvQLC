@@ -5,6 +5,7 @@
             "type": "extensionHost",
             "request": "launch",
             "name": "Run Extension",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
             "sourceMaps": true,
             "preLaunchTask": "npm: compile",
             "skipFiles": [

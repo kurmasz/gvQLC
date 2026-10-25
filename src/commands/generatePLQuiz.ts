@@ -197,9 +197,10 @@ ${question.text || "No question text provided"}
         fs.mkdirSync(studentAssessmentFolderPath, { recursive: true });
       }
 
-      // toISOString will add a time zone (UTC by default).
+      // Treat the course's timezone-free timestamp as UTC while adding days
+      // so the machine's timezone does not shift the review time.
       const startOfReviewUTC = new Date(
-        new Date(config.startDate).getTime() + config.daysForGrading * 86400000
+        new Date(config.startDate + 'Z').getTime() + config.daysForGrading * 86400000
       ).toISOString();
 
       // Remove teh time zone component so that PL
