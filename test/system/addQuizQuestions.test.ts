@@ -18,7 +18,7 @@ import {
   NotificationType,
   TextEditor,
 } from "vscode-extension-tester";
-import { By, until } from "selenium-webdriver";
+import { By, Key, until } from "selenium-webdriver";
 import {
   pause,
   logAllNotifications,
@@ -202,7 +202,22 @@ describe("addQuizQuestions", function () {
   async function addQuizQuestion(textToSelect: string) {
     const driver = VSBrowser.instance.driver;
     const editor = new TextEditor();
-    await editor.selectText(textToSelect);
+    // selectText reads the editor through the system clipboard, which can return
+    // stale contents. Locate the snippet in our fixture and select it directly.
+    const source = fs.readFileSync(
+      path.join(tempWorkspaceDir, "sam", "my_http_server.py"), "utf-8"
+    );
+    const offset = source.indexOf(textToSelect);
+    expect(offset, `Snippet missing from fixture: ${textToSelect}`).to.be.at.least(0);
+    const precedingLines = source.slice(0, offset).split("\n");
+    await editor.setCursor(
+      precedingLines.length, precedingLines[precedingLines.length - 1].length + 1
+    );
+    const selection = driver.actions().keyDown(Key.SHIFT);
+    for (let i = 0; i < textToSelect.length; ++i) {
+      selection.sendKeys(Key.RIGHT);
+    }
+    await selection.keyUp(Key.SHIFT).perform();
     await new Workbench().executeCommand("gvQLC: Add Quiz Question");
     await new Promise((res) => setTimeout(res, 1000));
 
