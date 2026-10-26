@@ -16,7 +16,7 @@
 Run this command from the repository folder:
 
 ```sh
-npx @vscode/vsce package
+npm run package
 ```
 
 The command compiles the code, runs the lint checks, and creates `gvqlc-<version>.vsix` in the repository folder.
