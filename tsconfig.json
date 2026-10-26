@@ -11,5 +11,5 @@
     "skipLibCheck": true
   },
   "exclude": ["node_modules", ".vscode-test", "test-resources", "src/ui-test/resources/**", ".test-extensions"],
-  "include": ["src", "test", ".eslintrc.json"]
+  "include": ["src", "test"]
 }

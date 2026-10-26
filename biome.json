@@ -1,0 +1,37 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "files": {
+    "includes": ["src/**/*.ts", "src/**/*.tsx", "!src/ui-test/resources/problems.ts"]
+  },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "rules": {
+      "preset": "none",
+      "style": {
+        "useBlockStatements": "warn",
+        "useThrowOnlyError": "warn",
+        "useNamingConvention": {
+          "level": "warn",
+          "options": {
+            "strictCase": false,
+            "conventions": [
+              {
+                "selector": { "kind": "enumMember" },
+                "formats": ["CONSTANT_CASE", "camelCase"]
+              },
+              { "selector": { "kind": "any" }, "match": ".*" }
+            ]
+          }
+        }
+      },
+      "suspicious": {
+        "noDoubleEquals": {
+          "level": "warn",
+          "options": { "ignoreNull": false }
+        },
+        "noRedeclare": "warn"
+      }
+    }
+  }
+}
