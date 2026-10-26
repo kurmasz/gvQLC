@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
 	*/
 
   const createConfigCommand = vscode.commands.registerCommand(
-    "gvQLC.createConfig",
+    "gvqlc.createConfig",
     async () => {
       // TODO: Test what happens if this is run without a workspace open.
       await createConfigFile();
