@@ -44,6 +44,7 @@
     ]
   },
   "scripts": {
+    "clean": "rm -rf out node_modules test-resources test-fixtures-tmp/* .test-extensions .vscode-test .vscode-test-user-data gvqlc-*.vsix",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./ && npm run lint",
     "lint": "biome lint src",
