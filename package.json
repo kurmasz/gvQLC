@@ -49,7 +49,7 @@
     "compile": "tsc -p ./ && npm run lint",
     "lint": "biome lint src",
     "watch": "tsc -watch -p ./",
-    "test": "npm run compile && VSCODE_TEST_ZK=true NODE_OPTIONS='-r source-map-support/register' extest setup-and-run './out/test/system/*.test.js' --code_version 1.101.0 --code_settings settings.json --extensions_dir .test-extensions",
+    "test": "npm run compile && TEST_NON_MODAL_ERRORS=true NODE_OPTIONS='-r source-map-support/register' extest setup-and-run './out/test/system/*.test.js' --code_version 1.101.0 --code_settings settings.json --extensions_dir .test-extensions",
     "test:linux": "env -u WAYLAND_DISPLAY XDG_SESSION_TYPE=x11 xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npm test",
     "package": "vsce package"
   },

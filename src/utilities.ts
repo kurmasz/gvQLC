@@ -51,9 +51,9 @@ function verifyAndSetWorkspaceRoot() {
       console.log("===========> Displaying modal error");
       // Modal error messages don't play nice with the automated tester,
       // so we switch them to headless.
-      const isTestEnv = process.env.VSCODE_TEST_ZK === "true";
-      const modalMessage = isTestEnv ? message + " (modal)" : message;
-      vscode.window.showErrorMessage(modalMessage, { modal: !isTestEnv }, "OK");
+      const useNonModalErrors = process.env.TEST_NON_MODAL_ERRORS === "true";
+      const modalMessage = useNonModalErrors ? message + " (modal)" : message;
+      vscode.window.showErrorMessage(modalMessage, { modal: !useNonModalErrors }, "OK");
       gvQLC.state.modalErrorDisplayed = true;
     }
     return false;
@@ -93,49 +93,6 @@ export function loadDataFromFile(fileName: string) {
     }
   }
   return [];
-}
-
-// Helper function to ensure quizQuestionsFileName is added to .gitignore
-// IMPORTANT: Don't use this unless it is thouroughly thought out and 
-// tested. If it is glitchy, then what happens is that some of the 
-// test fixtures don't get pushed to GitHub correctly and the CI
-// tests fail. 
-export function ensureGitignoreForQuizQuestionsFile() {
-  
-  // TODO: Has this been tested?
-
-  // We need to divert this activity in the test environment, otherwise,
-  // the .gitignore file will prevent the CI tests from running properly.
-  const isTestEnv =
-    process.env.VSCODE_TEST_ZK === "true" || !!process.env.VSCODE_DEBUG_MODE;
-  const workspaceDir = getWorkspaceDirectory();
-  const gitignoreFilename = isTestEnv ? ".test_gitignore" : ".gitignore";
-  const gitignorePath = path.join(workspaceDir, gitignoreFilename);
-
-  let gitignoreContent = "";
-
-  // Check if .gitignore exists
-  if (fs.existsSync(gitignorePath)) {
-    gitignoreContent = fs.readFileSync(gitignorePath, "utf-8");
-
-    // If quizQuestionsFileName is not already in .gitignore, add it
-
-    // TODO: This doesn't work as intended.  It only matches whole lines
-    // and I don't think that will end up being sufficiently reliable. 
-    // Consider using the npm package "ignore"
-    
-    if (!gitignoreContent.split("\n").includes(quizQuestionsFileName)) {
-      const message = `Adding ${quizQuestionsFileName} to .gitignore`;
-      console.log(message);
-      vscode.window.showInformationMessage(message);
-
-      gitignoreContent += `\n${quizQuestionsFileName}\n`;
-      fs.writeFileSync(gitignorePath, gitignoreContent);
-    }
-  } else {
-    // Create a .gitignore file and add quizQuestionsFileName
-    fs.writeFileSync(gitignorePath, `${quizQuestionsFileName}\n`);
-  }
 }
 
 // TODO Still need to handle error cases (empty filePath,
@@ -210,11 +167,6 @@ export function loadPersistedData() {
       ...loadDataFromFile(quizQuestionsFileName)
     );
 
-    // Ensure quizQuestionsFileName is in .gitignore
-    // I forgot why I thought I needed this.  It _is_ necessary if the project root is 
-    // going to be a student's repo root. But, if the project root is a level up, 
-    // this shouldn't be an issure, right? 
-    // ensureGitignoreForQuizQuestionsFile();
     state.dataLoaded = true;
     return true;
   }
