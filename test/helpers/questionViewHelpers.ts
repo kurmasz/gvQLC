@@ -56,13 +56,27 @@ type QuestionData = {
     question: string
 };
 
+// Resolve theme expressions in the webview rather than expecting one theme's RGB values.
+async function verifyThemeBackground(element: WebElement, color: string) {
+    const colors = await VSBrowser.instance.driver.executeScript<string[]>(`
+        const probe = document.createElement('span');
+        probe.style.backgroundColor = arguments[1];
+        document.body.appendChild(probe);
+        const colors = [getComputedStyle(arguments[0]).backgroundColor,
+                        getComputedStyle(probe).backgroundColor];
+        probe.remove();
+        return colors;
+    `, element, color);
+    expect(colors[0]).to.equal(colors[1]);
+}
+
 export async function verifyQuestionDisplayed(view: WebView, questionData: QuestionData) {
     const row = await view.findWebElement(By.css(`#row-${questionData.rowIndex}`));
     const cells = await row.findElements(By.css('td'));
     expect(await row.isDisplayed()).to.be.true;
 
     expect(await cells[0].getText()).to.equal(questionData.rowLabel);
-    expect(await cells[0].getCssValue('background-color')).to.equal(questionData.color);
+    await verifyThemeBackground(cells[0], questionData.color);
 
     expect(await cells[1].getText()).to.equal(questionData.file);
 
@@ -89,7 +103,7 @@ type SummaryData = {
 
 export async function verifySummaryDisplayed(container: WebElement, summaryData: SummaryData) {
     const row = await container.findElement(By.xpath(`.//tr[td[1][contains(normalize-space(.), "${summaryData.name}")]]`));
-    expect(await row.getCssValue('background-color')).to.equal(summaryData.color);
+    await verifyThemeBackground(row, summaryData.color);
 
     const cells = await row.findElements(By.css('td'));
     expect(await cells[1].getText()).to.equal(summaryData.questionCount.toString());

@@ -14,9 +14,11 @@ export const GVQLC = 'gvQLC';
 export const quizQuestionsFileName = 'gvQLC.quizQuestions.json';
 export const configFileName = 'gvQLC.config.json';
 
+// These highlights overlay the editor surface and retain its foreground color.
+// Keep CSS variable references so existing webviews follow theme changes live.
 export enum ViewColors {
-    RED = 'rgba(255, 184, 181, 1)',   // '#ffb8b5'
-    GREEN = 'rgba(208, 240, 208, 1)', // '#d0f0d0',
-    YELLOW = 'rgba(255, 255, 178, 1)', // '#ffffb2'
-    BLUE = 'rgba(184, 215, 255, 1)' // '#b8d7ff'
+    RED = 'var(--vscode-diffEditor-removedTextBackground, var(--vscode-editor-background))',
+    GREEN = 'var(--vscode-diffEditor-insertedTextBackground, var(--vscode-editor-background))',
+    YELLOW = 'var(--vscode-editor-findMatchHighlightBackground, var(--vscode-editor-background))',
+    BLUE = 'var(--vscode-editor-wordHighlightBackground, var(--vscode-editor-background))'
 };

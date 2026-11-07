@@ -14,6 +14,7 @@ import { state, config } from '../gvQLC';
 import { quizQuestionsFileName } from '../sharedConstants';
 
 import * as Util from '../utilities';
+import { webviewStyles } from '../webviewStyles';
 
 export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.addQuizQuestion', async () => {
     console.log('Begin addQuizQuestion.');
@@ -79,17 +80,16 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Quiz Question</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        textarea { width: 100%; font-size: 14px; margin-bottom: 10px; display: block; }
-        button { padding: 10px 20px; background: #007acc; color: white; border: none; cursor: pointer; margin-right: 10px; }
-        button:hover { background: #005a9e; }
-        .code-area { width: 100%; height: 120px; font-family: monospace; background: #f4f4f4; padding: 10px; border-radius: 5px; }
-        .optional { color: #666; font-style: italic; }
+        ${webviewStyles}
+        textarea { width: 100%; margin-bottom: 10px; display: block; }
+        button { padding: 10px 20px; cursor: pointer; margin-right: 10px; }
+        .code-area { width: 100%; height: 120px; padding: 10px; border-radius: 5px; }
+        .optional { color: var(--vscode-descriptionForeground); font-style: italic; }
         #suggestions { 
             position: absolute; 
-            background: white;
-            color: red;
-            border: 1px solid #ddd; 
+            background: var(--vscode-editorSuggestWidget-background);
+            color: var(--vscode-editorSuggestWidget-foreground);
+            border: 1px solid var(--vscode-editorSuggestWidget-border, var(--vscode-panel-border));
             max-height: 200px; 
             overflow-y: auto; 
             z-index: 1000;
@@ -100,10 +100,17 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         .suggestion-item {
             padding: 8px;
             cursor: pointer;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--vscode-editorSuggestWidget-border, var(--vscode-panel-border));
         }
         .suggestion-item:hover {
-            background-color: #f0f0f0;
+            background: var(--vscode-list-hoverBackground);
+            color: var(--vscode-list-hoverForeground, var(--vscode-editorSuggestWidget-foreground));
+        }
+        .suggestion-item.active {
+            background: var(--vscode-editorSuggestWidget-selectedBackground);
+            color: var(--vscode-editorSuggestWidget-selectedForeground);
+            outline: 1px solid var(--vscode-contrastActiveBorder, transparent);
+            outline-offset: -1px;
         }
         #question-container {
             position: relative;
@@ -198,13 +205,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
         function highlightSuggestion() {
             const suggestions = document.querySelectorAll('.suggestion-item');
             suggestions.forEach((item, index) => {
-                if (index === activeSuggestionIndex) {
-                    item.style.backgroundColor = '#007acc';
-                    item.style.color = 'white';
-                } else {
-                    item.style.backgroundColor = '';
-                    item.style.color = '';
-                }
+                item.classList.toggle('active', index === activeSuggestionIndex);
             });
         }
 
@@ -240,7 +241,7 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
             const editedCode = document.getElementById('codeBlock').value;
             
             if (question.trim() === '') {
-                alert('Question cannot be empty!');
+                vscode.postMessage({ type: 'showErrorMessage', message: 'Question cannot be empty!' });
                 return;
             }
 
@@ -258,6 +259,10 @@ export const addQuizQuestionCommand = vscode.commands.registerCommand('gvqlc.add
 
     // Handle messages from the Webview
     panel.webview.onDidReceiveMessage(async (message) => {
+        if (message.type === 'showErrorMessage') {
+            vscode.window.showErrorMessage(message.message);
+            return;
+        }
         if (message.type === 'submitQuestion') {
            
             

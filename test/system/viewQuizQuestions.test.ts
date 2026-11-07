@@ -50,6 +50,49 @@ describe('viewQuizQuestions', function () {
         ({view, summaryContainer} = await setUpQuizQuestionWebView('cis371_server', '14'));
     });
 
+    it('uses theme tokens and follows live theme updates without rebuilding the view', async () => {
+        const result = await VSBrowser.instance.driver.executeScript<string | null>(`
+            const body = document.body;
+            const originalStyle = body.getAttribute('style');
+            const check = (selector, property, token) => {
+                const probe = document.createElement('span');
+                probe.style[property] = 'var(' + token + ')';
+                body.appendChild(probe);
+                const actual = getComputedStyle(document.querySelector(selector))[property];
+                const expected = getComputedStyle(probe)[property];
+                probe.remove();
+                if (actual !== expected) throw new Error(selector + ': ' + actual + ' !== ' + expected);
+            };
+            try {
+                check('body', 'backgroundColor', '--vscode-editor-background');
+                check('body', 'color', '--vscode-editor-foreground');
+                check('.code-area', 'color', '--vscode-editor-foreground');
+                check('.question-area', 'backgroundColor', '--vscode-input-background');
+                check('#searchInput', 'color', '--vscode-input-foreground');
+                check('#refreshBtn', 'backgroundColor', '--vscode-button-background');
+                check('#toggleSummaryBtn', 'backgroundColor', '--vscode-button-secondaryBackground');
+                check('#rowsPerPage', 'backgroundColor', '--vscode-dropdown-background');
+                check('input[type="checkbox"]', 'backgroundColor', '--vscode-checkbox-background');
+                // VS Code changes CSS variables when switching themes. Exercise the same live path.
+                for (const color of ['rgb(240, 240, 240)', 'rgb(30, 30, 30)', 'rgb(0, 0, 0)']) {
+                    body.style.setProperty('--vscode-editor-background', color);
+                    body.style.setProperty('--vscode-button-background', color);
+                    check('body', 'backgroundColor', '--vscode-editor-background');
+                    check('.code-area', 'backgroundColor', '--vscode-editor-background');
+                    check('#refreshBtn', 'backgroundColor', '--vscode-button-background');
+                    check('.page-btn.active', 'backgroundColor', '--vscode-button-background');
+                }
+                return null;
+            } catch (error) {
+                return String(error);
+            } finally {
+                if (originalStyle === null) body.removeAttribute('style');
+                else body.setAttribute('style', originalStyle);
+            }
+        `);
+        expect(result).to.equal(null);
+    });
+
     it('displays the first queston', async () => {
         const expected = `                while line := file.readline():
                     socket.send_text_line(line)`;

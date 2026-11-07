@@ -14,6 +14,7 @@ const state = gvQLC.state;
 
 import { extractStudentName } from '../utilities';
 import * as Util from '../utilities';
+import { webviewStyles } from '../webviewStyles';
 import { PersonalizedQuestionsData } from '../types';
 import { logToFile } from '../fileLogger';
 
@@ -184,9 +185,9 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
               </td>
               <td>
                   <button onclick="saveChanges(${index})">Save</button>
-                  <button onclick="revertChanges(${index})" style="background-color: orange; color: white;">Revert</button>
-                  <button onclick="editQuestion(${index})" style="background-color: green; color: white;">Edit</button>
-                  <button onclick="copyQuestionText(${index})" style="background-color: #2196F3; color: white;">Copy</button>
+                  <button onclick="revertChanges(${index})" class="secondary">Revert</button>
+                  <button onclick="editQuestion(${index})" class="secondary">Edit</button>
+                  <button onclick="copyQuestionText(${index})" class="secondary">Copy</button>
                   <br>
                   <input type="checkbox" id="exclude-${index}" ${question.excludeFromQuiz ? 'checked' : ''} onchange="toggleExclude(${index})">
                   <label for="exclude-${index}">Exclude from Quiz</label>
@@ -204,6 +205,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     );
 
     const data = {
+        webviewStyles,
         totalQuestions: reorderedQuestions.length,
         summaryTable: buildSummaryTable(await allStudentsPromise),
         questionsTable: questionsTable,
