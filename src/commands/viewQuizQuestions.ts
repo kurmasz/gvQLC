@@ -205,7 +205,7 @@ export const viewQuizQuestionsCommand = vscode.commands.registerCommand('gvqlc.v
     );
 
     const data = {
-        webviewStyles,
+        webviewStyleTag: `<style>${webviewStyles}</style>`,
         totalQuestions: reorderedQuestions.length,
         summaryTable: buildSummaryTable(await allStudentsPromise),
         questionsTable: questionsTable,

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Quiz Questions</title>
+    {{{webviewStyleTag}}}
     <style>
-        {{{webviewStyles}}}
         .header-container {
             display: flex;
             justify-content: space-between;
@@ -199,10 +199,13 @@
         </div>
     </div>
 
+    <div id="originalData" hidden>{{originalData}}</div>
+    <div id="questionLabels" hidden>{{questionLabels}}</div>
+
     <script>
         const vscode = acquireVsCodeApi();
-        const originalData = JSON.parse(JSON.stringify({{{originalData}}}));
-        const questionLabels = JSON.parse('{{{questionLabels}}}');
+        const originalData = JSON.parse(document.getElementById('originalData').textContent);
+        const questionLabels = JSON.parse(document.getElementById('questionLabels').textContent);
         const totalQuestions = originalData.length;
 
 
