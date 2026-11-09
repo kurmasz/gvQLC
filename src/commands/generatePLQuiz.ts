@@ -120,6 +120,9 @@ export const generatePLQuizCommand = vscode.commands.registerCommand(
     // Group questions by student
     const questionsByStudent: Record<string, PersonalizedQuestionsData[]> = {};
     for (const question of state.personalizedQuestionsData) {
+      if (question.excludeFromQuiz) {
+        continue;
+      }
       const studentName = Util.extractStudentName(
         question.filePath,
         config.submissionRoot
