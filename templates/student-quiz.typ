@@ -63,21 +63,22 @@ Write your answers in the spaces provided.
   ..quiz.questions.map(question => [
     #literal(question.text)
 
-    #if question.code != "" {
-      block(
-        width: 100%,
-        breakable: false,
-        inset: 8pt,
-        fill: luma(96%),
-        radius: 3pt,
-        raw(
-          question.code,
-          block: true,
-          lang: quiz.language,
-        ),
-      )
-    }
+    #block(breakable: false)[
+      #if question.code != "" {
+        block(
+          width: 100%,
+          inset: 8pt,
+          fill: luma(96%),
+          radius: 3pt,
+          raw(
+            question.code,
+            block: true,
+            lang: quiz.language,
+          ),
+        )
+      }
 
-    #answer-box()
+      #answer-box()
+    ]
   ]),
 )
