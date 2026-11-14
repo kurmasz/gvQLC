@@ -7,6 +7,7 @@ import { viewQuizQuestionsCommand } from "./commands/viewQuizQuestions";
 import { createConfigFile } from "./configFile";
 import { addQuizQuestionCommand } from "./commands/addQuizQuestion";
 import { generatePLQuizCommand } from "./commands/generatePLQuiz";
+import { generatePDFQuizCommand } from "./commands/generatePDFQuiz";
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -34,7 +35,8 @@ export function activate(context: vscode.ExtensionContext) {
     viewQuizQuestionsCommand,
     addQuizQuestionCommand,
     createConfigCommand,
-    generatePLQuizCommand
+    generatePLQuizCommand,
+    generatePDFQuizCommand
   );
 }
 

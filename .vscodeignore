@@ -16,7 +16,17 @@ out/src/test/**
 out/src/ui-test/**
 out/package.json
 .npm/**
+.npm-cache/**
 *.vsix
 *.vsix.*
 .mocharc.js
 biome.json
+node_modules/dejavu-fonts-ttf/**
+!node_modules/dejavu-fonts-ttf/package.json
+!node_modules/dejavu-fonts-ttf/LICENSE
+!node_modules/dejavu-fonts-ttf/AUTHORS
+!node_modules/dejavu-fonts-ttf/README*.md
+!node_modules/dejavu-fonts-ttf/ttf/DejaVuSerif.ttf
+!node_modules/dejavu-fonts-ttf/ttf/DejaVuSerif-Bold.ttf
+!node_modules/dejavu-fonts-ttf/ttf/DejaVuSerif-Italic.ttf
+!node_modules/dejavu-fonts-ttf/ttf/DejaVuSansMono.ttf

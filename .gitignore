@@ -9,6 +9,7 @@ test-resources/
 Thumbs.db
 .test_gitignore
 .npm
+.npm-cache/
 gvQLC_log.txt
 
 /.bash_history

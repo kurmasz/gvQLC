@@ -40,6 +40,10 @@
       {
         "command": "gvqlc.generatePLQuiz",
         "title": "gvQLC: Generate PrairieLearn Quiz"
+      },
+      {
+        "command": "gvqlc.generatePDFQuiz",
+        "title": "gvQLC: Export Student Quiz PDFs"
       }
     ]
   },
@@ -54,6 +58,9 @@
     "package": "vsce package"
   },
   "dependencies": {
+    "@myriaddreamin/typst-ts-web-compiler": "0.8.0-rc4",
+    "@myriaddreamin/typst.ts": "0.8.0-rc4",
+    "dejavu-fonts-ttf": "2.37.3",
     "mustache": "^4.2.0"
   },
   "devDependencies": {
