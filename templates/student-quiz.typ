@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#let answer-box(width: 100%, height: 4cm) = box(
+#let answer-box(width: 100%, height: 5cm) = box(
   stroke: 0.5pt,
   width: width,
   height: height,
