@@ -66,6 +66,7 @@ Write your answers in the spaces provided.
     #if question.code != "" {
       block(
         width: 100%,
+        breakable: false,
         inset: 8pt,
         fill: luma(96%),
         radius: 3pt,
