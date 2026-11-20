@@ -3,7 +3,6 @@
   "displayName": "gvQLC",
   "description": "A tool for generating custom quiz questions over submitted code",
   "icon": "icons/gv.png",
-  "preview": true,
   "private": true,
   "version": "1.0.0",
   "main": "./out/src/extension.js",
