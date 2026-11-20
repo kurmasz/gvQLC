@@ -18,6 +18,7 @@ import { logToFile } from './fileLogger';
 
 const defaultConfig : ConfigData = {
     submissionRoot: '.',
+    pdfStudentName: "",
     title: "<<Title>>",
     topic: "<<Topic>>",
     pl_ready: false,

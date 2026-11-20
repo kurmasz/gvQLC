@@ -32,6 +32,7 @@ export const generatePDFQuizCommand = vscode.commands.registerCommand(
       const quizzes = groupPdfQuestions(
         state.personalizedQuestionsData,
         settings.submissionRoot,
+        typeof settings.pdfStudentName === "string" ? settings.pdfStudentName : undefined,
       );
       const title = await vscode.window.showInputBox({
         title: "PDF quiz title",

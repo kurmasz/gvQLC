@@ -16,6 +16,8 @@ View Quiz Question lets you view all of the currently created questions from all
 ### gvQLC: Export Student Quiz PDFs
 Export Student Quiz PDFs lets you generate a printable PDF for each student using their included quiz questions for a written exam.
 
+If you opened one student's repo in VS Code, set `pdfStudentName` to their name in `gvQLC.config.json` to export one PDF for that repo. Leave it blank to export one PDF per student folder under `submissionRoot`.
+
 ## Set up development environment
 
 1. Install Node.js 24 with npm and VS Code 1.101 or later.

@@ -12,7 +12,14 @@ export interface StudentQuiz {
 export function groupPdfQuestions(
   questions: readonly PersonalizedQuestionsData[],
   submissionRoot: string | null,
+  pdfStudentName?: string,
 ): StudentQuiz[] {
+  const singleStudent = pdfStudentName?.trim();
+  if (singleStudent) {
+    const included = questions.filter((question) => !question.excludeFromQuiz);
+    return included.length ? [{ student: singleStudent, questions: included }] : [];
+  }
+
   const groups = new Map<string, PersonalizedQuestionsData[]>();
   const root = (submissionRoot ?? ".")
     .replace(/\\/g, "/")
@@ -38,7 +45,7 @@ export function groupPdfQuestions(
     const student = parts[rootIndex];
     if (matchIndex < 0 || !student || student === ".." || rootIndex >= parts.length - 1) {
       throw new Error(
-        `Cannot identify the student for "${question.filePath}". Check submissionRoot in gvQLC.config.json.`,
+        `Cannot identify the student for "${question.filePath}". Check submissionRoot or set pdfStudentName for a single repo in gvQLC.config.json.`,
       );
     }
     const group = groups.get(student) ?? [];
