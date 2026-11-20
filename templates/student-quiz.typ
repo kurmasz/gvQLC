@@ -60,25 +60,23 @@ Write your answers in the spaces provided.
 #enum(
   numbering: "1.",
   spacing: 1em,
-  ..quiz.questions.map(question => [
+  ..quiz.questions.map(question => block(breakable: false)[
     #literal(question.text)
 
-    #block(breakable: false)[
-      #if question.code != "" {
-        block(
-          width: 100%,
-          inset: 8pt,
-          fill: luma(96%),
-          radius: 3pt,
-          raw(
-            question.code,
-            block: true,
-            lang: quiz.language,
-          ),
-        )
-      }
+    #if question.code != "" {
+      block(
+        width: 100%,
+        inset: 8pt,
+        fill: luma(96%),
+        radius: 3pt,
+        raw(
+          question.code,
+          block: true,
+          lang: quiz.language,
+        ),
+      )
+    }
 
-      #answer-box()
-    ]
+    #answer-box()
   ]),
 )
