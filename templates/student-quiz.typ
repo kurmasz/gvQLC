@@ -52,9 +52,7 @@ SOFTWARE.
 #parbreak()
 
 *Student:* #text(quiz.student)
-#parbreak()
 
-Write your answers in the spaces provided.
 #v(0.5em)
 
 #enum(
@@ -64,6 +62,7 @@ Write your answers in the spaces provided.
     #literal(question.text)
 
     #if question.code != "" {
+      text(font: "DejaVu Sans Mono", size: 9pt, question.filename)
       block(
         width: 100%,
         inset: 8pt,

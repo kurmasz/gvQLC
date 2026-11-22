@@ -4,7 +4,7 @@
   "description": "A tool for generating custom quiz questions over submitted code",
   "icon": "icons/gv.png",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "./out/src/extension.js",
   "author": {
     "name": "Zachary Kurmas"

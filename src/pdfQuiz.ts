@@ -65,6 +65,7 @@ export function studentQuizData(quiz: StudentQuiz, title: string, language: stri
     language,
     questions: quiz.questions.map((question) => ({
       text: question.text,
+      filename: path.posix.basename(question.filePath.replace(/\\/g, "/")),
       code: question.highlightedCode,
     })),
   });
